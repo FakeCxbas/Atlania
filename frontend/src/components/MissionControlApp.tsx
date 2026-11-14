@@ -18,6 +18,8 @@ import { MissionPresentation } from "@/components/MissionPresentation";
 import { downloadQgisGeoJson } from "@/lib/dossier";
 import { translateSite, translateTarget } from "@/lib/spanishTranslations";
 import {
+  ChevronDown,
+  ChevronUp,
   Compass,
   Download,
   Globe2,
@@ -49,6 +51,8 @@ export function MissionControlApp({ dataset }: MissionControlAppProps) {
   );
   const [showDirectory, setShowDirectory] = useState(false);
   const [showPresentation, setShowPresentation] = useState(false);
+  const [comparisonExpanded, setComparisonExpanded] = useState(false);
+  const [regionCollapsed, setRegionCollapsed] = useState(false);
   const [cameraTarget, setCameraTarget] = useState<CameraTarget | null>(null);
 
   const [probeMode, setProbeMode] = useState(false);
@@ -378,24 +382,24 @@ export function MissionControlApp({ dataset }: MissionControlAppProps) {
             <button
               type="button"
               onClick={() => handleTabChange("tierra")}
-              aria-selected={mainTab === "tierra"}
+              aria-pressed={mainTab === "tierra"}
               className={`flex items-center gap-1.5 rounded-lg px-3.5 py-1.5 text-xs font-semibold transition-all ${
                 mainTab === "tierra"
-                  ? "border border-[#D4AF37] bg-[#D4AF37]/25 text-[#D4AF37] shadow-[0_0_15px_rgba(212,175,55,0.25)]"
+                  ? "border border-[#F5B82E] bg-[#F5B82E]/20 text-[#F5B82E]"
                   : "text-slate-400 hover:text-slate-200"
               }`}
             >
-              <Globe2 className="h-3.5 w-3.5 text-cyan-400" aria-hidden="true" />
+              <Globe2 className="h-3.5 w-3.5 text-[#00D9F5]" aria-hidden="true" />
               <span>Tierra</span>
             </button>
 
             <button
               type="button"
               onClick={() => handleTabChange("luna")}
-              aria-selected={mainTab === "luna"}
+              aria-pressed={mainTab === "luna"}
               className={`flex items-center gap-1.5 rounded-lg px-3.5 py-1.5 text-xs font-semibold transition-all ${
                 mainTab === "luna"
-                  ? "border border-[#D4AF37] bg-[#D4AF37]/25 text-[#D4AF37] shadow-[0_0_15px_rgba(212,175,55,0.25)]"
+                  ? "border border-[#F5B82E] bg-[#F5B82E]/20 text-[#F5B82E]"
                   : "text-slate-400 hover:text-slate-200"
               }`}
             >
@@ -406,10 +410,10 @@ export function MissionControlApp({ dataset }: MissionControlAppProps) {
             <button
               type="button"
               onClick={() => handleTabChange("marte")}
-              aria-selected={mainTab === "marte"}
+              aria-pressed={mainTab === "marte"}
               className={`flex items-center gap-1.5 rounded-lg px-3.5 py-1.5 text-xs font-semibold transition-all ${
                 mainTab === "marte"
-                  ? "border border-[#D4AF37] bg-[#D4AF37]/25 text-[#D4AF37] shadow-[0_0_15px_rgba(212,175,55,0.25)]"
+                  ? "border border-[#F5B82E] bg-[#F5B82E]/20 text-[#F5B82E]"
                   : "text-slate-400 hover:text-slate-200"
               }`}
             >
@@ -672,11 +676,15 @@ export function MissionControlApp({ dataset }: MissionControlAppProps) {
         </div>
       </header>
 
-      {/* 3. Floating Slide-over Sheet (Strictly positioned below top header at top-[110px], preventing overlap) */}
+      {/* 3. Left Analysis Panel / Expandable 3-Column Comparison Workbench */}
       {selectedSite && !showDirectory && (
         <section
           aria-label={`Detalle del sitio ${selectedSite.name}`}
-          className="fixed bottom-3 left-3 right-3 top-[108px] z-30 flex flex-col overflow-hidden rounded-2xl border-2 border-[#D4AF37]/60 bg-[#0D1424]/95 shadow-[0_0_35px_rgba(212,175,55,0.2)] backdrop-blur-md sm:bottom-4 sm:left-4 sm:top-[112px] sm:w-[470px] sm:max-w-[calc(100vw-32px)] animate-in slide-in-from-left duration-300"
+          className={`fixed z-30 flex flex-col overflow-hidden rounded-2xl border border-[rgba(100,180,210,0.28)] bg-[#0D1925]/95 shadow-2xl backdrop-blur-md transition-all duration-200 ${
+            comparisonExpanded
+              ? "bottom-3 left-3 right-3 top-[108px] sm:bottom-4 sm:left-4 sm:right-4 sm:top-[112px]"
+              : "bottom-3 left-3 right-3 max-h-[62dvh] sm:bottom-4 sm:left-4 sm:right-auto sm:top-[112px] sm:max-h-none sm:w-[400px] lg:w-[420px]"
+          }`}
         >
           <TelemetryDrawer
             dataset={dataset}
@@ -684,7 +692,12 @@ export function MissionControlApp({ dataset }: MissionControlAppProps) {
             references={translatedReferences}
             activeTargetId={activeTargetId}
             onSelectTarget={setActiveTargetId}
-            onClose={() => setSelectedSiteId(null)}
+            onClose={() => {
+              setSelectedSiteId(null);
+              setComparisonExpanded(false);
+            }}
+            expanded={comparisonExpanded}
+            onToggleExpand={() => setComparisonExpanded((prev) => !prev)}
           />
         </section>
       )}
@@ -694,12 +707,12 @@ export function MissionControlApp({ dataset }: MissionControlAppProps) {
         <section
           id="directory-drawer"
           aria-label="Directorio completo de sitios análogos"
-          className="fixed bottom-3 left-3 right-3 top-[108px] z-30 flex flex-col overflow-hidden rounded-2xl border-2 border-[#D4AF37]/50 bg-[#0D1424]/95 shadow-2xl backdrop-blur-md sm:bottom-4 sm:left-4 sm:top-[112px] sm:w-[380px] animate-in slide-in-from-left duration-300"
+          className="fixed bottom-3 left-3 right-3 top-[108px] z-30 flex flex-col overflow-hidden rounded-2xl border border-[rgba(100,180,210,0.28)] bg-[#0D1925]/95 shadow-2xl backdrop-blur-md sm:bottom-4 sm:left-4 sm:top-[112px] sm:w-[380px]"
         >
-          <div className="flex items-center justify-between border-b border-slate-800/80 bg-[#060913]/80 px-4 py-3">
+          <div className="flex items-center justify-between border-b border-[rgba(100,180,210,0.2)] bg-[#071018]/80 px-4 py-3">
             <div className="flex items-center gap-2">
-              <ListFilter className="h-4 w-4 text-[#D4AF37]" aria-hidden="true" />
-              <h2 className="text-sm font-semibold text-slate-100">
+              <ListFilter className="h-4 w-4 text-[#F5B82E]" aria-hidden="true" />
+              <h2 className="text-sm font-semibold text-[#F1F5F9]">
                 Directorio ({filteredSites.length} sitios)
               </h2>
             </div>
@@ -707,7 +720,7 @@ export function MissionControlApp({ dataset }: MissionControlAppProps) {
               type="button"
               onClick={() => setShowDirectory(false)}
               aria-label="Cerrar directorio de sitios (Escape)"
-              className="rounded-lg p-1 text-slate-400 hover:bg-slate-800 hover:text-slate-100 focus:outline-none focus:ring-2 focus:ring-[#D4AF37]"
+              className="rounded-lg p-1 text-[#94A3B8] hover:bg-[#132434] hover:text-[#F1F5F9]"
             >
               <X className="h-4 w-4" aria-hidden="true" />
             </button>
@@ -726,22 +739,24 @@ export function MissionControlApp({ dataset }: MissionControlAppProps) {
         </section>
       )}
 
-      {/* 5. Tarjeta flotante de resultados de prospección regional */}
-      {(rankedRegionResult || regionError) && (
+      {/* 5. Módulo flotante compacto de Prospección Regional 3x3 / 4x4 (Fase 2) */}
+      {(rankedRegionResult || regionError || isProbingRegion) && !comparisonExpanded && (
         <section
-          aria-label="Resultados de prospección regional"
-          className="fixed bottom-14 right-3 z-20 w-88 max-w-[calc(100%-1.5rem)] rounded-2xl border border-[#D4AF37]/50 bg-[#0D1424]/95 p-3 text-xs text-slate-200 shadow-[0_0_30px_rgba(212,175,55,0.12)] backdrop-blur-md"
+          aria-label="Módulo de prospección regional"
+          className="fixed bottom-14 right-3 z-20 w-[345px] max-w-[calc(100%-1.5rem)] rounded-2xl border border-[rgba(100,180,210,0.28)] bg-[#0D1925]/95 p-3 text-xs text-[#F1F5F9] shadow-2xl backdrop-blur-md"
         >
-          <div className="mb-2 flex items-center justify-between gap-2 border-b border-slate-800 pb-1.5">
+          <div className="flex items-center justify-between gap-2 border-b border-[rgba(100,180,210,0.18)] pb-2">
             <div>
-              <h2 className="font-mono text-[11px] font-semibold uppercase tracking-wider text-[#D4AF37]">
-                {regionError
+              <h2 className="font-mono text-[11px] font-bold uppercase tracking-wider text-[#F5B82E]">
+                {isProbingRegion
+                  ? `Escaneando Grilla ${regionGridSize}×${regionGridSize}...`
+                  : regionError
                   ? "Error en Sondeo Regional"
-                  : `Prospección · ${rankedRegionResult?.grid_size ?? 3}×${rankedRegionResult?.grid_size ?? 3} (${rankedRegionResult?.evaluated_count ?? 0} pts)`}
+                  : `Prospección ${rankedRegionResult?.grid_size ?? 3}×${rankedRegionResult?.grid_size ?? 3} · ${rankedRegionResult?.evaluated_count ?? 0} pts`}
               </h2>
               {!regionError && rankedRegionResult && (
-                <p className="mt-0.5 font-mono text-[10px] text-slate-400 tabular-nums">
-                  {rankedRegionResult.bounds.minLat.toFixed(2)}°..
+                <p className="mt-0.5 font-mono text-[10px] text-[#94A3B8] tabular-nums">
+                  Rango: {rankedRegionResult.bounds.minLat.toFixed(2)}°..
                   {rankedRegionResult.bounds.maxLat.toFixed(2)}°N,{" "}
                   {rankedRegionResult.bounds.minLon.toFixed(2)}°..
                   {rankedRegionResult.bounds.maxLon.toFixed(2)}°E
@@ -750,26 +765,42 @@ export function MissionControlApp({ dataset }: MissionControlAppProps) {
             </div>
             <div className="flex items-center gap-1">
               {!regionError && rankedRegionResult && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    const blob = new Blob(
-                      [JSON.stringify(rankedRegionResult.geojson, null, 2)],
-                      { type: "application/geo+json" }
-                    );
-                    const url = URL.createObjectURL(blob);
-                    const link = document.createElement("a");
-                    link.href = url;
-                    link.download = `region-prospeccion-${rankedRegionResult.grid_size}x${rankedRegionResult.grid_size}.geojson`;
-                    link.click();
-                    URL.revokeObjectURL(url);
-                  }}
-                  title="Exportar GeoJSON de prospección regional"
-                  aria-label="Exportar GeoJSON de prospección regional"
-                  className="rounded p-1 text-slate-400 hover:bg-slate-800 hover:text-[#D4AF37]"
-                >
-                  <Download className="h-3.5 w-3.5" />
-                </button>
+                <>
+                  <button
+                    type="button"
+                    onClick={() => setRegionCollapsed((prev) => !prev)}
+                    aria-expanded={!regionCollapsed}
+                    title={regionCollapsed ? "Expandir resultados" : "Contraer resultados"}
+                    aria-label={regionCollapsed ? "Expandir prospección regional" : "Contraer prospección regional"}
+                    className="rounded p-1 text-[#94A3B8] hover:bg-[#132434] hover:text-[#00D9F5]"
+                  >
+                    {regionCollapsed ? (
+                      <ChevronUp className="h-3.5 w-3.5" aria-hidden="true" />
+                    ) : (
+                      <ChevronDown className="h-3.5 w-3.5" aria-hidden="true" />
+                    )}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const blob = new Blob(
+                        [JSON.stringify(rankedRegionResult.geojson, null, 2)],
+                        { type: "application/geo+json" }
+                      );
+                      const url = URL.createObjectURL(blob);
+                      const link = document.createElement("a");
+                      link.href = url;
+                      link.download = `region-prospeccion-${rankedRegionResult.grid_size}x${rankedRegionResult.grid_size}.geojson`;
+                      link.click();
+                      URL.revokeObjectURL(url);
+                    }}
+                    title="Exportar GeoJSON de prospección regional"
+                    aria-label="Exportar GeoJSON de prospección regional"
+                    className="rounded p-1 text-[#94A3B8] hover:bg-[#132434] hover:text-[#F5B82E]"
+                  >
+                    <Download className="h-3.5 w-3.5" />
+                  </button>
+                </>
               )}
               <button
                 type="button"
@@ -778,116 +809,136 @@ export function MissionControlApp({ dataset }: MissionControlAppProps) {
                   setRegionError(null);
                 }}
                 aria-label="Cerrar prospección regional"
-                className="rounded p-1 text-slate-400 hover:bg-slate-800 hover:text-slate-100"
+                className="rounded p-1 text-[#94A3B8] hover:bg-[#132434] hover:text-[#F1F5F9]"
               >
                 <X className="h-3.5 w-3.5" />
               </button>
             </div>
           </div>
 
-          {regionError ? (
-            <p className="text-rose-300">{regionError}</p>
+          {isProbingRegion ? (
+            <p className="mt-2.5 font-mono text-[11px] text-[#00D9F5]">
+              Consultando NASA POWER y Copernicus DEM para {regionGridSize * regionGridSize} sectores...
+            </p>
+          ) : regionError ? (
+            <p className="mt-2 text-rose-300">{regionError}</p>
           ) : (
-            <>
-              <div className="mb-2 flex items-center justify-between gap-1.5">
-                <span className="text-[11px] text-slate-400">Ordenar por:</span>
-                <div
-                  className="flex items-center rounded border border-slate-800 bg-[#060913]/80 p-0.5"
-                  role="group"
-                  aria-label="Modo de clasificación regional"
-                >
-                  <button
-                    type="button"
-                    onClick={() => setRegionRankByActiveTarget(true)}
-                    aria-pressed={regionRankByActiveTarget}
-                    className={`whitespace-nowrap rounded px-2 py-0.5 text-[11px] font-medium transition-colors ${
-                      regionRankByActiveTarget
-                        ? "bg-[#D4AF37]/20 text-[#D4AF37]"
-                        : "text-slate-400 hover:text-slate-200"
-                    }`}
+            !regionCollapsed &&
+            rankedRegionResult && (
+              <div className="mt-2 space-y-2">
+                <div className="flex items-center justify-between gap-1.5">
+                  <span className="text-[11px] text-[#94A3B8]">Ordenación:</span>
+                  <div
+                    className="flex items-center rounded border border-[rgba(100,180,210,0.2)] bg-[#071018] p-0.5"
+                    role="group"
+                    aria-label="Modo de clasificación regional"
                   >
-                    {(dataset.references[activeTargetId]?.name ?? "Objetivo Activo").split(" / ")[0]}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setRegionRankByActiveTarget(false)}
-                    aria-pressed={!regionRankByActiveTarget}
-                    className={`whitespace-nowrap rounded px-2 py-0.5 text-[11px] font-medium transition-colors ${
-                      !regionRankByActiveTarget
-                        ? "bg-[#D4AF37]/20 text-[#D4AF37]"
-                        : "text-slate-400 hover:text-slate-200"
-                    }`}
-                  >
-                    Mejor coincidencia
-                  </button>
+                    <button
+                      type="button"
+                      onClick={() => setRegionRankByActiveTarget(true)}
+                      aria-pressed={regionRankByActiveTarget}
+                      className={`whitespace-nowrap rounded px-2 py-0.5 text-[11px] font-medium transition-colors ${
+                        regionRankByActiveTarget
+                          ? "bg-[#F5B82E]/20 text-[#F5B82E]"
+                          : "text-[#94A3B8] hover:text-[#F1F5F9]"
+                      }`}
+                    >
+                      {(translatedReferences[activeTargetId]?.name ?? "Objetivo Activo").split(" / ")[0]}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setRegionRankByActiveTarget(false)}
+                      aria-pressed={!regionRankByActiveTarget}
+                      className={`whitespace-nowrap rounded px-2 py-0.5 text-[11px] font-medium transition-colors ${
+                        !regionRankByActiveTarget
+                          ? "bg-[#F5B82E]/20 text-[#F5B82E]"
+                          : "text-[#94A3B8] hover:text-[#F1F5F9]"
+                      }`}
+                    >
+                      Mejor global
+                    </button>
+                  </div>
                 </div>
+
+                {regionSummary && (
+                  <div className="rounded-lg border border-[rgba(100,180,210,0.18)] bg-[#071018]/90 p-2 font-mono text-[10px] tabular-nums">
+                    <div className="flex items-center justify-between text-slate-200">
+                      <span>
+                        Mejor:{" "}
+                        <strong className="text-[#F5B82E]">
+                          {regionSummary.maxAsi.toFixed(1)}%
+                        </strong>{" "}
+                        · Prom:{" "}
+                        <strong className="text-[#00D9F5]">
+                          {regionSummary.meanAsi.toFixed(1)}%
+                        </strong>
+                      </span>
+                      <span>
+                        Elev {Math.round(regionSummary.elevMinM)}–
+                        {Math.round(regionSummary.elevMaxM)} m
+                      </span>
+                    </div>
+                    <div className="mt-1 flex items-center justify-between text-[#94A3B8]">
+                      <span>
+                        Supera {regionSummary.beatenCatalogCount}/
+                        {regionSummary.totalCatalogCount} sitios
+                      </span>
+                      <span>Pend. máx {regionSummary.maxSlopeDeg.toFixed(1)}°</span>
+                    </div>
+                  </div>
+                )}
+
+                <ul className="max-h-52 space-y-1.5 overflow-y-auto pr-1">
+                  {rankedRegionResult.points.map((pt, idx) => {
+                    const isSelected = selectedSite?.id === pt.id;
+                    const activeTarget = regionRankByActiveTarget
+                      ? activeTargetId
+                      : null;
+                    const scored = getPointTargetScore(pt, activeTarget);
+                    const why = buildSiteRationale(pt, activeTarget);
+                    return (
+                      <li key={pt.id}>
+                        <button
+                          type="button"
+                          onClick={() => handleSelectSite(pt.id)}
+                          className={`w-full rounded-lg border px-2.5 py-1.5 text-left transition-colors ${
+                            isSelected
+                              ? "border-[#F5B82E] bg-[#F5B82E]/15"
+                              : "border-[rgba(100,180,210,0.16)] bg-[#071018]/75 hover:border-[rgba(100,180,210,0.4)]"
+                          }`}
+                        >
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="font-mono text-[11px] font-semibold text-[#F1F5F9] tabular-nums">
+                              #{idx + 1} · {pt.latitude.toFixed(2)}°,{" "}
+                              {pt.longitude.toFixed(2)}°
+                            </span>
+                            <span
+                              className={`font-mono text-xs font-bold tabular-nums ${
+                                scored.body === "Mars"
+                                  ? "text-[#E07A5F]"
+                                  : "text-[#00D9F5]"
+                              }`}
+                            >
+                              {scored.asi.toFixed(1)}%
+                            </span>
+                          </div>
+                          <div className="mt-0.5 flex items-center justify-between font-mono text-[10px] text-[#94A3B8] tabular-nums">
+                            <span>
+                              Elev {Math.round(pt.elevation_m)} m · Pend{" "}
+                              {pt.dem_telemetry.dem_slope_deg.toFixed(1)}°
+                            </span>
+                            <span>{scored.targetName}</span>
+                          </div>
+                          <p className="mt-0.5 line-clamp-1 text-[10px] text-slate-400">
+                            {why}
+                          </p>
+                        </button>
+                      </li>
+                    );
+                  })}
+                </ul>
               </div>
-
-              {regionSummary && (
-                <div className="mb-2 rounded border border-slate-800/90 bg-[#060913]/80 p-2 font-mono text-[10px] tabular-nums">
-                  <div className="flex items-center justify-between text-slate-300">
-                    <span>
-                      Máx:{" "}
-                      <strong className="text-[#D4AF37]">
-                        {regionSummary.maxAsi.toFixed(1)}%
-                      </strong>{" "}
-                      (prom {regionSummary.meanAsi.toFixed(1)}%)
-                    </span>
-                    <span>
-                      Elev {Math.round(regionSummary.elevMinM)}–
-                      {Math.round(regionSummary.elevMaxM)}m
-                    </span>
-                  </div>
-                  <div className="mt-1 flex items-center justify-between text-slate-400">
-                    <span>
-                      Supera {regionSummary.beatenCatalogCount}/
-                      {regionSummary.totalCatalogCount} sitios del catálogo
-                    </span>
-                    <span>Pend. máx {regionSummary.maxSlopeDeg.toFixed(1)}°</span>
-                  </div>
-                </div>
-              )}
-
-              <ul className="max-h-48 space-y-1.5 overflow-y-auto pr-1">
-                {rankedRegionResult?.points.slice(0, 5).map((pt, idx) => {
-                  const isSelected = selectedSite?.id === pt.id;
-                  const activeTarget = regionRankByActiveTarget ? activeTargetId : null;
-                  const scored = getPointTargetScore(pt, activeTarget);
-                  const why = buildSiteRationale(pt, activeTarget);
-                  return (
-                    <li key={pt.id}>
-                      <button
-                        type="button"
-                        onClick={() => handleSelectSite(pt.id)}
-                        className={`w-full rounded-lg border px-2.5 py-1.5 text-left transition-colors ${
-                          isSelected
-                            ? "border-[#D4AF37]/70 bg-[#D4AF37]/15"
-                            : "border-slate-800/90 bg-[#060913]/70 hover:border-slate-600"
-                        }`}
-                      >
-                        <div className="flex items-center justify-between gap-2">
-                          <span className="font-mono text-[11px] font-medium text-slate-200 tabular-nums">
-                            #{idx + 1} {pt.latitude.toFixed(2)}°, {pt.longitude.toFixed(2)}°
-                          </span>
-                          <span
-                            className={`font-mono text-xs font-semibold tabular-nums ${
-                              scored.body === "Mars"
-                                ? "text-[#E07A5F]"
-                                : "text-[#06B6D4]"
-                            }`}
-                          >
-                            {scored.asi.toFixed(1)}% · {scored.targetName}
-                          </span>
-                        </div>
-                        <p className="mt-0.5 line-clamp-2 text-[11px] text-slate-400">
-                          {why}
-                        </p>
-                      </button>
-                    </li>
-                  );
-                })}
-              </ul>
-            </>
+            )
           )}
         </section>
       )}
