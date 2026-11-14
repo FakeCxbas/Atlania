@@ -58,14 +58,14 @@ function getBasemapStyle(mode: BasemapMode): string | maplibregl.StyleSpecificat
           maxzoom: 9,
           attribution: "NASA EOSDIS GIBS / Worldview",
         },
-        "carto-labels": {
+        "esri-labels": {
           type: "raster",
           tiles: [
-            "https://a.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}.png",
+            "https://services.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}",
           ],
           tileSize: 256,
           maxzoom: 19,
-          attribution: "CARTO",
+          attribution: "Esri Reference",
         },
       },
       layers: [
@@ -77,9 +77,9 @@ function getBasemapStyle(mode: BasemapMode): string | maplibregl.StyleSpecificat
           maxzoom: 19,
         },
         {
-          id: "carto-labels-layer",
+          id: "esri-labels-layer",
           type: "raster",
-          source: "carto-labels",
+          source: "esri-labels",
           minzoom: 5,
           maxzoom: 19,
           paint: {
@@ -113,14 +113,14 @@ function getBasemapStyle(mode: BasemapMode): string | maplibregl.StyleSpecificat
         maxzoom: 18,
         attribution: "Esri, Maxar, Earthstar Geographics | NASA POWER &amp; PDS",
       },
-      "carto-labels": {
+      "esri-labels": {
         type: "raster",
         tiles: [
-          "https://a.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}.png",
+          "https://services.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}",
         ],
         tileSize: 256,
         maxzoom: 19,
-        attribution: "CARTO",
+        attribution: "Esri Reference",
       },
     },
     layers: [
@@ -132,9 +132,9 @@ function getBasemapStyle(mode: BasemapMode): string | maplibregl.StyleSpecificat
         maxzoom: 19,
       },
       {
-        id: "carto-labels-layer",
+        id: "esri-labels-layer",
         type: "raster",
-        source: "carto-labels",
+        source: "esri-labels",
         minzoom: 5,
         maxzoom: 19,
         paint: {
@@ -265,8 +265,8 @@ export function AnalogMap({
       }
 
       if (!map.getLayer("terrain-hillshade")) {
-        const beforeLayer = map.getLayer("carto-labels-layer")
-          ? "carto-labels-layer"
+        const beforeLayer = map.getLayer("esri-labels-layer")
+          ? "esri-labels-layer"
           : undefined;
         map.addLayer(
           {
