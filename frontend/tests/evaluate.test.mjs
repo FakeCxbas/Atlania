@@ -42,3 +42,41 @@ test("five-point DEM metrics detect positive slope and relief", () => {
   assert.ok(metrics.dem_slope_deg > 0);
   assert.ok(metrics.dem_roughness_m > 0);
 });
+
+function buildRegionGrid(bounds, gridSize = 3) {
+  const { minLat, maxLat, minLon, maxLon } = bounds;
+  if (minLat < -90 || maxLat > 90 || minLat >= maxLat) {
+    throw new Error("Invalid latitude bounds");
+  }
+  if (minLon < -180 || maxLon > 180 || minLon >= maxLon) {
+    throw new Error("Invalid longitude bounds");
+  }
+  if (!Number.isInteger(gridSize) || gridSize < 2 || gridSize > 4) {
+    throw new Error("Invalid gridSize");
+  }
+  const points = [];
+  const latStep = (maxLat - minLat) / (gridSize - 1);
+  const lonStep = (maxLon - minLon) / (gridSize - 1);
+  for (let r = 0; r < gridSize; r += 1) {
+    const lat = Number((minLat + r * latStep).toFixed(4));
+    for (let c = 0; c < gridSize; c += 1) {
+      const lon = Number((minLon + c * lonStep).toFixed(4));
+      points.push({ lat, lon });
+    }
+  }
+  return points;
+}
+
+test("buildRegionGrid generates uniform 3x3 coordinates within bounds", () => {
+  const pts = buildRegionGrid({ minLat: -1, maxLat: 1, minLon: -79, maxLon: -77 }, 3);
+  assert.equal(pts.length, 9);
+  assert.deepEqual(pts[0], { lat: -1, lon: -79 });
+  assert.deepEqual(pts[4], { lat: 0, lon: -78 });
+  assert.deepEqual(pts[8], { lat: 1, lon: -77 });
+});
+
+test("buildRegionGrid rejects inverted bounds and out-of-range gridSize", () => {
+  assert.throws(() => buildRegionGrid({ minLat: 1, maxLat: -1, minLon: -1, maxLon: 1 }, 3));
+  assert.throws(() => buildRegionGrid({ minLat: -1, maxLat: 1, minLon: -1, maxLon: 1 }, 5));
+});
+
