@@ -27,12 +27,23 @@ export interface TargetScore {
   analogy_breakdowns: Record<string, string>;
 }
 
+export interface DemTelemetry {
+  elevation_m: number;
+  dem_slope_deg: number;
+  dem_roughness_m: number;
+  source: "open_meteo" | "fallback";
+  fallback_reason: string | null;
+  attribution: string;
+}
+
 export interface NasaPowerClimatology {
   tmax_c: number;
   tmin_c: number;
   precipitation_mm_day: number;
   wind_m_s: number;
   relative_humidity_pct: number;
+  solar_irradiance_kwh_m2_day: number;
+  surface_pressure_kpa: number;
   source: "nasa_power" | "fallback";
   fallback_reason: string | null;
   source_url: string;
@@ -46,6 +57,9 @@ export interface AnalogSite {
   latitude: number;
   longitude: number;
   elevation_m: number;
+  dem_telemetry: DemTelemetry;
+  discovery_tier: "Under-Recognized" | "Regional Highlight" | "Benchmark";
+  mission_testbeds: string[];
   terrain: {
     slope_deg: number;
     roughness: number;

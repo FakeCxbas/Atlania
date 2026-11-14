@@ -10,12 +10,16 @@ uv run --project engine python engine/build_dataset.py
 uv run --project engine python engine/build_dataset.py --offline
 ```
 
-`--timeout 10` sets the httpx timeout per network phase; requests are sequential.
+`--timeout 10` (default) sets the httpx timeout per network phase; requests are sequential.
+Transport failures (including ReadTimeout), HTTP 429 and 5xx are retried up to
+three total attempts, with exponential waits of 1 and 2 seconds. Other HTTP
+errors and invalid payloads fall back immediately; a site can take longer than
+10 seconds across phases and attempts. DEM requests use the same retry policy.
 `--output-dir PATH` overrides the default `frontend/public/data`, resolved relative
 to the script, not the caller's working directory. Import with `engine.asi_engine`
 or run the builder with `python -m engine.build_dataset`.
 
-Outputs contain 10 representative Earth sites, scores against all four targets,
+Outputs contain 16 representative Earth sites, scores against all four targets,
 the winning target, strengths, explicit breakdowns and climate provenance.
 GeoJSON uses WGS84 `[longitude, latitude]` coordinates and preserves the full site
 record in each feature's properties. JSON root keys are `schema_version`,
@@ -28,23 +32,25 @@ before rounding, so displayed component scores may differ by a rounding unit.
 
 This is an auditable hackathon hypothesis-ranking model, **not a scientifically
 validated similarity metric, probability, field safety assessment, or NASA endorsement**.
-All terrain, geological membership, ice, aqueous-history, cave, shelter and
+All scoring terrain, geological membership, ice, aqueous-history, cave, shelter and
 reference temperature values are illustrative scenario priors. They require
 site-specific DEM, mineralogy, field measurements and sensitivity calibration
 before scientific inference. No claim is made that they were extracted from NASA
-rasters. Coordinates and elevations are approximate representative locations.
+rasters. Coordinates are representative locations. Elevations use live DEM when available, with approximate fallback priors.
 
-Galapagos combines Santa Cruz and Isabela in one entry to retain 10 sites; the
-POWER point is on Santa Cruz. It cannot represent both islands or underground
+The legacy Galapagos entry retains its ID and Santa Cruz POWER point.
+Sierra Negra now separately samples Isabela. It cannot represent both islands or underground
 conditions. Chimborazo ice relevance does not establish a mapped permafrost area.
 Cotopaxi and Chimborazo are not treated as pure basalt. Memberships describe
 relevance rather than mineral mass fractions and need not sum to one.
 
 Live Earth climate comes from the [NASA POWER climatology point API](https://power.larc.nasa.gov/docs/services/api/temporal/climatology/).
-It requests `T2M_MAX,T2M_MIN,PRECTOTCORR,WS10M,RH2M`, community `RE`, JSON.
+It requests `T2M_MAX,T2M_MIN,PRECTOTCORR,WS10M,RH2M,ALLSKY_SFC_SW_DWN,PS`, community `RE`, JSON.
 Annual `ANN` values are preferred; otherwise all twelve monthly values are
 required and averaged using a 365-day calendar. Precipitation remains **mm/day**,
-not annual millimeters. Units are Celsius, mm/day, m/s, and percent.
+not annual millimeters. Units are Celsius, mm/day, m/s, percent, kWh/m2/day and kPa.
+Solar irradiance and pressure are stored as `solar_irradiance_kwh_m2_day` and
+`surface_pressure_kpa`.
 The available header start/end are preserved, without inventing a source period.
 Missing keys, fill values, nonfinite/out-of-range values, malformed JSON, HTTP
 errors and timeouts trigger a whole-record deterministic fallback. Fallback
@@ -54,11 +60,11 @@ Every result carries a source, request URL and fallback reason when applicable.
 POWER air-temperature aggregates do not measure surface temperature or cave
 microclimates. `tmax - tmin` here is an aggregate thermal-range proxy, not a
 measured lunar diurnal cycle or time-series variance. Wind and humidity are
-reported for context but are **not scored**. Radiation and UV are not fetched or
+reported for context but are **not scored**. Broadband solar irradiance is reported, but UV and ionizing radiation are not fetched or
 scored; they are explicit limitations. Dataset reproducibility requires fixing
 NASA responses or using offline mode; live upstream data can change.
 
-## Equations (version 0.1.0)
+## Equations (version 0.2.0; scoring unchanged)
 
 Define `L(a,b;s) = max(0, 1 - abs(a-b)/s)`. Unit-interval priors use `s=1`.
 All dimension scores below are multiplied by 100:
@@ -105,3 +111,58 @@ Earth analog and are returned for every target. Geologic process similarity is
 not environmental equivalence or evidence of habitability. The next scientific
 step is replacing the scenario priors with cited site-scale observations and
 validating rankings against expert-selected tasks and held-out analogs.
+
+
+## v0.2.0 telemetry and discovery
+
+The JSON schema remains `1.0.0`; all legacy fields, IDs, target profiles, scoring
+formulas and frontend types are preserved. New fields are additive. Six candidates
+extend the catalog: Sierra Negra, Antisana, Puna/Laguna Verde, Lut/Rig-e Yalan,
+Tibesti and Timanfaya. `discovery_tier` is a curated editorial category
+(`Benchmark`, `Regional Highlight`, `Under-Recognized`), not a literature census.
+`mission_testbeds` lists proposed concrete experiments, not verified facilities or
+permission to operate. Thin-air rotorcraft trials on Earth do not reproduce Mars
+atmospheric density or certify Ingenuity-class flight performance.
+
+### DEM telemetry
+
+[Open-Meteo Elevation API](https://open-meteo.com/en/docs/elevation-api) provides
+Copernicus DEM GLO-90 (2021), nominal 90 m resolution; attribution: Open-Meteo /
+Copernicus, [dataset DOI](https://doi.org/10.5270/ESA-c5d3d65).
+One batch requests five points in center, north, south, east, west order at
+±0.01 degrees. With `R=6371008.8 m`, `dy=R*radians(0.01)` and
+`dx=dy*cos(latitude)`, the central gradients are `(zN-zS)/(2*dy)` and
+`(zE-zW)/(2*dx)`. Slope is `degrees(atan(hypot(gx,gy)))`. Roughness is the
+population standard deviation of all five elevations, in meters (includes broad
+slope; not detrended microtopography). This measures kilometer-scale relief,
+not rover wheel-scale hazards or the full resolution of the underlying DEM.
+
+`dem_telemetry` stores elevation, `dem_slope_deg`, `dem_roughness_m`, samples,
+spacing, attribution, source URL, source (`open_meteo` or `fallback`) and reason.
+Successful DEM sampling updates the site's `elevation_m`. Existing dimensionless
+`terrain.roughness` and scoring slope remain curated priors; DEM telemetry does
+not silently change their meaning or the ASI. Longitude wraps at the date line.
+Within 0.01 degrees of a pole, the symmetric stencil is undefined and falls back.
+Offline or invalid DEM responses retain site elevation and prior slope, with
+roughness `0.0` as an **unknown placeholder**, not measured flat terrain, and null
+sample elevations. These fallbacks are deterministic and explicitly labeled.
+`methodology.dem_source_counts` summarizes acquisition outcomes separately from climate.
+
+Fallback solar energy is an illustrative 4 kWh/m2/day. Catalog fallback pressure
+uses `101.325*exp(-prior_elevation_m/8434.5)` kPa, a simplified scale-height model,
+not an observation. Neither new climate variable is used in ASI scoring.
+
+### On-demand coordinates
+
+```python
+from engine.asi_engine import score_custom_coordinates
+site = score_custom_coordinates(-0.68, -78.44, offline=False)
+```
+
+This validates finite WGS84 coordinates and returns the same site/score structure,
+with live POWER and DEM where available. No reverse geocoding or geological
+inference is performed. Country is `Unknown`; geology, ice, aqueous history,
+caves and shelter use unmeasured neutral 0.5 memberships, scoring slope 0 degrees,
+and fallback elevation 0 m. These assumptions make scores provisional screening
+results, not discovered analogs. `offline=True` makes no network requests and
+produces repeatable, labeled estimates.

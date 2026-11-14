@@ -1,25 +1,27 @@
 """Exploratory ASI, not a validated similarity probability or site safety rating.
 
 All terrain/geology/ice/operations numbers are explicit expert-style scenario
-priors, NOT NASA measurements. POWER supplies only gridded Earth air climatology.
+priors, NOT NASA measurements. POWER supplies gridded climate and solar telemetry;
+Open-Meteo supplies DEM telemetry separately from scoring priors.
 See README.md for equations, units, provenance, and known comparison limitations.
 """
 from __future__ import annotations
 
 import calendar
 import math
-from dataclasses import asdict, dataclass
+import time
+from dataclasses import asdict, dataclass, replace
 from typing import Any, Mapping
 
 import httpx
 
 POWER_URL = "https://power.larc.nasa.gov/api/temporal/climatology/point"
-PARAMETERS = ("T2M_MAX", "T2M_MIN", "PRECTOTCORR", "WS10M", "RH2M")
+PARAMETERS = ("T2M_MAX", "T2M_MIN", "PRECTOTCORR", "WS10M", "RH2M", "ALLSKY_SFC_SW_DWN", "PS")
 MONTHS = tuple(calendar.month_abbr[i].upper() for i in range(1, 13))
 DAYS = (31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31)
 DIMENSIONS = ("topography", "geology", "thermal", "hydrology_ice", "subsurface_ops")
 GEOLOGY = ("basalt", "regolith", "sedimentary", "evaporite", "impact")
-UNITS = dict(zip(PARAMETERS, ("degC", "degC", "mm/day", "m/s", "%")))
+UNITS = dict(zip(PARAMETERS, ("degC", "degC", "mm/day", "m/s", "%", "kWh/m2/day", "kPa")))
 PRIOR_NOTE = "Illustrative scenario priors; not measured or calibrated site properties."
 
 
@@ -63,13 +65,18 @@ class Climate:
     period: str | None = None
     aggregation: str = "illustrative annual scenario"
 
+    solar_irradiance_kwh_m2_day: float = 4.0
+    surface_pressure_kpa: float = 101.325
+
     def __post_init__(self) -> None:
-        for name in ("tmax_c", "tmin_c", "precipitation_mm_day", "wind_m_s", "relative_humidity_pct"):
+        for name in ("solar_irradiance_kwh_m2_day", "surface_pressure_kpa", "tmax_c", "tmin_c", "precipitation_mm_day", "wind_m_s", "relative_humidity_pct"):
             finite(getattr(self, name), name)
         if not -100 <= self.tmin_c <= self.tmax_c <= 70:
             raise ValueError("Earth air temperature outside supported range or min > max")
         if self.precipitation_mm_day < 0 or self.wind_m_s < 0:
             raise ValueError("Precipitation and wind must be nonnegative")
+        if self.solar_irradiance_kwh_m2_day < 0 or not 0 < self.surface_pressure_kpa <= 120:
+            raise ValueError("Invalid solar irradiance or surface pressure")
         if not 0 <= self.relative_humidity_pct <= 100:
             raise ValueError("Humidity must be in [0, 100]")
 
@@ -86,6 +93,8 @@ class Site:
     fallback: Climate
     rationale: str
     caveat: str
+    discovery_tier: str = "Benchmark"
+    mission_testbeds: tuple[str, ...] = ("Rover traverse planning", "Surface sampling procedures")
 
     def __post_init__(self) -> None:
         if not -90 <= finite(self.latitude, "latitude") <= 90:
@@ -146,7 +155,7 @@ REFERENCE_PROFILES = {
 }
 
 # Coordinates/elevations are representative map points, not surveyed sampling sites.
-# Galapagos is one regional entry, anchored on Santa Cruz; Isabela is not separately sampled.
+# Legacy Galapagos entry stays anchored on Santa Cruz; Sierra Negra samples Isabela.
 EARTH_SITES = (
     Site("galapagos-lava-tubes", "Galapagos Lava Tubes - Santa Cruz / Isabela", "Ecuador",
          -.67, -90.38, 400, Terrain(5, .65, (1, .4, .05, 0, 0), 0, .1, 1, 1),
@@ -191,6 +200,58 @@ EARTH_SITES = (
 )
 
 
+# Added sites are candidate testbeds, not confirmed infrastructure or field access.
+EARTH_SITES += (
+    Site("sierra-negra", "Sierra Negra Caldera", "Ecuador", -.83, -91.17, 1124,
+         Terrain(5, .8, (1, .6, .05, 0, 0), 0, .1, .6, .5), Climate(23, 16, 2, 5, 80),
+         "Basaltic caldera terrain offers volcanic traverse and mapping scenarios.",
+         "Active volcanism, biological weathering and protected-area restrictions; tubes require survey.",
+         "Regional Highlight", ("Basalt rover wheel abrasion", "Caldera photogrammetry")),
+    Site("antisana", "Antisana Glacier-Basalt", "Ecuador", -.48, -78.14, 4800,
+         Terrain(20, .85, (.6, .6, .1, 0, 0), .9, .3, .05, .1), Climate(4, -7, 2, 7, 75),
+         "Glacier and volcanic contacts offer cold terrain and ice sampling scenarios.",
+         "Mixed volcanic lithology and terrestrial glacier ice do not reproduce lunar ice deposits.",
+         "Regional Highlight", ("ISRU ice drilling procedures", "Glacier ground-penetrating radar")),
+    Site("puna-laguna-verde", "Puna de Atacama / Laguna Verde", "Chile / Argentina", -26.88, -68.48, 4350,
+         Terrain(6, .6, (.5, .6, .8, .8, 0), .2, .9, 0, .1), Climate(12, -8, .15, 6, 30),
+         "High arid volcanic and saline basins offer Mars sampling scenarios.",
+         "Representative Chilean point does not characterize the entire transboundary Puna; Earth air remains much denser than Mars.",
+         "Regional Highlight", ("Thin-air rotorcraft control trials", "Raman salt mineral screening")),
+    Site("lut-rig-e-yalan", "Lut Desert / Rig-e Yalan", "Iran", 30.5, 59.0, 450,
+         Terrain(12, .7, (.05, .9, .8, .3, 0), 0, .1, 0, 0), Climate(35, 17, .08, 4, 20),
+         "Dune terrain offers traction and aeolian sampling scenarios.",
+         "Hot terrestrial sand and oxygen-rich air differ from cold Martian dunes.",
+         "Under-Recognized", ("Dune rover slip estimation", "Dust abrasion testing")),
+    Site("tibesti", "Tibesti Volcanic Field", "Chad", 19.8, 18.53, 3000,
+         Terrain(15, .85, (.8, .8, .2, 0, .1), 0, .1, .3, .2), Climate(22, 6, .1, 5, 25),
+         "Arid volcanic relief offers remote navigation and rock sampling scenarios.",
+         "Mixed lithologies, sparse observations and access constraints require local assessment.",
+         "Under-Recognized", ("Autonomous volcanic traverse navigation", "Portable LIBS rock screening")),
+    Site("timanfaya", "Timanfaya Lava Tubes", "Spain", 29.02, -13.75, 350,
+         Terrain(8, .9, (1, .7, .05, 0, 0), 0, .05, .8, .7), Climate(24, 17, .3, 6, 65),
+         "Lanzarote lava terrain offers basalt mobility and candidate tube mapping scenarios.",
+         "Representative Timanfaya point does not confirm an accessible tube; marine humidity and protected access differ from lunar conditions.",
+         "Under-Recognized", ("Subsurface lava tube LiDAR", "Cave robot communications relay")),
+)
+_SITE_TESTBEDS = (
+    ("Subsurface lava tube LiDAR", "Habitat geometry surveys"),
+    ("Frost rover mobility", "Cold-soil drill procedures"),
+    ("Regolith wheel traction", "Dust seal abrasion"),
+    ("Evaporite Raman spectroscopy", "Salt crust rover bearing tests"),
+    ("Saline soil sample caching", "Rover autonomous navigation"),
+    ("Hydrothermal mineral spectroscopy", "Corrosion sensor deployment"),
+    ("Lava tube robot navigation", "Basalt wheel abrasion"),
+    ("ISRU ice drilling procedures", "Polar rover communications"),
+    ("Low-biomass sample contamination control", "Dry-soil drill testing"),
+    ("Basalt rover traverse", "Volcanic terrain photogrammetry"),
+)
+EARTH_SITES = tuple(replace(site,
+    discovery_tier="Regional Highlight" if i < 3 else site.discovery_tier,
+    mission_testbeds=_SITE_TESTBEDS[i] if i < 10 else site.mission_testbeds,
+    fallback=replace(site.fallback, surface_pressure_kpa=round(101.325 * math.exp(-site.elevation_m / 8434.5), 3)))
+    for i, site in enumerate(EARTH_SITES))
+
+
 def parse_power(payload: Mapping[str, Any], source_url: str) -> Climate:
     """Prefer ANN; otherwise day-weight 12 monthly means (365-day convention).
 
@@ -214,8 +275,10 @@ def parse_power(payload: Mapping[str, Any], source_url: str) -> Climate:
                 raise ValueError(f"Missing POWER monthly value: {parameter}")
             # Validate monthly ranges too; averaging must not hide invalid months.
             for v in monthly:
-                if parameter in ("PRECTOTCORR", "WS10M") and v < 0:
+                if parameter in ("PRECTOTCORR", "WS10M", "ALLSKY_SFC_SW_DWN") and v < 0:
                     raise ValueError(f"Negative POWER value: {parameter}")
+                if parameter == "PS" and not 0 < v <= 120:
+                    raise ValueError("Invalid monthly pressure")
                 if parameter == "RH2M" and not 0 <= v <= 100:
                     raise ValueError("Invalid monthly humidity")
                 if parameter.startswith("T2M") and not -100 <= v <= 70:
@@ -225,7 +288,8 @@ def parse_power(payload: Mapping[str, Any], source_url: str) -> Climate:
         values.append(value)
     header = payload.get("header", {})
     period = f"{header['start']}..{header['end']}" if "start" in header and "end" in header else None
-    return Climate(*values, source="nasa_power", source_url=source_url, period=period,
+    return Climate(*values[:5], solar_irradiance_kwh_m2_day=values[5],
+                   surface_pressure_kpa=values[6], source="nasa_power", source_url=source_url, period=period,
                    aggregation="; ".join(f"{p}: {m}" for p, m in zip(PARAMETERS, modes)))
 
 
@@ -241,12 +305,7 @@ def fetch_climatology(site: Site, *, client: httpx.Client | None = None,
         reason = "offline mode requested"
     else:
         try:
-            if client is None:
-                with httpx.Client(timeout=timeout, follow_redirects=True) as owned:
-                    response = owned.get(POWER_URL, params=params, timeout=timeout)
-            else:
-                response = client.get(POWER_URL, params=params, timeout=timeout)
-            response.raise_for_status()
+            response = _get_with_retry(POWER_URL, params, timeout, client)
             return parse_power(response.json(), str(response.url))
         except (httpx.HTTPError, ValueError, KeyError, TypeError, AttributeError) as exc:
             # Stable diagnostic without leaking proxy URLs, credentials, or raw payloads.
@@ -254,6 +313,86 @@ def fetch_climatology(site: Site, *, client: httpx.Client | None = None,
     data = asdict(site.fallback)
     data.update(source="fallback", fallback_reason=reason, source_url=url)
     return Climate(**data)
+
+
+def _get_with_retry(url: str, params: dict, timeout: float,
+                    client: httpx.Client | None = None) -> httpx.Response:
+    """Three attempts for transport errors, 429 and 5xx; 1s/2s backoff."""
+    if client is None:
+        with httpx.Client(follow_redirects=True) as owned:
+            return _get_with_retry(url, params, timeout, owned)
+    for attempt in range(3):
+        try:
+            response = client.get(url, params=params, timeout=timeout)
+            response.raise_for_status()
+            return response
+        except httpx.HTTPError as exc:
+            retryable = isinstance(exc, httpx.TransportError) or (
+                isinstance(exc, httpx.HTTPStatusError) and
+                (exc.response.status_code == 429 or exc.response.status_code >= 500))
+            if not retryable or attempt == 2:
+                raise
+            time.sleep(2 ** attempt)
+    raise AssertionError("unreachable")
+
+
+ELEVATION_URL = "https://api.open-meteo.com/v1/elevation"
+DEM_STEP_DEG = .01
+
+
+def fetch_dem(site: Site, *, client: httpx.Client | None = None,
+              timeout: float = 10.0, offline: bool = False) -> dict[str, Any]:
+    """Center/N/S/E/W; central gradient and population elevation deviation."""
+    if finite(timeout, "timeout") <= 0:
+        raise ValueError("timeout must be positive")
+    lat, lon = site.latitude, site.longitude
+    wrap = lambda x: (x + 180) % 360 - 180
+    points = [(lat, lon), (min(90, lat + .01), lon), (max(-90, lat - .01), lon),
+              (lat, wrap(lon + .01)), (lat, wrap(lon - .01))]
+    params = {"latitude": ",".join(str(p[0]) for p in points),
+              "longitude": ",".join(str(p[1]) for p in points)}
+    result = {"elevation_m": site.elevation_m, "dem_slope_deg": site.terrain.slope_deg,
+              "dem_roughness_m": 0.0, "source": "fallback",
+              "fallback_reason": "offline mode requested", "source_url": str(httpx.URL(ELEVATION_URL, params=params)),
+              "sample_order": ["center", "north", "south", "east", "west"],
+              "sample_spacing_deg": DEM_STEP_DEG, "sample_elevations_m": None,
+              "attribution": "Open-Meteo / Copernicus DEM GLO-90 (2021)"}
+    if offline:
+        return result
+    try:
+        if abs(lat) > 89.99:
+            raise ValueError("Symmetric stencil undefined near poles")
+        response = _get_with_retry(ELEVATION_URL, params, timeout, client)
+        elevations = response.json()["elevation"]
+        if not isinstance(elevations, list) or len(elevations) != 5:
+            raise ValueError("Five elevations required")
+        z = [finite(v, "DEM elevation") for v in elevations]
+        if any(not -12000 <= v <= 9000 for v in z):
+            raise ValueError("DEM elevation out of range")
+        dy = 6371008.8 * math.radians(DEM_STEP_DEG)
+        dx = dy * math.cos(math.radians(lat))
+        slope = math.degrees(math.atan(math.hypot((z[3]-z[4])/(2*dx), (z[1]-z[2])/(2*dy))))
+        mean = sum(z)/5
+        roughness = math.sqrt(sum((v-mean)**2 for v in z)/5)
+        result.update(elevation_m=z[0], dem_slope_deg=slope, dem_roughness_m=roughness,
+                      source="open_meteo", fallback_reason=None, sample_elevations_m=z)
+    except (httpx.HTTPError, ValueError, KeyError, TypeError, AttributeError) as exc:
+        result["fallback_reason"] = f"DEM unavailable or invalid ({type(exc).__name__})"
+    return result
+
+
+def score_custom_coordinates(lat: float, lon: float, offline: bool = False) -> dict[str, Any]:
+    """Exploratory coordinate screening with explicitly unmeasured neutral priors."""
+    site = Site(f"custom-{lat}-{lon}", "Custom Earth coordinate", "Unknown", lat, lon, 0,
+                Terrain(0, .5, (.5, .5, .5, .5, .5), .5, .5, .5, .5),
+                Climate(20, 10, 1, 3, 50),
+                "Coordinate screening only; geological, ice and cave properties are unmeasured neutral priors.",
+                "No local geology, ice, caves, field access or operational suitability is established.",
+                "Under-Recognized", ("Reconnaissance terrain mapping",))
+    with httpx.Client(follow_redirects=True) as client:
+        climate = fetch_climatology(site, offline=offline, client=client)
+        dem = fetch_dem(site, offline=offline, client=client)
+    return score_site(site, climate, dem)
 
 
 def similarity(a: float, b: float, scale: float = 1.0) -> float:
@@ -301,11 +440,14 @@ def score_target(site: Site, climate: Climate, target: Reference) -> dict[str, A
             "analogy_strengths": strengths, "analogy_breakdowns": breakdowns}
 
 
-def score_site(site: Site, climate: Climate) -> dict[str, Any]:
+def score_site(site: Site, climate: Climate, dem_telemetry: dict[str, Any] | None = None) -> dict[str, Any]:
+    dem = dem_telemetry if dem_telemetry is not None else fetch_dem(site, offline=True)
     scores = {key: score_target(site, climate, target) for key, target in REFERENCE_PROFILES.items()}
     best = max(scores, key=lambda key: scores[key]["overall_asi"])
     return {"id": site.id, "name": site.name, "country": site.country,
-            "latitude": site.latitude, "longitude": site.longitude, "elevation_m": site.elevation_m,
+            "latitude": site.latitude, "longitude": site.longitude, "elevation_m": dem["elevation_m"] if dem["source"] == "open_meteo" else site.elevation_m,
+            "dem_telemetry": dem, "discovery_tier": site.discovery_tier,
+            "mission_testbeds": list(site.mission_testbeds),
             "terrain": asdict(site.terrain), "climatology": asdict(climate),
             "rationale": site.rationale, "prior_status": PRIOR_NOTE,
             "scores": scores, "best_target": best, "overall_asi": scores[best]["overall_asi"],
