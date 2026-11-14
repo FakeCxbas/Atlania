@@ -16,6 +16,8 @@ interface AnalogMapProps {
   onProbeCoordinate?: (lat: number, lon: number) => void;
   regionProbeMode?: boolean;
   isProbingRegion?: boolean;
+  regionGridSize?: 3 | 4;
+  onChangeRegionGridSize?: (size: 3 | 4) => void;
   onToggleRegionProbeMode?: () => void;
   onProbeRegion?: (bounds: RegionBounds) => void;
   regionResult?: RegionEvaluationResult | null;
@@ -92,6 +94,8 @@ export function AnalogMap({
   onProbeCoordinate,
   regionProbeMode = false,
   isProbingRegion = false,
+  regionGridSize = 3,
+  onChangeRegionGridSize,
   onToggleRegionProbeMode,
   onProbeRegion,
   regionResult = null,
@@ -100,6 +104,12 @@ export function AnalogMap({
   const mapRef = useRef<maplibregl.Map | null>(null);
   const markersRef = useRef<Map<string, maplibregl.Marker>>(new Map());
   const [basemap, setBasemap] = useState<BasemapMode>("satellite");
+  const [dragBox, setDragBox] = useState<{
+    startX: number;
+    startY: number;
+    curX: number;
+    curY: number;
+  } | null>(null);
   const [cursorCoords, setCursorCoords] = useState<{
     lat: number;
     lon: number;
@@ -240,26 +250,95 @@ export function AnalogMap({
 
     const activeProbe = probeMode || regionProbeMode;
     map.getCanvas().style.cursor = activeProbe ? "crosshair" : "";
+
+    if (regionProbeMode) {
+      map.dragPan.disable();
+    } else {
+      map.dragPan.enable();
+    }
+
     if (!activeProbe) return;
 
-    const handleClick = (e: maplibregl.MapMouseEvent) => {
-      if (regionProbeMode && onProbeRegion) {
-        const halfSpan = 0.45;
-        onProbeRegion({
-          minLat: Math.max(-89.5, Number((e.lngLat.lat - halfSpan).toFixed(4))),
-          maxLat: Math.min(89.5, Number((e.lngLat.lat + halfSpan).toFixed(4))),
-          minLon: Math.max(-179.5, Number((e.lngLat.lng - halfSpan).toFixed(4))),
-          maxLon: Math.min(179.5, Number((e.lngLat.lng + halfSpan).toFixed(4))),
-        });
+    const canvas = map.getCanvas();
+    let dragStart: { x: number; y: number } | null = null;
+
+    const handleMouseDown = (e: MouseEvent) => {
+      if (!regionProbeMode || e.button !== 0) return;
+      const rect = canvas.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      dragStart = { x, y };
+      setDragBox({ startX: x, startY: y, curX: x, curY: y });
+    };
+
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!dragStart) return;
+      const rect = canvas.getBoundingClientRect();
+      const x = Math.max(0, Math.min(rect.width, e.clientX - rect.left));
+      const y = Math.max(0, Math.min(rect.height, e.clientY - rect.top));
+      setDragBox({ startX: dragStart.x, startY: dragStart.y, curX: x, curY: y });
+    };
+
+    const handleMouseUp = (e: MouseEvent) => {
+      if (!dragStart || !onProbeRegion) {
+        dragStart = null;
+        setDragBox(null);
         return;
       }
-      if (probeMode && onProbeCoordinate) {
+      const rect = canvas.getBoundingClientRect();
+      const endX = Math.max(0, Math.min(rect.width, e.clientX - rect.left));
+      const endY = Math.max(0, Math.min(rect.height, e.clientY - rect.top));
+      const dx = Math.abs(endX - dragStart.x);
+      const dy = Math.abs(endY - dragStart.y);
+
+      if (dx >= 14 && dy >= 14) {
+        const sw = map.unproject([
+          Math.min(dragStart.x, endX),
+          Math.max(dragStart.y, endY),
+        ]);
+        const ne = map.unproject([
+          Math.max(dragStart.x, endX),
+          Math.min(dragStart.y, endY),
+        ]);
+        const minLat = Math.max(-89.5, Number(sw.lat.toFixed(4)));
+        const maxLat = Math.min(89.5, Number(ne.lat.toFixed(4)));
+        const minLon = Math.max(-179.5, Number(sw.lng.toFixed(4)));
+        const maxLon = Math.min(179.5, Number(ne.lng.toFixed(4)));
+        if (minLat < maxLat && minLon < maxLon) {
+          onProbeRegion({ minLat, maxLat, minLon, maxLon });
+        }
+      } else {
+        const center = map.unproject([endX, endY]);
+        const zoom = map.getZoom();
+        const halfSpan = Math.max(0.08, Math.min(2.5, 4.5 / Math.pow(2, zoom - 2)));
+        onProbeRegion({
+          minLat: Math.max(-89.5, Number((center.lat - halfSpan).toFixed(4))),
+          maxLat: Math.min(89.5, Number((center.lat + halfSpan).toFixed(4))),
+          minLon: Math.max(-179.5, Number((center.lng - halfSpan).toFixed(4))),
+          maxLon: Math.min(179.5, Number((center.lng + halfSpan).toFixed(4))),
+        });
+      }
+
+      dragStart = null;
+      setDragBox(null);
+    };
+
+    const handleClick = (e: maplibregl.MapMouseEvent) => {
+      if (probeMode && !regionProbeMode && onProbeCoordinate) {
         onProbeCoordinate(e.lngLat.lat, e.lngLat.lng);
       }
     };
 
+    canvas.addEventListener("mousedown", handleMouseDown);
+    window.addEventListener("mousemove", handleMouseMove);
+    window.addEventListener("mouseup", handleMouseUp);
     map.on("click", handleClick);
+
     return () => {
+      map.dragPan.enable();
+      canvas.removeEventListener("mousedown", handleMouseDown);
+      window.removeEventListener("mousemove", handleMouseMove);
+      window.removeEventListener("mouseup", handleMouseUp);
       map.off("click", handleClick);
     };
   }, [probeMode, regionProbeMode, onProbeCoordinate, onProbeRegion]);
@@ -368,9 +447,19 @@ export function AnalogMap({
               75,
               "#E07A5F",
             ],
-            "circle-opacity": 0.85,
-            "circle-stroke-width": 1.5,
-            "circle-stroke-color": "#060913",
+            "circle-opacity": 0.88,
+            "circle-stroke-width": [
+              "case",
+              ["==", ["get", "rank"], 1],
+              3,
+              1.5,
+            ],
+            "circle-stroke-color": [
+              "case",
+              ["==", ["get", "rank"], 1],
+              "#F8FAFC",
+              "#060913",
+            ],
           },
         });
         map.addLayer({
@@ -378,7 +467,12 @@ export function AnalogMap({
           type: "symbol",
           source: "region-grid",
           layout: {
-            "text-field": ["concat", ["to-string", ["round", ["get", "best_asi_score"]]], "%"],
+            "text-field": [
+              "case",
+              ["==", ["get", "rank"], 1],
+              ["concat", "#1 · ", ["to-string", ["round", ["get", "best_asi_score"]]], "%"],
+              ["concat", ["to-string", ["round", ["get", "best_asi_score"]]], "%"],
+            ],
             "text-size": 11,
             "text-offset": [0, 1.4],
             "text-font": ["Open Sans Bold", "Arial Unicode MS Bold"],
@@ -473,24 +567,89 @@ export function AnalogMap({
         )}
 
         {onToggleRegionProbeMode && (
-          <button
-            type="button"
-            onClick={onToggleRegionProbeMode}
-            aria-pressed={regionProbeMode}
-            className={`rounded-md border px-3 py-1.5 text-xs font-medium backdrop-blur-md transition-colors ${
-              regionProbeMode
-                ? "border-cyan-400/70 bg-cyan-500/20 text-cyan-200"
-                : "border-slate-800/80 bg-[#060913]/85 text-slate-200 hover:border-cyan-500/50"
-            }`}
-          >
-            {isProbingRegion
-              ? "Scanning 3x3 Grid..."
-              : regionProbeMode
-              ? "Region Scan: Click Center"
-              : "Probe Region"}
-          </button>
+          <div className="flex items-center gap-1">
+            <button
+              type="button"
+              onClick={onToggleRegionProbeMode}
+              aria-pressed={regionProbeMode}
+              className={`rounded-md border px-3 py-1.5 text-xs font-medium backdrop-blur-md transition-colors ${
+                regionProbeMode
+                  ? "border-cyan-400/70 bg-cyan-500/20 text-cyan-200"
+                  : "border-slate-800/80 bg-[#060913]/85 text-slate-200 hover:border-cyan-500/50"
+              }`}
+            >
+              {isProbingRegion
+                ? `Scanning ${regionGridSize}×${regionGridSize}...`
+                : regionProbeMode
+                ? "Region: Drag Box / Click"
+                : "Probe Region"}
+            </button>
+
+            {regionProbeMode && onChangeRegionGridSize && (
+              <div
+                className="flex items-center rounded-md border border-slate-800/80 bg-[#060913]/90 p-0.5 backdrop-blur-md"
+                role="group"
+                aria-label="Region grid density"
+              >
+                {([3, 4] as const).map((size) => (
+                  <button
+                    key={size}
+                    type="button"
+                    onClick={() => onChangeRegionGridSize(size)}
+                    aria-pressed={regionGridSize === size}
+                    className={`rounded px-2 py-1 font-mono text-[11px] font-medium transition-colors ${
+                      regionGridSize === size
+                        ? "bg-cyan-500/25 text-cyan-200"
+                        : "text-slate-400 hover:text-slate-200"
+                    }`}
+                  >
+                    {size}×{size}
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {regionProbeMode && onProbeRegion && (
+              <button
+                type="button"
+                disabled={isProbingRegion}
+                onClick={() => {
+                  const map = mapRef.current;
+                  if (!map) return;
+                  const b = map.getBounds();
+                  const latSpan = b.getNorth() - b.getSouth();
+                  const lonSpan = b.getEast() - b.getWest();
+                  const padLat = latSpan * 0.1;
+                  const padLon = lonSpan * 0.1;
+                  const minLat = Math.max(-89.5, Number((b.getSouth() + padLat).toFixed(4)));
+                  const maxLat = Math.min(89.5, Number((b.getNorth() - padLat).toFixed(4)));
+                  const minLon = Math.max(-179.5, Number((b.getWest() + padLon).toFixed(4)));
+                  const maxLon = Math.min(179.5, Number((b.getEast() - padLon).toFixed(4)));
+                  if (minLat < maxLat && minLon < maxLon) {
+                    onProbeRegion({ minLat, maxLat, minLon, maxLon });
+                  }
+                }}
+                className="rounded-md border border-cyan-500/50 bg-[#060913]/90 px-2.5 py-1.5 text-xs font-medium text-cyan-300 backdrop-blur-md transition-colors hover:bg-cyan-500/20 disabled:opacity-50"
+              >
+                Scan View
+              </button>
+            )}
+          </div>
         )}
       </div>
+
+      {regionProbeMode && dragBox && (
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute z-10 border-2 border-dashed border-cyan-400 bg-cyan-400/15"
+          style={{
+            left: Math.min(dragBox.startX, dragBox.curX),
+            top: Math.min(dragBox.startY, dragBox.curY),
+            width: Math.abs(dragBox.curX - dragBox.startX),
+            height: Math.abs(dragBox.curY - dragBox.startY),
+          }}
+        />
+      )}
 
       {/* HUD Coordinate & Legend Overlay */}
       <div className="pointer-events-none absolute bottom-3 left-3 flex flex-wrap items-center gap-3 rounded-md border border-slate-800/80 bg-[#060913]/85 px-3 py-1.5 text-xs text-slate-300 backdrop-blur-md">

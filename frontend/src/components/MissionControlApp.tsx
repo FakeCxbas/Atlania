@@ -2,7 +2,14 @@
 
 import { useCallback, useMemo, useRef, useState } from "react";
 import type { AnalogDataset, AnalogSite } from "@/types/analog";
-import type { RegionBounds, RegionEvaluationResult } from "@/lib/evaluateRegion";
+import {
+  buildSiteRationale,
+  getPointTargetScore,
+  rankRegionResult,
+  summarizeRegionScan,
+  type RegionBounds,
+  type RegionEvaluationResult,
+} from "@/lib/evaluateRegion";
 import { AnalogMap } from "@/components/AnalogMap";
 import { SiteDirectory } from "@/components/SiteDirectory";
 import { TelemetryDrawer } from "@/components/TelemetryDrawer";
@@ -44,6 +51,8 @@ export function MissionControlApp({ dataset }: MissionControlAppProps) {
 
   const [regionProbeMode, setRegionProbeMode] = useState(false);
   const [isProbingRegion, setIsProbingRegion] = useState(false);
+  const [regionGridSize, setRegionGridSize] = useState<3 | 4>(3);
+  const [regionRankByActiveTarget, setRegionRankByActiveTarget] = useState(true);
   const [regionResult, setRegionResult] = useState<RegionEvaluationResult | null>(null);
   const [regionError, setRegionError] = useState<string | null>(null);
 
@@ -72,9 +81,21 @@ export function MissionControlApp({ dataset }: MissionControlAppProps) {
     [filteredSites, probeSite]
   );
 
+  const rankedRegionResult = useMemo(() => {
+    if (!regionResult) return null;
+    const targetId = regionRankByActiveTarget ? activeTargetId : null;
+    return rankRegionResult(regionResult, targetId);
+  }, [regionResult, regionRankByActiveTarget, activeTargetId]);
+
+  const regionSummary = useMemo(() => {
+    if (!rankedRegionResult) return null;
+    const targetId = regionRankByActiveTarget ? activeTargetId : null;
+    return summarizeRegionScan(rankedRegionResult.points, dataset.sites, targetId);
+  }, [rankedRegionResult, dataset.sites, regionRankByActiveTarget, activeTargetId]);
+
   const selectedSite = useMemo(() => {
     if (probeSite && selectedSiteId === probeSite.id) return probeSite;
-    const regionSite = regionResult?.points.find((p) => p.id === selectedSiteId);
+    const regionSite = rankedRegionResult?.points.find((p) => p.id === selectedSiteId);
     if (regionSite) return regionSite;
     return (
       filteredSites.find((s) => s.id === selectedSiteId) ??
@@ -82,23 +103,26 @@ export function MissionControlApp({ dataset }: MissionControlAppProps) {
       filteredSites[0] ??
       null
     );
-  }, [filteredSites, dataset.sites, selectedSiteId, probeSite, regionResult]);
+  }, [filteredSites, dataset.sites, selectedSiteId, probeSite, rankedRegionResult]);
 
   const handleSelectSite = useCallback(
     (siteId: string) => {
       setSelectedSiteId(siteId);
+      const regionSite = rankedRegionResult?.points.find((p) => p.id === siteId);
       const site =
         (probeSite && probeSite.id === siteId ? probeSite : null) ??
-        regionResult?.points.find((p) => p.id === siteId) ??
+        regionSite ??
         dataset.sites.find((s) => s.id === siteId);
       if (site) {
-        setActiveTargetId(site.best_target);
+        if (!regionSite || !regionRankByActiveTarget) {
+          setActiveTargetId(site.best_target);
+        }
         setMobilePanel("telemetry");
         if (window.matchMedia("(max-width: 1023px)").matches)
           telemetryToggle.current?.focus();
       }
     },
-    [probeSite, regionResult, dataset.sites]
+    [probeSite, rankedRegionResult, regionRankByActiveTarget, dataset.sites]
   );
 
   const handleProbeCoordinate = useCallback(async (lat: number, lon: number) => {
@@ -121,35 +145,43 @@ export function MissionControlApp({ dataset }: MissionControlAppProps) {
     }
   }, []);
 
-  const handleProbeRegion = useCallback(async (bounds: RegionBounds) => {
-    setIsProbingRegion(true);
-    setRegionError(null);
-    try {
-      const params = new URLSearchParams({
-        minLat: bounds.minLat.toString(),
-        maxLat: bounds.maxLat.toString(),
-        minLon: bounds.minLon.toString(),
-        maxLon: bounds.maxLon.toString(),
-        gridSize: "3",
-      });
-      const res = await fetch(`/api/evaluate-region?${params.toString()}`);
-      const payload = (await res.json()) as RegionEvaluationResult & { error?: string };
-      if (!res.ok) {
-        setRegionError(payload.error ?? "Region scan failed.");
-        return;
+  const handleProbeRegion = useCallback(
+    async (bounds: RegionBounds) => {
+      setIsProbingRegion(true);
+      setRegionError(null);
+      try {
+        const params = new URLSearchParams({
+          minLat: bounds.minLat.toString(),
+          maxLat: bounds.maxLat.toString(),
+          minLon: bounds.minLon.toString(),
+          maxLon: bounds.maxLon.toString(),
+          gridSize: regionGridSize.toString(),
+        });
+        if (regionRankByActiveTarget && activeTargetId) {
+          params.set("targetId", activeTargetId);
+        }
+        const res = await fetch(`/api/evaluate-region?${params.toString()}`);
+        const payload = (await res.json()) as RegionEvaluationResult & { error?: string };
+        if (!res.ok) {
+          setRegionError(payload.error ?? "Region scan failed.");
+          return;
+        }
+        setRegionResult(payload);
+        setRegionProbeMode(false);
+        if (payload.points[0]) {
+          setSelectedSiteId(payload.points[0].id);
+          if (!regionRankByActiveTarget) {
+            setActiveTargetId(payload.points[0].best_target);
+          }
+        }
+      } catch {
+        setRegionError("Unable to reach region evaluation service.");
+      } finally {
+        setIsProbingRegion(false);
       }
-      setRegionResult(payload);
-      setRegionProbeMode(false);
-      if (payload.points[0]) {
-        setSelectedSiteId(payload.points[0].id);
-        setActiveTargetId(payload.points[0].best_target);
-      }
-    } catch {
-      setRegionError("Unable to reach region evaluation service.");
-    } finally {
-      setIsProbingRegion(false);
-    }
-  }, []);
+    },
+    [regionGridSize, regionRankByActiveTarget, activeTargetId]
+  );
 
   return (
     <div className="flex h-dvh flex-col overflow-hidden bg-[#060913] text-slate-100">
@@ -320,81 +352,177 @@ export function MissionControlApp({ dataset }: MissionControlAppProps) {
             onProbeCoordinate={handleProbeCoordinate}
             regionProbeMode={regionProbeMode}
             isProbingRegion={isProbingRegion}
+            regionGridSize={regionGridSize}
+            onChangeRegionGridSize={setRegionGridSize}
             onToggleRegionProbeMode={() => {
               setRegionProbeMode((prev) => !prev);
               setProbeMode(false);
             }}
             onProbeRegion={handleProbeRegion}
-            regionResult={regionResult}
+            regionResult={rankedRegionResult}
           />
 
-          {(regionResult || regionError) && (
+          {(rankedRegionResult || regionError) && (
             <section
               aria-label="Region scan analog results"
-              className="absolute bottom-14 right-3 z-10 w-80 max-w-[calc(100%-1.5rem)] rounded-md border border-slate-700/80 bg-[#0D1424]/95 p-3 text-xs text-slate-200 shadow-lg backdrop-blur-md"
+              className="absolute bottom-14 right-3 z-10 w-88 max-w-[calc(100%-1.5rem)] rounded-md border border-slate-700/80 bg-[#0D1424]/95 p-3 text-xs text-slate-200 shadow-lg backdrop-blur-md"
             >
               <div className="mb-2 flex items-center justify-between gap-2 border-b border-slate-800 pb-1.5">
-                <h2 className="font-mono text-[11px] font-semibold uppercase tracking-wider text-cyan-300">
-                  {regionError
-                    ? "Region Scan Error"
-                    : `Region Grid (${regionResult?.evaluated_count ?? 0} pts)`}
-                </h2>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setRegionResult(null);
-                    setRegionError(null);
-                  }}
-                  aria-label="Clear region scan"
-                  className="rounded p-1 text-slate-400 hover:bg-slate-800 hover:text-slate-100"
-                >
-                  <X className="h-3.5 w-3.5" />
-                </button>
+                <div>
+                  <h2 className="font-mono text-[11px] font-semibold uppercase tracking-wider text-cyan-300">
+                    {regionError
+                      ? "Region Scan Error"
+                      : `Prospecting · ${rankedRegionResult?.grid_size ?? 3}×${rankedRegionResult?.grid_size ?? 3} (${rankedRegionResult?.evaluated_count ?? 0} pts)`}
+                  </h2>
+                  {!regionError && rankedRegionResult && (
+                    <p className="mt-0.5 font-mono text-[10px] text-slate-400 tabular-nums">
+                      {rankedRegionResult.bounds.minLat.toFixed(2)}°..
+                      {rankedRegionResult.bounds.maxLat.toFixed(2)}°N,{" "}
+                      {rankedRegionResult.bounds.minLon.toFixed(2)}°..
+                      {rankedRegionResult.bounds.maxLon.toFixed(2)}°E
+                    </p>
+                  )}
+                </div>
+                <div className="flex items-center gap-1">
+                  {!regionError && rankedRegionResult && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const blob = new Blob(
+                          [JSON.stringify(rankedRegionResult.geojson, null, 2)],
+                          { type: "application/geo+json" }
+                        );
+                        const url = URL.createObjectURL(blob);
+                        const link = document.createElement("a");
+                        link.href = url;
+                        link.download = `region-prospecting-${rankedRegionResult.grid_size}x${rankedRegionResult.grid_size}.geojson`;
+                        link.click();
+                        URL.revokeObjectURL(url);
+                      }}
+                      title="Export region scan GeoJSON"
+                      aria-label="Export region scan GeoJSON"
+                      className="rounded p-1 text-slate-400 hover:bg-slate-800 hover:text-cyan-300"
+                    >
+                      <Download className="h-3.5 w-3.5" />
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setRegionResult(null);
+                      setRegionError(null);
+                    }}
+                    aria-label="Clear region scan"
+                    className="rounded p-1 text-slate-400 hover:bg-slate-800 hover:text-slate-100"
+                  >
+                    <X className="h-3.5 w-3.5" />
+                  </button>
+                </div>
               </div>
 
               {regionError ? (
                 <p className="text-rose-300">{regionError}</p>
               ) : (
-                <ul className="max-h-52 space-y-1.5 overflow-y-auto pr-1">
-                  {regionResult?.points.slice(0, 5).map((pt, idx) => {
-                    const isSelected = selectedSite?.id === pt.id;
-                    const ref = dataset.references[pt.best_target];
-                    const targetBody = ref?.body ?? "Moon";
-                    const targetName = ref?.name ?? pt.best_target;
-                    const why =
-                      pt.analogy_strengths.slice(0, 2).join(" · ") ||
-                      `${Math.round(pt.elevation_m)} m, ${pt.dem_telemetry.dem_slope_deg.toFixed(1)} deg slope`;
-                    return (
-                      <li key={pt.id}>
-                        <button
-                          type="button"
-                          onClick={() => handleSelectSite(pt.id)}
-                          className={`w-full rounded border px-2.5 py-1.5 text-left transition-colors ${
-                            isSelected
-                              ? "border-cyan-500/70 bg-cyan-500/15"
-                              : "border-slate-800/90 bg-[#060913]/70 hover:border-slate-600"
-                          }`}
-                        >
-                          <div className="flex items-center justify-between gap-2">
-                            <span className="font-mono text-[11px] font-medium text-slate-200 tabular-nums">
-                              #{idx + 1} {pt.latitude.toFixed(2)}°, {pt.longitude.toFixed(2)}°
-                            </span>
-                            <span
-                              className={`font-mono text-xs font-semibold tabular-nums ${
-                                targetBody === "Mars" ? "text-[#E07A5F]" : "text-[#06B6D4]"
-                              }`}
-                            >
-                              {pt.overall_asi.toFixed(1)}% · {targetName}
-                            </span>
-                          </div>
-                          <p className="mt-0.5 line-clamp-2 text-[11px] text-slate-400">
-                            {why}
-                          </p>
-                        </button>
-                      </li>
-                    );
-                  })}
-                </ul>
+                <>
+                  <div className="mb-2 flex items-center justify-between gap-1.5">
+                    <span className="text-[11px] text-slate-400">Rank by:</span>
+                    <div
+                      className="flex items-center rounded border border-slate-800 bg-[#060913]/80 p-0.5"
+                      role="group"
+                      aria-label="Region ranking mode"
+                    >
+                      <button
+                        type="button"
+                        onClick={() => setRegionRankByActiveTarget(true)}
+                        aria-pressed={regionRankByActiveTarget}
+                        className={`rounded px-2 py-0.5 text-[11px] font-medium transition-colors ${
+                          regionRankByActiveTarget
+                            ? "bg-cyan-500/20 text-cyan-200"
+                            : "text-slate-400 hover:text-slate-200"
+                        }`}
+                      >
+                        {dataset.references[activeTargetId]?.name ?? "Active Target"}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setRegionRankByActiveTarget(false)}
+                        aria-pressed={!regionRankByActiveTarget}
+                        className={`rounded px-2 py-0.5 text-[11px] font-medium transition-colors ${
+                          !regionRankByActiveTarget
+                            ? "bg-cyan-500/20 text-cyan-200"
+                            : "text-slate-400 hover:text-slate-200"
+                        }`}
+                      >
+                        Best Match
+                      </button>
+                    </div>
+                  </div>
+
+                  {regionSummary && (
+                    <div className="mb-2 rounded border border-slate-800/90 bg-[#060913]/80 p-2 font-mono text-[10px] tabular-nums">
+                      <div className="flex items-center justify-between text-slate-300">
+                        <span>
+                          Top:{" "}
+                          <strong className="text-cyan-300">
+                            {regionSummary.maxAsi.toFixed(1)}%
+                          </strong>{" "}
+                          (avg {regionSummary.meanAsi.toFixed(1)}%)
+                        </span>
+                        <span>
+                          Elev {Math.round(regionSummary.elevMinM)}–
+                          {Math.round(regionSummary.elevMaxM)}m
+                        </span>
+                      </div>
+                      <div className="mt-1 flex items-center justify-between text-slate-400">
+                        <span>
+                          Beats {regionSummary.beatenCatalogCount}/
+                          {regionSummary.totalCatalogCount} catalog sites
+                        </span>
+                        <span>Max slope {regionSummary.maxSlopeDeg.toFixed(1)}°</span>
+                      </div>
+                    </div>
+                  )}
+
+                  <ul className="max-h-48 space-y-1.5 overflow-y-auto pr-1">
+                    {rankedRegionResult?.points.slice(0, 5).map((pt, idx) => {
+                      const isSelected = selectedSite?.id === pt.id;
+                      const activeTarget = regionRankByActiveTarget ? activeTargetId : null;
+                      const scored = getPointTargetScore(pt, activeTarget);
+                      const why = buildSiteRationale(pt, activeTarget);
+                      return (
+                        <li key={pt.id}>
+                          <button
+                            type="button"
+                            onClick={() => handleSelectSite(pt.id)}
+                            className={`w-full rounded border px-2.5 py-1.5 text-left transition-colors ${
+                              isSelected
+                                ? "border-cyan-500/70 bg-cyan-500/15"
+                                : "border-slate-800/90 bg-[#060913]/70 hover:border-slate-600"
+                            }`}
+                          >
+                            <div className="flex items-center justify-between gap-2">
+                              <span className="font-mono text-[11px] font-medium text-slate-200 tabular-nums">
+                                #{idx + 1} {pt.latitude.toFixed(2)}°, {pt.longitude.toFixed(2)}°
+                              </span>
+                              <span
+                                className={`font-mono text-xs font-semibold tabular-nums ${
+                                  scored.body === "Mars"
+                                    ? "text-[#E07A5F]"
+                                    : "text-[#06B6D4]"
+                                }`}
+                              >
+                                {scored.asi.toFixed(1)}% · {scored.targetName}
+                              </span>
+                            </div>
+                            <p className="mt-0.5 line-clamp-2 text-[11px] text-slate-400">
+                              {why}
+                            </p>
+                          </button>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </>
               )}
             </section>
           )}
