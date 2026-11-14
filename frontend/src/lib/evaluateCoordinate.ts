@@ -272,17 +272,29 @@ export async function evaluateCoordinate(
     }
   }
 
-  const earthGeology: [number, number, number, number, number] = [0.5, 0.5, 0.5, 0.5, 0.5];
+  const earthGeology: [number, number, number, number, number] = [0, 0, 0, 0, 0];
   const earthSlope = demTelemetry.source === "open_meteo" ? demTelemetry.dem_slope_deg : 0;
-  const earthRoughness = 0.5;
-  const earthIce = 0.5;
-  const earthAqueous = 0.5;
-  const earthLava = 0.5;
-  const earthShelter = 0.5;
+  const earthRoughness =
+    demTelemetry.source === "open_meteo"
+      ? Math.min(1, demTelemetry.dem_roughness_m / 120)
+      : 0;
+  const earthIce =
+    climatology.tmin_c <= -5 ||
+    (climatology.tmin_c <= 0 &&
+      (demTelemetry.elevation_m >= 3500 || Math.abs(lat) >= 60))
+      ? 0.7
+      : climatology.tmin_c <= 5
+      ? 0.25
+      : 0;
+  const earthAqueous = 0;
+  const earthLava = 0;
+  const earthShelter = 0;
 
   const meanC = (climatology.tmax_c + climatology.tmin_c) / 2;
   const rangeC = climatology.tmax_c - climatology.tmin_c;
-  const dryness = 1 / (1 + climatology.precipitation_mm_day);
+  const dryness =
+    (1 / (1 + climatology.precipitation_mm_day)) *
+    (1 - 0.5 * (climatology.relative_humidity_pct / 100));
 
   const scores: Record<string, TargetScore> = {};
   let bestTarget = "shackleton-crater";

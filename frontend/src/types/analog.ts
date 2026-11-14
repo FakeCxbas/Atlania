@@ -9,6 +9,11 @@ export interface TargetProfile {
   dryness: number;
   context: string;
   source_url: string;
+  instrument?: string;
+  pds_dataset?: string;
+  gravity_ms2?: number;
+  pressure_kpa?: number;
+  mineralogy_summary?: string;
 }
 
 export interface DimensionScores {
