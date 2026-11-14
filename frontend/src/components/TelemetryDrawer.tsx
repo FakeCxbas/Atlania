@@ -72,7 +72,7 @@ export function TelemetryDrawer({
         <div className="flex items-start justify-between gap-3">
           <div>
             <span className="inline-flex items-center rounded border border-slate-700/80 bg-slate-900/80 px-2 py-0.5 text-xs font-medium text-slate-300">
-              {site.country}
+              {site.discovery_tier} · {site.country}
             </span>
             <h2 className="mt-2 text-lg font-semibold leading-snug text-slate-100">
               {site.name}
@@ -228,6 +228,44 @@ export function TelemetryDrawer({
               {site.climatology.relative_humidity_pct.toFixed(0)}%
             </span>
           </div>
+          <div className="rounded border border-slate-800/80 bg-[#060913]/60 p-2">
+            <span className="block text-slate-400">Solar Irradiance</span>
+            <span className="font-mono tabular-nums text-slate-100">
+              {site.climatology.solar_irradiance_kwh_m2_day.toFixed(2)} kWh/m²/d
+            </span>
+          </div>
+          <div className="rounded border border-slate-800/80 bg-[#060913]/60 p-2">
+            <span className="block text-slate-400">Surface Pressure</span>
+            <span className="font-mono tabular-nums text-slate-100">
+              {site.climatology.surface_pressure_kpa.toFixed(1)} kPa
+            </span>
+          </div>
+          <div className="col-span-2 rounded border border-slate-800/80 bg-[#060913]/60 p-2">
+            <span className="block text-slate-400">
+              Copernicus DEM Slope / Roughness ({site.dem_telemetry.source})
+            </span>
+            <span className="font-mono tabular-nums text-slate-100">
+              {site.dem_telemetry.dem_slope_deg.toFixed(1)}° slope ·{" "}
+              {site.dem_telemetry.dem_roughness_m.toFixed(1)} m relief
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* Mission Testbeds */}
+      <div className="border-b border-slate-800/80 py-3.5 text-xs">
+        <span className="mb-2 block font-semibold text-slate-200">
+          Mission Testbeds
+        </span>
+        <div className="flex flex-wrap gap-1.5">
+          {site.mission_testbeds.map((testbed) => (
+            <span
+              key={testbed}
+              className="rounded border border-cyan-500/30 bg-cyan-500/10 px-2 py-0.5 text-[11px] text-cyan-200"
+            >
+              {testbed}
+            </span>
+          ))}
         </div>
       </div>
 

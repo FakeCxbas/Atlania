@@ -7,20 +7,25 @@ import pytest
 
 from asi_engine import (Climate, DIMENSIONS, EARTH_SITES, MONTHS, PARAMETERS,
                         REFERENCE_PROFILES, fetch_climatology, parse_power,
-                        score_site, score_target, similarity)
+                        score_site, score_target, similarity, fetch_dem, score_custom_coordinates)
 from build_dataset import build_dataset, to_geojson, write_dataset
+
+
+@pytest.fixture(autouse=True)
+def no_backoff_wait(monkeypatch):
+    monkeypatch.setattr("asi_engine.time.sleep", lambda _: None)
 
 
 def payload():
     return {"header": {"fill_value": -999, "start": "20010101", "end": "20201231"},
             "properties": {"parameter": {p: {"ANN": v} for p, v in
-                           zip(PARAMETERS, (20, 5, .5, 3, 60))}}}
+                           zip(PARAMETERS, (20, 5, .5, 3, 60, 5.5, 85))}}}
 
 
 def test_catalog():
-    assert len(EARTH_SITES) == len({s.id for s in EARTH_SITES}) == 10
+    assert len(EARTH_SITES) == len({s.id for s in EARTH_SITES}) == 16
     assert set(REFERENCE_PROFILES) == {"shackleton-crater", "mare-tranquillitatis", "jezero-crater", "olympus-mons-flank"}
-    assert sum(s.country == "Ecuador" for s in EARTH_SITES) == 3
+    assert sum(s.country == "Ecuador" for s in EARTH_SITES) == 5
     for target in REFERENCE_PROFILES.values():
         assert sum(target.weights) == pytest.approx(1)
         assert target.source_url.startswith("https://")
@@ -181,13 +186,13 @@ def test_prior_validation():
 
 def test_dataset_roundtrip_geojson_and_reproducibility(tmp_path):
     data = build_dataset(offline=True)
-    assert data["methodology"]["source_counts"] == {"nasa_power": 0, "fallback": 10}
+    assert data["methodology"]["source_counts"] == {"nasa_power": 0, "fallback": 16}
     paths = write_dataset(data, tmp_path)
     serialized_data = json.loads(json.dumps(data))
     assert json.loads(paths[0].read_text()) == serialized_data
     geo = json.loads(paths[1].read_text())
     assert geo["type"] == "FeatureCollection"
-    assert len(geo["features"]) == 10
+    assert len(geo["features"]) == 16
     for feature, site in zip(geo["features"], serialized_data["sites"]):
         assert feature["geometry"]["coordinates"] == [site["longitude"], site["latitude"]]
         assert feature["properties"] == site
@@ -200,10 +205,12 @@ def test_dataset_roundtrip_geojson_and_reproducibility(tmp_path):
 
 def test_pipeline_mixed_sources():
     def handler(request):
+        if request.url.host == "api.open-meteo.com":
+            return httpx.Response(200, json={"elevation": [100] * 5})
         return httpx.Response(200, json=payload()) if float(request.url.params["latitude"]) < 0 else httpx.Response(503)
     with httpx.Client(transport=httpx.MockTransport(handler)) as client:
         data = build_dataset(client=client)
-    assert data["methodology"]["source_counts"] == {"nasa_power": 5, "fallback": 5}
+    assert data["methodology"]["source_counts"] == {"nasa_power": 8, "fallback": 8}
 
 
 @pytest.mark.parametrize("parameter,value", [("PRECTOTCORR", -1), ("WS10M", -1),
@@ -241,3 +248,103 @@ def test_strict_json_rejects_nonfinite_before_writing(tmp_path):
         write_dataset(data, tmp_path)
     assert not (tmp_path / "analogs.json").exists()
     assert not (tmp_path / "analogs.geojson").exists()
+
+
+def test_retry_then_success(monkeypatch):
+    calls, delays = [], []
+    monkeypatch.setattr("asi_engine.time.sleep", delays.append)
+    def handler(request):
+        calls.append(request)
+        assert request.extensions["timeout"]["read"] == 10
+        if len(calls) < 3:
+            raise httpx.ReadTimeout("transient", request=request)
+        return httpx.Response(200, json=payload())
+    with httpx.Client(transport=httpx.MockTransport(handler)) as client:
+        result = fetch_climatology(EARTH_SITES[2], client=client)
+    assert result.source == "nasa_power"
+    assert len(calls) == 3 and delays == [1, 2]
+    assert result.solar_irradiance_kwh_m2_day == 5.5
+    assert result.surface_pressure_kpa == 85
+    assert {"ALLSKY_SFC_SW_DWN", "PS"} <= set(PARAMETERS)
+
+
+@pytest.mark.parametrize("status,attempts", [(503, 3), (429, 3), (400, 1)])
+def test_retry_limit(status, attempts):
+    calls = []
+    def handler(request):
+        calls.append(request)
+        return httpx.Response(status)
+    with httpx.Client(transport=httpx.MockTransport(handler)) as client:
+        assert fetch_climatology(EARTH_SITES[0], client=client).source == "fallback"
+    assert len(calls) == attempts
+
+
+@pytest.mark.parametrize("latitude", [0, 60])
+def test_dem_stencil_planar_slope(latitude):
+    site = replace(EARTH_SITES[0], latitude=latitude, longitude=180)
+    dy = 6371008.8 * math.radians(.01)
+    dx = dy * math.cos(math.radians(latitude))
+    elevations = [1000, 1000 + .1*dy, 1000 - .1*dy, 1000 + .2*dx, 1000 - .2*dx]
+    def handler(request):
+        assert request.url.host == "api.open-meteo.com"
+        assert list(map(float, request.url.params["latitude"].split(","))) == [latitude, latitude+.01, latitude-.01, latitude, latitude]
+        assert float(request.url.params["longitude"].split(",")[3]) == pytest.approx(-179.99)
+        return httpx.Response(200, json={"elevation": elevations})
+    with httpx.Client(transport=httpx.MockTransport(handler)) as client:
+        dem = fetch_dem(site, client=client)
+    assert dem["source"] == "open_meteo"
+    assert dem["dem_slope_deg"] == pytest.approx(math.degrees(math.atan(math.hypot(.1, .2))))
+    assert dem["dem_roughness_m"] == pytest.approx(math.sqrt(sum((z-1000)**2 for z in elevations)/5))
+    result = score_site(site, site.fallback, dem)
+    assert result["elevation_m"] == 1000
+    assert result["scores"] == score_site(site, site.fallback)["scores"]
+
+
+@pytest.mark.parametrize("elevations", [[1]*5, [], [1, None, 2, 3, 4], [-99999]*5])
+def test_dem_flat_or_invalid(elevations):
+    with httpx.Client(transport=httpx.MockTransport(lambda r: httpx.Response(200, json={"elevation": elevations}))) as client:
+        dem = fetch_dem(EARTH_SITES[0], client=client)
+    assert dem["source"] == ("open_meteo" if elevations == [1]*5 else "fallback")
+    assert dem["dem_roughness_m"] == 0
+    if dem["source"] == "open_meteo":
+        assert dem["dem_slope_deg"] == 0
+
+
+def test_custom_offline_and_catalog_metadata(monkeypatch):
+    def forbidden(*args, **kwargs):
+        pytest.fail("offline request")
+    monkeypatch.setattr(httpx.Client, "get", forbidden)
+    result = score_custom_coordinates(-.5, -78, offline=True)
+    assert result == score_custom_coordinates(-.5, -78, offline=True)
+    assert result["latitude"] == -.5 and result["longitude"] == -78
+    assert result["dem_telemetry"]["source"] == result["climatology"]["source"] == "fallback"
+    assert set(result["scores"]) == set(REFERENCE_PROFILES)
+    for site in EARTH_SITES:
+        assert site.discovery_tier in {"Benchmark", "Regional Highlight", "Under-Recognized"}
+        assert len(site.mission_testbeds) >= 2
+    assert score_custom_coordinates(90, 180, offline=True)["latitude"] == 90
+
+
+@pytest.mark.parametrize("lat,lon", [(91, 0), (0, 181), (float("nan"), 0), (True, 0)])
+def test_custom_invalid_coordinates(lat, lon):
+    with pytest.raises(ValueError):
+        score_custom_coordinates(lat, lon, offline=True)
+
+
+def test_custom_live(monkeypatch):
+    def get(self, url, **kwargs):
+        data = {"elevation": [123]*5} if "open-meteo" in url else payload()
+        return httpx.Response(200, json=data, request=httpx.Request("GET", url))
+    monkeypatch.setattr(httpx.Client, "get", get)
+    result = score_custom_coordinates(1, 2)
+    assert result["elevation_m"] == 123
+    assert result["climatology"]["source"] == "nasa_power"
+
+
+@pytest.mark.parametrize("parameter,value", [("PS", 0), ("PS", 121), ("ALLSKY_SFC_SW_DWN", -1)])
+@pytest.mark.parametrize("monthly", [False, True])
+def test_new_power_validation(parameter, value, monthly):
+    data = payload()
+    data["properties"]["parameter"][parameter] = dict.fromkeys(MONTHS, value) if monthly else {"ANN": value}
+    with pytest.raises(ValueError):
+        parse_power(data, "test")

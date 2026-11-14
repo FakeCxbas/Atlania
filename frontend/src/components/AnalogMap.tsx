@@ -124,9 +124,11 @@ export function AnalogMap({
 
     mapRef.current = map;
 
+    const markers = markersRef.current;
+
     return () => {
-      markersRef.current.forEach((m) => m.remove());
-      markersRef.current.clear();
+      markers.forEach((m) => m.remove());
+      markers.clear();
       map.remove();
       mapRef.current = null;
     };

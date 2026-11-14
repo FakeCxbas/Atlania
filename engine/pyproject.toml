@@ -1,6 +1,6 @@
 [project]
 name = "nasa-analog-asi"
-version = "0.1.0"
+version = "0.2.0"
 description = "Transparent, exploratory Earth/Moon/Mars analog similarity scoring"
 requires-python = ">=3.11"
 dependencies = ["httpx>=0.27,<1"]

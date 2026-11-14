@@ -11,28 +11,32 @@ import httpx
 
 if __package__:
     from .asi_engine import (DIMENSIONS, EARTH_SITES, GEOLOGY, PRIOR_NOTE,
-                             REFERENCE_PROFILES, UNITS, fetch_climatology, score_site)
+                             REFERENCE_PROFILES, UNITS, fetch_climatology, fetch_dem, score_site)
 else:
     from asi_engine import (DIMENSIONS, EARTH_SITES, GEOLOGY, PRIOR_NOTE,
-                            REFERENCE_PROFILES, UNITS, fetch_climatology, score_site)
+                            REFERENCE_PROFILES, UNITS, fetch_climatology, fetch_dem, score_site)
 
 DEFAULT_OUTPUT = Path(__file__).resolve().parents[1] / "frontend" / "public" / "data"
 
 
 def build_dataset(*, offline: bool = False, timeout: float = 10.0,
                   client: httpx.Client | None = None) -> dict[str, Any]:
-    sites = [score_site(site, fetch_climatology(site, offline=offline, timeout=timeout, client=client))
+    sites = [score_site(site, fetch_climatology(site, offline=offline, timeout=timeout, client=client),
+                        fetch_dem(site, offline=offline, timeout=timeout, client=client))
              for site in EARTH_SITES]
     return {
         "schema_version": "1.0.0",
         "methodology": {
-            "name": "Exploratory Analog Similarity Index", "version": "0.1.0",
+            "name": "Exploratory Analog Similarity Index", "version": "0.2.0",
             "score_range": [0, 100], "dimensions": DIMENSIONS,
             "geology_order": GEOLOGY, "climatology_units": UNITS,
             "prior_status": PRIOR_NOTE,
             "interpretation": "Weighted scenario similarity, not a validated probability, mission readiness score or NASA endorsement.",
             "climate_limitations": "POWER grid-cell 2 m air climate does not resolve caves, summit relief or extraterrestrial surface thermal cycles. Fallback values are illustrative estimates, not observations.",
-            "geography": "Representative WGS84 points and approximate elevations; Galapagos combines Santa Cruz/Isabela but samples only Santa Cruz.",
+            "geography": "Representative WGS84 points; live DEM center elevations when available, otherwise approximate priors. Galapagos legacy point samples Santa Cruz; Sierra Negra separately samples Isabela.",
+            "dem_method": "Open-Meteo / Copernicus GLO-90; center + N/S/E/W at 0.01 degrees; central-gradient slope and population elevation standard deviation. Telemetry only; ASI terrain priors unchanged.",
+            "dem_source_counts": {source: sum(s["dem_telemetry"]["source"] == source for s in sites)
+                                  for source in ("open_meteo", "fallback")},
             "formula": "overall_asi = sum(target_weight[d] * dimension_score[d]); details in engine/README.md",
             "thermal_scales_c": {"mean": 100, "range": 100},
             "source_counts": {source: sum(s["climatology"]["source"] == source for s in sites)
@@ -65,7 +69,7 @@ def write_dataset(dataset: dict[str, Any], output_dir: Path = DEFAULT_OUTPUT) ->
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--offline", action="store_true", help="Use deterministic illustrative climate only")
+    parser.add_argument("--offline", action="store_true", help="Use deterministic illustrative climate and DEM fallback")
     parser.add_argument("--timeout", type=float, default=10, help="HTTP timeout in seconds per network phase")
     parser.add_argument("--output-dir", type=Path, default=DEFAULT_OUTPUT)
     args = parser.parse_args()
