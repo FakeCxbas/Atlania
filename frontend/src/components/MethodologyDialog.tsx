@@ -118,6 +118,37 @@ export function MethodologyDialog({ dataset }: { dataset: AnalogDataset }) {
                 </tbody>
               </table>
             </div>
+            <div className="mt-3 rounded border border-slate-700/80 bg-[#060913]/60 p-3">
+              <h4 className="font-semibold text-slate-200">
+                Why these weights? (Mission rationale)
+              </h4>
+              <ul className="mt-1.5 list-disc space-y-1 pl-5 text-xs text-slate-300">
+                <li>
+                  <span className="font-medium text-cyan-300">Shackleton Crater</span>{" "}
+                  weights Thermal (30%) and Hydrology / Ice (30%) highest because
+                  Artemis South Pole operations depend on cryogenic cold-trap stability
+                  for water-ice ISRU alongside steep crater-rim traverse slopes (20%).
+                </li>
+                <li>
+                  <span className="font-medium text-cyan-300">Mare Tranquillitatis</span>{" "}
+                  weights Subsurface / Ops (35%) and Geology (25%) highest because
+                  collapsed basaltic skylight pits and intact lava tubes are the
+                  primary radiation and micrometeoroid shelter mechanism.
+                </li>
+                <li>
+                  <span className="font-medium text-amber-300">Jezero Crater</span>{" "}
+                  weights Geology (30%) and Hydrology / Ice (25%) highest because
+                  astrobiology and rover sampling focus on fluvio-lacustrine clay/carbonate
+                  deltas and arid evaporitic preservation.
+                </li>
+                <li>
+                  <span className="font-medium text-amber-300">Olympus Mons / Tharsis</span>{" "}
+                  weights Geology (30%) and Topography (25%) highest to prioritize
+                  shield-volcano basaltic flows, slope trafficability, and lava-tube
+                  shelter (20%) over polar ice.
+                </li>
+              </ul>
+            </div>
           </section>
           <section>
             <h3 className="font-semibold text-cyan-300">
