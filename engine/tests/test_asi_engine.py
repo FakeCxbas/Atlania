@@ -8,7 +8,7 @@ import pytest
 from asi_engine import (Climate, DIMENSIONS, EARTH_SITES, MONTHS, PARAMETERS,
                         REFERENCE_PROFILES, fetch_climatology, parse_power,
                         score_site, score_target, similarity, fetch_dem, score_custom_coordinates,
-                        grid_search_region)
+                        grid_search_region, analyze_analog_clusters_and_knn)
 from build_dataset import build_dataset, to_geojson, write_dataset
 
 
@@ -30,6 +30,94 @@ def test_catalog():
     for target in REFERENCE_PROFILES.values():
         assert sum(target.weights) == pytest.approx(1)
         assert target.source_url.startswith("https://")
+
+
+def ml_site(site_id, value):
+    return {"id": site_id, "best_target": "target", "scores": {
+        "target": {"dimensions": {d: value for d in DIMENSIONS}}},
+        "elevation_m": 1000 + value * 100, "dem_telemetry": {"dem_slope_deg": 5}}
+
+
+def test_ml_population_z_scores_and_constant_feature():
+    sites = [ml_site(str(i), v) for i, v in enumerate((10, 20, 30))]
+    result = analyze_analog_clusters_and_knn(sites, k_clusters=3)
+    assert result["feature_names"] == [*DIMENSIONS, "elevation_m", "dem_slope_deg"]
+    for i, expected in enumerate((-math.sqrt(1.5), 0, math.sqrt(1.5))):
+        centroid = result["centroids"][result["clusters"][str(i)]]
+        assert centroid == pytest.approx([expected] * 6 + [0])
+    for j in range(6):
+        column = [centroid[j] for centroid in result["centroids"]]
+        assert sum(column) / 3 == pytest.approx(0, abs=1e-14)
+        assert sum(v * v for v in column) / 3 == pytest.approx(1)
+    assert result["knn"]["0"][0] == {"id": "1", "distance": pytest.approx(3)}
+
+
+def test_ml_deterministic_clusters_and_centroid_means():
+    import random
+    sites = [ml_site(str(i), v) for i, v in enumerate((0, 1, 99, 100))]
+    state = random.getstate()
+    result = analyze_analog_clusters_and_knn(sites, k_clusters=2, seed=7)
+    assert random.getstate() == state
+    assert result == analyze_analog_clusters_and_knn(list(reversed(sites)), k_clusters=2, seed=7)
+    labels = result["clusters"]
+    assert labels["0"] == labels["1"] != labels["2"] == labels["3"]
+    std = math.sqrt(sum((v - 50) ** 2 for v in (0, 1, 99, 100)) / 4)
+    assert result["centroids"][labels["0"]] == pytest.approx([-49.5 / std] * 6 + [0])
+
+
+def test_ml_knn_distances_symmetric_sorted_and_self_excluded():
+    sites = [ml_site(str(i), v) for i, v in enumerate((0, 1, 10, 100))]
+    full = analyze_analog_clusters_and_knn(sites, k_neighbors=20)["knn"]
+    limited = analyze_analog_clusters_and_knn(sites, k_neighbors=1)["knn"]
+    for site_id, neighbors in full.items():
+        assert len(neighbors) == 3
+        assert site_id not in [neighbor["id"] for neighbor in neighbors]
+        assert neighbors == sorted(neighbors, key=lambda neighbor: (neighbor["distance"], neighbor["id"]))
+        assert limited[site_id] == neighbors[:1]
+        for neighbor in neighbors:
+            reverse = next(item for item in full[neighbor["id"]] if item["id"] == site_id)
+            assert reverse["distance"] == neighbor["distance"]
+
+
+def test_ml_empty_singleton_duplicates_and_average_fallback():
+    assert analyze_analog_clusters_and_knn([])["centroids"] == []
+    site = ml_site("a", 20)
+    singleton = analyze_analog_clusters_and_knn([site])
+    assert singleton["clusters"] == {"a": 0}
+    assert singleton["centroids"] == [[0.0] * 7]
+    assert singleton["knn"] == {"a": []}
+    sites = [ml_site("a", 20), ml_site("b", 20)]
+    result = analyze_analog_clusters_and_knn(sites)
+    assert result["knn"]["a"] == [{"id": "b", "distance": 0.0}]
+    assert analyze_analog_clusters_and_knn(sites, k_neighbors=0)["knn"] == {"a": [], "b": []}
+    sites = [ml_site("a", 20), ml_site("b", 40)]
+    expected = analyze_analog_clusters_and_knn(sites)
+    del sites[0]["best_target"]
+    sites[0]["scores"] = {"x": ml_site("x", 10)["scores"]["target"],
+                          "y": ml_site("y", 30)["scores"]["target"]}
+    sites[0]["dem_slope_deg"] = 5
+    assert analyze_analog_clusters_and_knn(sites) == expected
+
+
+@pytest.mark.parametrize("kwargs", [{"k_clusters": 0}, {"k_clusters": 1.5},
+                                   {"k_neighbors": -1}, {"k_neighbors": True}])
+def test_ml_rejects_invalid_counts(kwargs):
+    with pytest.raises(ValueError):
+        analyze_analog_clusters_and_knn([], **kwargs)
+
+
+def test_ml_rejects_duplicate_ids_and_nonfinite_features():
+    with pytest.raises(ValueError, match="unique strings"):
+        analyze_analog_clusters_and_knn([ml_site("a", 1), ml_site("a", 2)])
+    with pytest.raises(ValueError, match="finite"):
+        analyze_analog_clusters_and_knn([ml_site("a", float("nan"))])
+
+
+def test_ml_accepts_engine_catalog_results():
+    result = analyze_analog_clusters_and_knn([score_site(site, site.fallback) for site in EARTH_SITES])
+    assert set(result["clusters"]) == {site.id for site in EARTH_SITES}
+    assert len(result["centroids"]) == 3
+    assert all(len(neighbors) == 3 for neighbors in result["knn"].values())
 
 
 @pytest.mark.parametrize("site", EARTH_SITES, ids=lambda s: s.id)
