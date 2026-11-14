@@ -349,12 +349,30 @@ export function AnalogMap({
     if (!map) return;
 
     const syncRegionOverlay = () => {
-      if (!map.isStyleLoaded()) return;
+      if (!map.getStyle()) return;
 
       const emptyFc: GeoJSON.FeatureCollection = {
         type: "FeatureCollection",
         features: [],
       };
+
+      const gridLines: number[][][] = [];
+      if (regionResult) {
+        const { minLat, maxLat, minLon, maxLon } = regionResult.bounds;
+        const steps = Math.max(2, regionResult.grid_size) - 1;
+        for (let i = 1; i < steps; i += 1) {
+          const lat = minLat + ((maxLat - minLat) * i) / steps;
+          const lon = minLon + ((maxLon - minLon) * i) / steps;
+          gridLines.push([
+            [minLon, lat],
+            [maxLon, lat],
+          ]);
+          gridLines.push([
+            [lon, minLat],
+            [lon, maxLat],
+          ]);
+        }
+      }
 
       const boundsData: GeoJSON.FeatureCollection = regionResult
         ? {
@@ -362,7 +380,7 @@ export function AnalogMap({
             features: [
               {
                 type: "Feature",
-                properties: {},
+                properties: { kind: "bounds" },
                 geometry: {
                   type: "Polygon",
                   coordinates: [
@@ -376,12 +394,20 @@ export function AnalogMap({
                   ],
                 },
               },
+              ...(gridLines.length > 0
+                ? [
+                    {
+                      type: "Feature" as const,
+                      properties: { kind: "grid" },
+                      geometry: {
+                        type: "MultiLineString" as const,
+                        coordinates: gridLines,
+                      },
+                    },
+                  ]
+                : []),
             ],
           }
-        : emptyFc;
-
-      const gridData: GeoJSON.FeatureCollection = regionResult
-        ? (regionResult.geojson as unknown as GeoJSON.FeatureCollection)
         : emptyFc;
 
       const existingBounds = map.getSource("region-bounds") as
@@ -395,72 +421,34 @@ export function AnalogMap({
           id: "region-bounds-fill",
           type: "fill",
           source: "region-bounds",
+          filter: ["==", ["get", "kind"], "bounds"],
           paint: {
             "fill-color": "#06B6D4",
-            "fill-opacity": 0.08,
+            "fill-opacity": 0.06,
           },
         });
         map.addLayer({
           id: "region-bounds-line",
           type: "line",
           source: "region-bounds",
+          filter: ["==", ["get", "kind"], "bounds"],
           paint: {
             "line-color": "#06B6D4",
             "line-width": 1.5,
-            "line-dasharray": [3, 2],
+            "line-dasharray": [4, 3],
+            "line-opacity": 0.85,
           },
         });
-      }
-
-      const existingGrid = map.getSource("region-grid") as
-        | maplibregl.GeoJSONSource
-        | undefined;
-      if (existingGrid) {
-        existingGrid.setData(gridData);
-      } else {
-        map.addSource("region-grid", { type: "geojson", data: gridData });
         map.addLayer({
-          id: "region-grid-points",
-          type: "circle",
-          source: "region-grid",
+          id: "region-grid-lines",
+          type: "line",
+          source: "region-bounds",
+          filter: ["==", ["get", "kind"], "grid"],
           paint: {
-            "circle-radius": [
-              "interpolate",
-              ["linear"],
-              ["get", "best_asi_score"],
-              0,
-              8,
-              60,
-              12,
-              100,
-              16,
-            ],
-            "circle-color": [
-              "interpolate",
-              ["linear"],
-              ["get", "best_asi_score"],
-              0,
-              "#475569",
-              35,
-              "#0284C7",
-              55,
-              "#06B6D4",
-              75,
-              "#E07A5F",
-            ],
-            "circle-opacity": 0.88,
-            "circle-stroke-width": [
-              "case",
-              ["==", ["get", "rank"], 1],
-              3,
-              1.5,
-            ],
-            "circle-stroke-color": [
-              "case",
-              ["==", ["get", "rank"], 1],
-              "#F8FAFC",
-              "#060913",
-            ],
+            "line-color": "#06B6D4",
+            "line-width": 1,
+            "line-dasharray": [2, 3],
+            "line-opacity": 0.35,
           },
         });
       }
@@ -481,58 +469,94 @@ export function AnalogMap({
         const isSelected = id === selectedSiteId;
         const accent = body === "Mars" ? "#E07A5F" : "#06B6D4";
 
-        const badge = document.createElement("button");
-        badge.type = "button";
-        badge.setAttribute("aria-label", `Region point #${rank}, ${best_asi_score.toFixed(1)}% ASI`);
+        const wrapper = document.createElement("button");
+        wrapper.type = "button";
+        wrapper.setAttribute(
+          "aria-label",
+          `Region point #${rank}, ${best_asi_score.toFixed(1)}% ASI`
+        );
+        wrapper.style.cssText = [
+          "display: flex",
+          "flex-direction: column",
+          "align-items: center",
+          "gap: 4px",
+          "background: transparent",
+          "border: none",
+          "padding: 0",
+          "cursor: pointer",
+          "transform: translateY(10px)",
+        ].join(";");
+
+        const reticle = document.createElement("span");
+        const ringSize = isTop ? 18 : 12;
+        const coreSize = isTop ? 7 : 5;
+        reticle.style.cssText = [
+          `width: ${ringSize}px`,
+          `height: ${ringSize}px`,
+          "border-radius: 9999px",
+          "display: flex",
+          "align-items: center",
+          "justify-content: center",
+          `border: ${isSelected || isTop ? "2px" : "1.5px"} solid ${
+            isSelected ? "#F8FAFC" : accent
+          }`,
+          `background: ${isTop ? `${accent}33` : "rgba(6, 9, 19, 0.55)"}`,
+          `box-shadow: ${
+            isTop || isSelected
+              ? `0 0 12px ${accent}99`
+              : "0 1px 4px rgba(0, 0, 0, 0.7)"
+          }`,
+        ].join(";");
+
+        const core = document.createElement("span");
+        core.style.cssText = [
+          `width: ${coreSize}px`,
+          `height: ${coreSize}px`,
+          "border-radius: 9999px",
+          `background: ${isTop || isSelected ? "#F8FAFC" : accent}`,
+        ].join(";");
+        reticle.appendChild(core);
+
+        const badge = document.createElement("span");
         badge.style.cssText = [
-          `font-family: ui-monospace, SFMono-Regular, Menlo, monospace`,
-          `font-variant-numeric: tabular-nums`,
+          "font-family: ui-monospace, SFMono-Regular, Menlo, monospace",
+          "font-variant-numeric: tabular-nums",
           `font-size: ${isTop ? "11px" : "10px"}`,
-          `font-weight: 700`,
-          `line-height: 1`,
-          `padding: ${isTop ? "3px 7px" : "2px 5px"}`,
-          `border-radius: 9999px`,
-          `color: #F8FAFC`,
-          `background: ${isTop ? "rgba(6, 9, 19, 0.92)" : "rgba(6, 9, 19, 0.82)"}`,
-          `border: ${isSelected ? "2px" : isTop ? "1.5px" : "1px"} solid ${isSelected ? "#F8FAFC" : accent}`,
-          `box-shadow: ${isTop ? `0 0 10px ${accent}80` : "0 1px 4px rgba(0,0,0,0.6)"}`,
-          `cursor: pointer`,
-          `white-space: nowrap`,
-          `transform: translateY(16px)`,
+          `font-weight: ${isTop ? "700" : "600"}`,
+          "line-height: 1",
+          `padding: ${isTop ? "3px 7px" : "2px 6px"}`,
+          "border-radius: 4px",
+          `color: ${isTop || isSelected ? "#F8FAFC" : "#CBD5E1"}`,
+          `background: ${isTop ? "rgba(6, 9, 19, 0.92)" : "rgba(6, 9, 19, 0.78)"}`,
+          `border: 1px solid ${isSelected ? "#F8FAFC" : isTop ? accent : "rgba(148, 163, 184, 0.3)"}`,
+          "backdrop-filter: blur(4px)",
+          "white-space: nowrap",
         ].join(";");
         badge.textContent = isTop
           ? `#1 · ${Math.round(best_asi_score)}%`
           : `${Math.round(best_asi_score)}%`;
 
-        badge.addEventListener("click", (ev) => {
+        wrapper.appendChild(reticle);
+        wrapper.appendChild(badge);
+
+        wrapper.addEventListener("click", (ev) => {
           ev.stopPropagation();
           onSelectSite(id);
         });
 
-        const marker = new maplibregl.Marker({ element: badge, anchor: "top" })
+        const marker = new maplibregl.Marker({ element: wrapper, anchor: "center" })
           .setLngLat([lon, lat])
           .addTo(map);
         regionMarkersRef.current.push(marker);
       }
     };
 
-    const handleGridPointClick = (
-      e: maplibregl.MapMouseEvent & { features?: maplibregl.MapGeoJSONFeature[] }
-    ) => {
-      const featureId = e.features?.[0]?.properties?.id;
-      if (typeof featureId === "string") {
-        onSelectSite(featureId);
-      }
-    };
-
     syncRegionOverlay();
     syncRegionMarkers();
     map.on("style.load", syncRegionOverlay);
-    map.on("click", "region-grid-points", handleGridPointClick);
 
     return () => {
       map.off("style.load", syncRegionOverlay);
-      map.off("click", "region-grid-points", handleGridPointClick);
       for (const m of regionMarkersRef.current) {
         m.remove();
       }
