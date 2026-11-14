@@ -81,7 +81,15 @@
         0.05
       ],
       "context": "Cold-trap interior scenario; does not represent the illuminated rim. Ice relevance is a hypothesis, not a local abundance measurement.",
-      "source_url": "https://science.nasa.gov/resource/shackleton-craters-illuminated-rim-shadowed-interior/"
+      "source_url": "https://science.nasa.gov/resource/shackleton-craters-illuminated-rim-shadowed-interior/",
+      "instrument": "LRO Diviner + LOLA",
+      "pds_dataset": "LRO-L-DLRE-5-GCP-V1.0; https://pds-geosciences.wustl.edu/missions/lro/lola.htm",
+      "gravity_ms2": 1.62,
+      "pressure_kpa": 0.0,
+      "temp_min_c": -188,
+      "temp_max_c": -178,
+      "mineralogy_summary": "Highlands impact regolith; anorthositic context and possible cold-trapped volatiles, not verified local ice abundance.",
+      "metadata_note": "Archive citations provide mission context, not locally extracted telemetry. Temperature bounds are illustrative scenario mean +/- half range; gravity and pressure are nominal body constants (Mars pressure varies with altitude/season). Mineralogy is regional context, not a quantitative local assay."
     },
     "mare-tranquillitatis": {
       "id": "mare-tranquillitatis",
@@ -113,7 +121,15 @@
         0.3
       ],
       "context": "Shaded pit / hypothetical connected cave scenario; 17 C is modeled pit shade, not lunar surface climate or a proven habitable cave.",
-      "source_url": "https://www.nasa.gov/solar-system/nasas-lro-finds-lunar-pits-harbor-comfortable-temperatures/"
+      "source_url": "https://www.nasa.gov/solar-system/nasas-lro-finds-lunar-pits-harbor-comfortable-temperatures/",
+      "instrument": "LRO LROC + Diviner",
+      "pds_dataset": "LRO-L-LROC-3-CDR-V1.0; LRO-L-DLRE-5-GCP-V1.0",
+      "gravity_ms2": 1.62,
+      "pressure_kpa": 0.0,
+      "temp_min_c": 16,
+      "temp_max_c": 18,
+      "mineralogy_summary": "Basaltic mare terrain and regolith; pit morphology suggests possible lava-tube access, not confirmed cave extent.",
+      "metadata_note": "Archive citations provide mission context, not locally extracted telemetry. Temperature bounds are illustrative scenario mean +/- half range; gravity and pressure are nominal body constants (Mars pressure varies with altitude/season). Mineralogy is regional context, not a quantitative local assay."
     },
     "jezero-crater": {
       "id": "jezero-crater",
@@ -145,7 +161,15 @@
         0.05
       ],
       "context": "Present dry surface thermal scenario combined with ancient aqueous geology; not a reconstruction of ancient climate.",
-      "source_url": "https://www.jpl.nasa.gov/news/nasas-perseverance-rover-deciphers-ancient-history-of-martian-lake/"
+      "source_url": "https://www.jpl.nasa.gov/news/nasas-perseverance-rover-deciphers-ancient-history-of-martian-lake/",
+      "instrument": "Perseverance MEDA + MRO CRISM",
+      "pds_dataset": "MEDA doi:10.17189/1522849; https://pds-geosciences.wustl.edu/missions/mro/crism.htm",
+      "gravity_ms2": 3.71,
+      "pressure_kpa": 0.65,
+      "temp_min_c": -95,
+      "temp_max_c": -25,
+      "mineralogy_summary": "Basaltic crater-floor rocks and ancient delta sediments; regional carbonate and hydrated mineral signatures.",
+      "metadata_note": "Archive citations provide mission context, not locally extracted telemetry. Temperature bounds are illustrative scenario mean +/- half range; gravity and pressure are nominal body constants (Mars pressure varies with altitude/season). Mineralogy is regional context, not a quantitative local assay."
     },
     "olympus-mons-flank": {
       "id": "olympus-mons-flank",
@@ -177,7 +201,15 @@
         0.2
       ],
       "context": "Exposed volcanic flank thermal scenario with tube exploration relevance; no measured subsurface temperature assumed.",
-      "source_url": "https://science.nasa.gov/photojournal/the-flows-of-olympus/"
+      "source_url": "https://science.nasa.gov/photojournal/the-flows-of-olympus/",
+      "instrument": "MGS MOLA + MRO HiRISE",
+      "pds_dataset": "https://pds-geosciences.wustl.edu/missions/mgs/mola.html; https://hirise.lpl.arizona.edu/PDS/",
+      "gravity_ms2": 3.71,
+      "pressure_kpa": 0.65,
+      "temp_min_c": -105,
+      "temp_max_c": -25,
+      "mineralogy_summary": "Volcanic lava-flow terrain interpreted as basaltic; MOLA/HiRISE constrain morphology, not mineral abundances.",
+      "metadata_note": "Archive citations provide mission context, not locally extracted telemetry. Temperature bounds are illustrative scenario mean +/- half range; gravity and pressure are nominal body constants (Mars pressure varies with altitude/season). Mineralogy is regional context, not a quantitative local assay."
     }
   },
   "features": [

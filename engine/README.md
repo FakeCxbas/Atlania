@@ -139,7 +139,7 @@ not rover wheel-scale hazards or the full resolution of the underlying DEM.
 
 `dem_telemetry` stores elevation, `dem_slope_deg`, `dem_roughness_m`, samples,
 spacing, attribution, source URL, source (`open_meteo` or `fallback`) and reason.
-Successful DEM sampling updates the site's `elevation_m`. Existing dimensionless
+Successful DEM sampling updates the site's `elevation_m`. For catalog sites, dimensionless
 `terrain.roughness` and scoring slope remain curated priors; DEM telemetry does
 not silently change their meaning or the ASI. Longitude wraps at the date line.
 Within 0.01 degrees of a pole, the symmetric stencil is undefined and falls back.
@@ -161,8 +161,38 @@ site = score_custom_coordinates(-0.68, -78.44, offline=False)
 
 This validates finite WGS84 coordinates and returns the same site/score structure,
 with live POWER and DEM where available. No reverse geocoding or geological
-inference is performed. Country is `Unknown`; geology, ice, aqueous history,
-caves and shelter use unmeasured neutral 0.5 memberships, scoring slope 0 degrees,
-and fallback elevation 0 m. These assumptions make scores provisional screening
-results, not discovered analogs. `offline=True` makes no network requests and
-produces repeatable, labeled estimates.
+inference is performed. Country is `Unknown`. Unmeasured geology (all five
+memberships), aqueous history, lava tubes and shelter are zero: unknown evidence,
+not verified absence. Successful DEM supplies scoring slope and roughness
+`min(1, dem_roughness_m / 120)`; fallback slope, roughness and elevation are zero.
+Ice relevance is a climate proxy, not detected ice: 0.7 when `tmin_c <= -5`, or
+when `tmin_c <= 0` and either elevation is at least 3500 m or absolute latitude
+is at least 60 degrees; otherwise 0.25 when `tmin_c <= 5`, else zero.
+Custom-probe dryness is `(1 / (1 + precipitation_mm_day)) *
+(1 - 0.5 * relative_humidity_pct / 100)`. Catalog scoring retains its existing
+priors and precipitation-only dryness. Fallback climate also feeds these proxies
+and is explicitly labeled illustrative; `offline=True` makes no network requests.
+Scores remain provisional screening results, not discovered analogs.
+
+### Reference archive metadata
+
+All four profiles export additive `instrument`, `pds_dataset`, `gravity_ms2`,
+`pressure_kpa`, `temp_min_c`, `temp_max_c`, `mineralogy_summary` and `metadata_note`
+fields. Existing frontend fields and the schema version remain unchanged.
+Dataset IDs/DOIs and archive URLs identify relevant data, not products extracted
+at the reference coordinates. Temperature bounds preserve the existing scenario
+mean +/- half range (including the shaded-pit scenario, not exposed lunar soil).
+Gravity and pressure are nominal body constants; 0.65 kPa is not an Olympus
+altitude-specific measurement. Mineralogy summaries describe regional context;
+MOLA and HiRISE measure topography/imaging, not composition. These metadata do
+not change target scoring weights or thermal priors.
+
+Archive citations:
+- Shackleton: [Diviner GCP/PCP, LRO-L-DLRE-5-GCP-V1.0](https://pds.nasa.gov/ds-view/pds/viewProfile.jsp?dsid=LRO-L-DLRE-5-GCP-V1.0)
+  and [LOLA](https://pds-geosciences.wustl.edu/missions/lro/lola.htm).
+- Tranquillitatis: [LROC CDR archive, LRO-L-LROC-3-CDR-V1.0](https://pds.lroc.asu.edu/)
+  and the Diviner archive above; the existing NASA context URL explains modeled pit temperatures.
+- Jezero: [MEDA, DOI 10.17189/1522849](https://pdsatmospheres.nmsu.edu/data_and_services/atmospheres_data/PERSEVERANCE/meda.html)
+  and [MRO CRISM](https://pds-geosciences.wustl.edu/missions/mro/crism.htm).
+- Olympus: [MGS MOLA](https://pds-geosciences.wustl.edu/missions/mgs/mola.html)
+  and [MRO HiRISE](https://hirise.lpl.arizona.edu/PDS/).

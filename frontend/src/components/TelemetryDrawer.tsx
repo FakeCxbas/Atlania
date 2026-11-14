@@ -156,22 +156,43 @@ export function TelemetryDrawer({
           })}
         </select>
         {activeTarget && (
-          <p className="mt-2 text-xs leading-relaxed text-slate-400">
-            {activeTarget.context} Mean{" "}
-            <span className="font-mono tabular-nums text-slate-300">
-              {activeTarget.temperature_mean_c}°C
-            </span>
-            .{" "}
-            <a
-              href={activeTarget.source_url}
-              target="_blank"
-              rel="noreferrer noopener"
-              className="inline-flex items-center gap-1 text-cyan-400 hover:underline"
-            >
-              NASA Reference
-              <ExternalLink className="h-3 w-3" aria-hidden="true" />
-            </a>
-          </p>
+          <div className="mt-2 space-y-1.5 text-xs leading-relaxed text-slate-400">
+            <p>
+              {activeTarget.context} Mean{" "}
+              <span className="font-mono tabular-nums text-slate-300">
+                {activeTarget.temperature_mean_c}°C
+              </span>
+              {activeTarget.gravity_ms2 !== undefined && (
+                <>
+                  {" "}
+                  · Gravity{" "}
+                  <span className="font-mono tabular-nums text-slate-300">
+                    {activeTarget.gravity_ms2} m/s²
+                  </span>
+                </>
+              )}
+              .{" "}
+              <a
+                href={activeTarget.source_url}
+                target="_blank"
+                rel="noreferrer noopener"
+                className="inline-flex items-center gap-1 text-cyan-400 hover:underline"
+              >
+                NASA Reference
+                <ExternalLink className="h-3 w-3" aria-hidden="true" />
+              </a>
+            </p>
+            {activeTarget.instrument && (
+              <p className="font-mono text-[11px] text-slate-300">
+                {activeTarget.instrument} · {activeTarget.pds_dataset}
+              </p>
+            )}
+            {activeTarget.mineralogy_summary && (
+              <p className="text-[11px] text-slate-400">
+                Mineralogy: {activeTarget.mineralogy_summary}
+              </p>
+            )}
+          </div>
         )}
       </div>
 
