@@ -23,6 +23,8 @@ export interface TargetProfile {
   pds_dataset?: string;
   gravity_ms2?: number;
   pressure_kpa?: number;
+  temp_min_c?: number;
+  temp_max_c?: number;
   mineralogy_summary?: string;
 }
 
@@ -62,6 +64,7 @@ export interface NasaPowerClimatology {
   source: "nasa_power" | "fallback";
   fallback_reason: string | null;
   source_url: string;
+  period?: string | null;
   aggregation: string;
 }
 
@@ -78,9 +81,11 @@ export interface AnalogSite {
   terrain: {
     slope_deg: number;
     roughness: number;
+    geology?: Record<string, number> | number[];
     lava_tubes: number;
     shelter: number;
     ice: number;
+    aqueous_history?: number;
   };
   climatology: NasaPowerClimatology;
   rationale: string;

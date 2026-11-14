@@ -1,18 +1,19 @@
 "use client";
 
 import type { AnalogSite, TargetProfile, DimensionScores } from "@/types/analog";
+import { AsiRadarChart } from "@/components/AsiRadarChart";
 import {
   ExternalLink,
   Layers,
-  Thermometer,
-  Droplets,
-  Mountain,
-  Gauge,
   CheckCircle2,
   AlertTriangle,
   Globe2,
   Moon,
   Orbit,
+  Maximize2,
+  Minimize2,
+  Database,
+  Info,
 } from "lucide-react";
 
 interface SideBySideComparisonProps {
@@ -27,6 +28,8 @@ interface SideBySideComparisonProps {
   };
   references: Record<string, TargetProfile>;
   onSelectTarget: (targetId: string) => void;
+  expanded?: boolean;
+  onToggleExpand?: () => void;
 }
 
 const ASI_DIMENSION_CONFIG: {
@@ -42,24 +45,89 @@ const ASI_DIMENSION_CONFIG: {
   {
     key: "geology",
     label: "Geología y Mineralogía",
-    desc: "Composición de basaltos, regolito, sedimentos y evaporitas",
+    desc: "Superposición difusa de Jaccard en basalto, regolito, sedimentos, evaporitas e impacto",
   },
   {
     key: "thermal",
     label: "Régimen Térmico",
-    desc: "Afinidad en temperatura media y rango térmico anual/diurno",
+    desc: "60% temperatura media y 40% amplitud térmica anual/diurna",
   },
   {
     key: "hydrology_ice",
     label: "Sequedad y Potencial de Hielo",
-    desc: "Hiperaridez, permafrost o historia acuosa pasada",
+    desc: "40% índice de aridez, 40% relevancia de hielo/permafrost y 20% historia acuosa",
   },
   {
     key: "subsurface_ops",
     label: "Operaciones Subterráneas y Refugio",
-    desc: "Aptitud de tubos de lava y protección contra radiación",
+    desc: "70% relevancia de tubos de lava y 30% refugio contra radiación",
   },
 ];
+
+const GEOLOGY_LABELS = [
+  "Basalto",
+  "Regolito / Tefra",
+  "Sedimentario",
+  "Evaporitas (Sales)",
+  "Impacto",
+];
+
+function AsiCircularGauge({
+  score,
+  isMars,
+}: {
+  score: number;
+  isMars: boolean;
+}) {
+  const size = 128;
+  const strokeWidth = 9;
+  const r = (size - strokeWidth) / 2;
+  const c = 2 * Math.PI * r;
+  const clamped = Math.max(0, Math.min(100, score));
+  const offset = c - (clamped / 100) * c;
+  const color = isMars ? "#E07A5F" : "#00D9F5";
+
+  return (
+    <div className="relative inline-flex items-center justify-center">
+      <svg
+        width={size}
+        height={size}
+        viewBox={`0 0 ${size} ${size}`}
+        role="img"
+        aria-label={`Índice de Similitud Análoga global: ${clamped.toFixed(1)} de 100`}
+        className="-rotate-90 transform"
+      >
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={r}
+          fill="none"
+          stroke="rgba(100, 180, 210, 0.14)"
+          strokeWidth={strokeWidth}
+        />
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={r}
+          fill="none"
+          stroke={color}
+          strokeWidth={strokeWidth}
+          strokeDasharray={c}
+          strokeDashoffset={offset}
+          strokeLinecap="round"
+        />
+      </svg>
+      <div className="Select-none absolute inset-0 flex flex-col items-center justify-center text-center">
+        <span className="font-mono text-2xl font-bold tabular-nums text-[#F1F5F9]">
+          {clamped.toFixed(1)}%
+        </span>
+        <span className="text-[10px] font-semibold tracking-wider text-[#F5B82E] uppercase">
+          ASI Global
+        </span>
+      </div>
+    </div>
+  );
+}
 
 export function SideBySideComparison({
   site,
@@ -67,14 +135,16 @@ export function SideBySideComparison({
   activeScore,
   references,
   onSelectTarget,
+  expanded = false,
+  onToggleExpand,
 }: SideBySideComparisonProps) {
   const isMars = target.body === "Mars";
-  const targetAccent = isMars ? "text-[#E07A5F]" : "text-cyan-400";
-  const targetBorder = isMars ? "border-[#E07A5F]/40" : "border-cyan-400/40";
-  const targetBg = isMars ? "bg-[#E07A5F]/10" : "bg-cyan-400/10";
-  const targetBar = isMars ? "bg-[#E07A5F]" : "bg-cyan-400";
+  const targetAccent = isMars ? "text-[#E07A5F]" : "text-[#00D9F5]";
+  const targetBorder = isMars ? "border-[#E07A5F]/40" : "border-[#00D9F5]/40";
+  const targetBar = isMars ? "bg-[#E07A5F]" : "bg-[#00D9F5]";
+  const bodyLabel = isMars ? "Marte" : "Luna";
 
-  // Environmental metric computations
+  // Real computed metrics from site & target data
   const earthMeanTemp = (site.climatology.tmax_c + site.climatology.tmin_c) / 2;
   const earthTempSwing = site.climatology.tmax_c - site.climatology.tmin_c;
   const targetMeanTemp = target.temperature_mean_c;
@@ -84,473 +154,649 @@ export function SideBySideComparison({
   const targetDryness = target.dryness;
 
   const earthSlope = site.terrain.slope_deg;
-  const targetSlope = target.terrain?.slope_deg ?? (isMars ? 8 : 20);
+  const targetSlope = target.terrain?.slope_deg ?? null;
 
   const earthRoughness = site.terrain.roughness;
-  const targetRoughness = target.terrain?.roughness ?? 0.85;
+  const targetRoughness = target.terrain?.roughness ?? null;
 
   const earthIce = site.terrain.ice;
-  const targetIce = target.terrain?.ice ?? (target.body === "Moon" ? 0.95 : 0.1);
+  const targetIce = target.terrain?.ice ?? null;
+  const earthAqueous = site.terrain.aqueous_history ?? 0;
 
-  // Gravity constants
-  const earthGravity = 9.81; // m/s^2
-  const targetGravity = target.body === "Moon" ? 1.62 : 3.71; // m/s^2
+  const geologyKeyMap: Record<string, string> = {
+    basalt: "Basalto",
+    regolith: "Regolito / Tefra",
+    sedimentary: "Sedimentario",
+    evaporite: "Evaporitas (Sales)",
+    impact: "Impacto",
+  };
+  const geologyEntries: Array<{ label: string; val: number }> = Array.isArray(
+    site.terrain.geology
+  )
+    ? site.terrain.geology.map((val, idx) => ({
+        label: GEOLOGY_LABELS[idx] ?? `Litología ${idx + 1}`,
+        val,
+      }))
+    : site.terrain.geology
+      ? Object.entries(site.terrain.geology).map(([key, val]) => ({
+          label: geologyKeyMap[key] ?? key,
+          val,
+        }))
+      : [];
+
+  const earthGravity = 9.81;
+  const targetGravity =
+    target.gravity_ms2 && target.gravity_ms2 > 0
+      ? target.gravity_ms2
+      : target.body === "Moon"
+      ? 1.62
+      : 3.71;
   const targetGravityRatio = Math.round((targetGravity / earthGravity) * 100);
 
-  // Atmospheric pressure constants
-  const earthPressure = "101.3 kPa (1.0 atm)";
-  const earthAtmosphere = "78% N₂ / 21% O₂ (Respirable)";
-  const targetPressure =
-    target.body === "Moon" ? "≈ 0 kPa (Vacío duro)" : "≈ 0.64 kPa (0.6% atm)";
-  const targetAtmosphere =
-    target.body === "Moon"
-      ? "Exosfera tenue / Radiación directa"
-      : "95% CO₂ (Híper-tenue, no respirable)";
+  // Ranked dimensions from actual engine output for objective interpretation
+  const sortedDims = [...ASI_DIMENSION_CONFIG].sort(
+    (a, b) => activeScore.dimensions[b.key] - activeScore.dimensions[a.key]
+  );
+  const topDim = sortedDims[0];
+  const weakestDim = sortedDims[sortedDims.length - 1];
+
+  const isLivePower = site.climatology.source === "nasa_power";
+  const isLiveDem = site.dem_telemetry.source === "open_meteo";
 
   return (
-    <div className="space-y-6 text-slate-100">
-      {/* Target Selector Bar */}
-      <div className="rounded-xl border border-[#D4AF37]/30 bg-[#060913]/80 p-3.5 shadow-inner">
-        <label
-          htmlFor="side-by-side-target-select"
-          className="mb-2 block text-xs font-semibold tracking-wider text-[#D4AF37] uppercase"
-        >
-          Objetivo Extraterrestre de Comparación
-        </label>
-        <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-4">
-          {Object.entries(references).map(([tId, ref]) => {
-            const isSelected = tId === target.id;
-            const refIsMars = ref.body === "Mars";
-            const score = site.scores[tId]?.overall_asi ?? 0;
-
-            return (
-              <button
-                key={tId}
-                type="button"
-                onClick={() => onSelectTarget(tId)}
-                aria-pressed={isSelected}
-                className={`flex flex-col items-start rounded-lg border p-2 text-left transition-all ${
-                  isSelected
-                    ? "border-[#D4AF37] bg-[#D4AF37]/15 shadow-[0_0_12px_rgba(212,175,55,0.25)]"
-                    : "border-slate-800 bg-[#0D1424]/70 hover:border-slate-700 hover:bg-slate-800/50"
+    <div className="space-y-5 text-[#F1F5F9]">
+      {/* 1. COMPARISON HEADER & TARGET SELECTOR */}
+      <div className="rounded-xl border border-[rgba(100,180,210,0.22)] bg-[#071018]/90 p-3.5">
+        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[rgba(100,180,210,0.18)] pb-3">
+          <div>
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="rounded border border-[#00D9F5]/40 bg-[#00D9F5]/10 px-2 py-0.5 text-[10px] font-semibold tracking-wider text-[#00D9F5] uppercase">
+                Tierra vs. {bodyLabel}
+              </span>
+              <span
+                className={`inline-flex items-center gap-1 rounded border px-2 py-0.5 font-mono text-[10px] font-semibold ${
+                  isLivePower
+                    ? "border-[#34D399]/40 bg-[#34D399]/10 text-[#34D399]"
+                    : "border-[#F5B82E]/40 bg-[#F5B82E]/10 text-[#F5B82E]"
                 }`}
               >
-                <div className="flex w-full items-center justify-between text-[11px]">
-                  <span
-                    className={`font-semibold ${
-                      refIsMars ? "text-[#E07A5F]" : "text-cyan-400"
-                    }`}
-                  >
-                    {ref.body}
-                  </span>
-                  <span className="font-mono font-bold tabular-nums text-slate-200">
-                    {score.toFixed(1)}%
-                  </span>
-                </div>
-                <span className="mt-1 line-clamp-1 text-xs font-medium text-slate-200">
-                  {ref.name.split("/")[0]}
-                </span>
-              </button>
-            );
-          })}
+                {isLivePower ? "CLIMA: NASA POWER EN VIVO" : "CLIMA: ESCENARIO DE RESPALDO"}
+              </span>
+              <span
+                className={`inline-flex items-center gap-1 rounded border px-2 py-0.5 font-mono text-[10px] font-semibold ${
+                  isLiveDem
+                    ? "border-[#34D399]/40 bg-[#34D399]/10 text-[#34D399]"
+                    : "border-[#F5B82E]/40 bg-[#F5B82E]/10 text-[#F5B82E]"
+                }`}
+              >
+                {isLiveDem ? "DEM: COPERNICUS GLO-90" : "DEM: RESPALDO"}
+              </span>
+            </div>
+            <p className="mt-1.5 text-xs text-[#94A3B8]">
+              Comparando{" "}
+              <strong className="text-[#F1F5F9]">{site.name}</strong> ({site.country})
+              frente a{" "}
+              <strong className={targetAccent}>{target.name}</strong>
+            </p>
+          </div>
+
+          {onToggleExpand && (
+            <button
+              type="button"
+              onClick={onToggleExpand}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-[#F5B82E]/50 bg-[#F5B82E]/15 px-3 py-1.5 text-xs font-semibold text-[#F5B82E] transition-colors hover:bg-[#F5B82E]/25"
+            >
+              {expanded ? (
+                <>
+                  <Minimize2 className="h-3.5 w-3.5" aria-hidden="true" />
+                  <span>Vista Compacta</span>
+                </>
+              ) : (
+                <>
+                  <Maximize2 className="h-3.5 w-3.5" aria-hidden="true" />
+                  <span>Expandir 3 Columnas</span>
+                </>
+              )}
+            </button>
+          )}
         </div>
 
-        {/* Target summary notice */}
-        <div className="mt-3 flex items-start gap-2 rounded-lg border border-slate-800/90 bg-[#0D1424]/80 p-2.5 text-xs text-slate-300">
-          <div className="mt-0.5 shrink-0">
-            {target.body === "Moon" ? (
-              <Moon className="h-4 w-4 text-cyan-400" aria-hidden="true" />
-            ) : (
-              <Orbit className="h-4 w-4 text-[#E07A5F]" aria-hidden="true" />
-            )}
-          </div>
-          <div className="flex-1 leading-relaxed">
-            <span className="font-semibold text-slate-100">{target.name}</span>:{" "}
-            {target.context}
-          </div>
-          <a
-            href={target.source_url}
-            target="_blank"
-            rel="noreferrer noopener"
-            className="inline-flex shrink-0 items-center gap-1 text-xs font-medium text-[#D4AF37] hover:underline"
-            title="Abrir referencia oficial NASA"
+        {/* Target Selector Grid (All 6 Planetary Targets) */}
+        <div className="mt-3">
+          <span className="mb-1.5 block text-[11px] font-semibold tracking-wider text-[#F5B82E] uppercase">
+            Seleccionar Destino Extraterrestre ({Object.keys(references).length} referencias PDS)
+          </span>
+          <div
+            className={`grid gap-1.5 ${
+              expanded ? "grid-cols-2 sm:grid-cols-3 lg:grid-cols-6" : "grid-cols-2 sm:grid-cols-3"
+            }`}
           >
-            NASA Docs
-            <ExternalLink className="h-3 w-3" aria-hidden="true" />
-          </a>
+            {Object.entries(references).map(([tId, ref]) => {
+              const isSelected = tId === target.id;
+              const refIsMars = ref.body === "Mars";
+              const score = site.scores[tId]?.overall_asi ?? 0;
+
+              return (
+                <button
+                  key={tId}
+                  type="button"
+                  onClick={() => onSelectTarget(tId)}
+                  aria-pressed={isSelected}
+                  className={`flex flex-col items-start rounded-lg border p-2 text-left transition-colors ${
+                    isSelected
+                      ? "border-[#F5B82E] bg-[#F5B82E]/15"
+                      : "border-[rgba(100,180,210,0.18)] bg-[#0D1925]/80 hover:border-[rgba(100,180,210,0.4)]"
+                  }`}
+                >
+                  <div className="flex w-full items-center justify-between text-[10px]">
+                    <span
+                      className={`font-semibold uppercase ${
+                        refIsMars ? "text-[#E07A5F]" : "text-[#00D9F5]"
+                      }`}
+                    >
+                      {refIsMars ? "Marte" : "Luna"}
+                    </span>
+                    <span className="font-mono font-bold tabular-nums text-[#F1F5F9]">
+                      {score.toFixed(1)}%
+                    </span>
+                  </div>
+                  <span className="mt-0.5 line-clamp-1 text-[11px] font-medium text-slate-200">
+                    {ref.name.split("/")[0]}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
         </div>
       </div>
 
-      {/* 4 Environmental Gaps (Side by Side) */}
-      <section aria-labelledby="gaps-heading" className="space-y-4">
-        <div className="flex items-center justify-between border-b border-[#D4AF37]/20 pb-2">
-          <h3
-            id="gaps-heading"
-            className="flex items-center gap-2 text-sm font-bold tracking-wide text-slate-100 uppercase"
-          >
-            <Gauge className="h-4 w-4 text-[#D4AF37]" aria-hidden="true" />
-            Brechas Ambientales: Tierra vs. {target.body}
-          </h3>
-          <span className="text-xs font-medium text-slate-400">
-            Similitud ASI:{" "}
-            <span className="font-mono font-bold tabular-nums text-[#D4AF37]">
-              {activeScore.overall_asi.toFixed(1)}%
-            </span>
-          </span>
-        </div>
-
-        <div className="grid grid-cols-1 gap-3">
-          {/* 1. Thermal Regime Gap */}
-          <div className="rounded-xl border border-slate-800/90 bg-[#060913]/60 p-3.5">
-            <div className="flex items-center justify-between text-xs">
-              <span className="flex items-center gap-1.5 font-semibold text-slate-200">
-                <Thermometer className="h-3.5 w-3.5 text-amber-400" aria-hidden="true" />
-                1. Régimen Térmico y Amplitud
-              </span>
-              <span className="font-mono font-semibold tabular-nums text-slate-300">
-                ASI: {activeScore.dimensions.thermal.toFixed(1)} / 100
+      {/* 2. THREE-COLUMN SCIENTIFIC COMPARISON WORKBENCH */}
+      <div
+        className={`grid gap-4 ${
+          expanded ? "grid-cols-1 lg:grid-cols-3" : "grid-cols-1"
+        }`}
+      >
+        {/* COLUMN 1 — TIERRA (Sitio Análogo) */}
+        <section
+          aria-label="Columna Tierra: propiedades del sitio terrestre"
+          className="flex flex-col justify-between rounded-xl border border-[rgba(100,180,210,0.22)] bg-[#0D1925]/90 p-4"
+        >
+          <div className="space-y-4">
+            <div className="flex items-center justify-between border-b border-[rgba(100,180,210,0.18)] pb-2.5">
+              <div className="flex items-center gap-2">
+                <Globe2 className="h-4 w-4 text-[#00D9F5]" aria-hidden="true" />
+                <h3 className="text-xs font-bold tracking-wider text-[#00D9F5] uppercase">
+                  Columna I · Tierra (Sitio)
+                </h3>
+              </div>
+              <span className="rounded bg-[#132434] px-2 py-0.5 text-[10px] font-semibold text-slate-200">
+                {site.discovery_tier}
               </span>
             </div>
 
-            <div className="mt-3 grid grid-cols-2 gap-3 text-xs">
-              {/* Earth Side */}
-              <div className="rounded-lg border border-cyan-500/20 bg-cyan-950/20 p-2.5">
-                <div className="flex items-center gap-1 font-medium text-cyan-300">
-                  <Globe2 className="h-3.5 w-3.5" aria-hidden="true" /> Tierra (Sitio)
-                </div>
-                <div className="mt-1.5 space-y-1 font-mono tabular-nums text-slate-200">
-                  <div className="flex justify-between">
-                    <span className="text-slate-400">Media:</span>
-                    <span className="font-semibold">{earthMeanTemp.toFixed(1)}°C</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-slate-400">Rango (Min/Max):</span>
-                    <span>
-                      {site.climatology.tmin_c.toFixed(1)}° a {site.climatology.tmax_c.toFixed(1)}°
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-slate-400">Amplitud ΔT:</span>
-                    <span className="text-cyan-300">{earthTempSwing.toFixed(1)}°C</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Target Side */}
-              <div className={`rounded-lg border ${targetBorder} ${targetBg} p-2.5`}>
-                <div className={`flex items-center gap-1 font-medium ${targetAccent}`}>
-                  {target.body === "Moon" ? (
-                    <Moon className="h-3.5 w-3.5" aria-hidden="true" />
-                  ) : (
-                    <Orbit className="h-3.5 w-3.5" aria-hidden="true" />
-                  )}
-                  {target.body} ({target.name.split("/")[0]})
-                </div>
-                <div className="mt-1.5 space-y-1 font-mono tabular-nums text-slate-200">
-                  <div className="flex justify-between">
-                    <span className="text-slate-400">Media:</span>
-                    <span className="font-semibold">{targetMeanTemp.toFixed(1)}°C</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-slate-400">Rango esperado:</span>
-                    <span>±{(targetTempSwing / 2).toFixed(0)}°C</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-slate-400">Amplitud ΔT:</span>
-                    <span className={targetAccent}>{targetTempSwing.toFixed(1)}°C</span>
-                  </div>
-                </div>
-              </div>
+            <div>
+              <h4 className="text-sm font-bold text-[#F1F5F9]">{site.name}</h4>
+              <p className="mt-0.5 font-mono text-xs tabular-nums text-[#94A3B8]">
+                {site.country} · LAT {site.latitude.toFixed(3)}°, LON{" "}
+                {site.longitude.toFixed(3)}° · Elev. {site.elevation_m.toLocaleString()} m
+              </p>
             </div>
 
-            {/* Visual comparative bar */}
-            <div className="mt-3">
-              <div className="mb-1 flex justify-between text-[11px] text-slate-400">
-                <span>Brecha Térmica (Diferencia de media)</span>
-                <span className="font-mono tabular-nums text-amber-300">
-                  Δ {Math.abs(earthMeanTemp - targetMeanTemp).toFixed(1)}°C
-                </span>
-              </div>
-              <div className="h-2 w-full overflow-hidden rounded-full bg-slate-800">
-                <div
-                  className="h-full rounded-full bg-gradient-to-r from-cyan-400 to-amber-400"
-                  style={{
-                    width: `${Math.min(100, Math.max(0, activeScore.dimensions.thermal))}%`,
-                  }}
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* 2. Dryness & Ice Potential */}
-          <div className="rounded-xl border border-slate-800/90 bg-[#060913]/60 p-3.5">
-            <div className="flex items-center justify-between text-xs">
-              <span className="flex items-center gap-1.5 font-semibold text-slate-200">
-                <Droplets className="h-3.5 w-3.5 text-blue-400" aria-hidden="true" />
-                2. Sequedad e Hielo / Agua
+            {/* Measured / Sampled Earth Telemetry */}
+            <div className="space-y-1.5">
+              <span className="block text-[10px] font-semibold tracking-wider text-[#94A3B8] uppercase">
+                Climatología ({site.climatology.source === "nasa_power" ? "NASA POWER 2m" : "Respaldo"})
               </span>
-              <span className="font-mono font-semibold tabular-nums text-slate-300">
-                ASI: {activeScore.dimensions.hydrology_ice.toFixed(1)} / 100
-              </span>
-            </div>
-
-            <div className="mt-3 grid grid-cols-2 gap-3 text-xs">
-              <div className="rounded-lg border border-cyan-500/20 bg-cyan-950/20 p-2.5">
-                <span className="font-medium text-cyan-300">Tierra (Sitio)</span>
-                <div className="mt-1.5 space-y-1 font-mono tabular-nums text-slate-200">
-                  <div className="flex justify-between">
-                    <span className="text-slate-400">Precipitación:</span>
-                    <span>{site.climatology.precipitation_mm_day.toFixed(2)} mm/d</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-slate-400">Índice Sequedad:</span>
-                    <span className="font-semibold">{(earthDryness * 100).toFixed(0)}%</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-slate-400">Relevancia Hielo:</span>
-                    <span>{(earthIce * 100).toFixed(0)}%</span>
-                  </div>
-                </div>
-              </div>
-
-              <div className={`rounded-lg border ${targetBorder} ${targetBg} p-2.5`}>
-                <span className={`font-medium ${targetAccent}`}>
-                  {target.body} ({target.name.split("/")[0]})
-                </span>
-                <div className="mt-1.5 space-y-1 font-mono tabular-nums text-slate-200">
-                  <div className="flex justify-between">
-                    <span className="text-slate-400">Lluvia Líquida:</span>
-                    <span>0.00 mm/d (Nula)</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-slate-400">Índice Sequedad:</span>
-                    <span className="font-semibold">{(targetDryness * 100).toFixed(0)}%</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-slate-400">Relevancia Hielo:</span>
-                    <span>{(targetIce * 100).toFixed(0)}%</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="mt-3">
-              <div className="mb-1 flex justify-between text-[11px] text-slate-400">
-                <span>Alineación Hidrológica / Criosfera</span>
-                <span className="font-mono tabular-nums text-blue-300">
-                  {activeScore.dimensions.hydrology_ice.toFixed(1)}% match
-                </span>
-              </div>
-              <div className="h-2 w-full overflow-hidden rounded-full bg-slate-800">
-                <div
-                  className="h-full rounded-full bg-blue-500"
-                  style={{
-                    width: `${Math.min(100, Math.max(0, activeScore.dimensions.hydrology_ice))}%`,
-                  }}
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* 3. Topography: Slope & Roughness */}
-          <div className="rounded-xl border border-slate-800/90 bg-[#060913]/60 p-3.5">
-            <div className="flex items-center justify-between text-xs">
-              <span className="flex items-center gap-1.5 font-semibold text-slate-200">
-                <Mountain className="h-3.5 w-3.5 text-emerald-400" aria-hidden="true" />
-                3. Pendiente y Rugosidad Topográfica
-              </span>
-              <span className="font-mono font-semibold tabular-nums text-slate-300">
-                ASI: {activeScore.dimensions.topography.toFixed(1)} / 100
-              </span>
-            </div>
-
-            <div className="mt-3 grid grid-cols-2 gap-3 text-xs">
-              <div className="rounded-lg border border-cyan-500/20 bg-cyan-950/20 p-2.5">
-                <span className="font-medium text-cyan-300">Tierra (Sitio)</span>
-                <div className="mt-1.5 space-y-1 font-mono tabular-nums text-slate-200">
-                  <div className="flex justify-between">
-                    <span className="text-slate-400">Pendiente:</span>
-                    <span className="font-semibold">{earthSlope.toFixed(1)}°</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-slate-400">Rugosidad (0-1):</span>
-                    <span>{earthRoughness.toFixed(2)}</span>
-                  </div>
-                </div>
-              </div>
-
-              <div className={`rounded-lg border ${targetBorder} ${targetBg} p-2.5`}>
-                <span className={`font-medium ${targetAccent}`}>
-                  {target.body} ({target.name.split("/")[0]})
-                </span>
-                <div className="mt-1.5 space-y-1 font-mono tabular-nums text-slate-200">
-                  <div className="flex justify-between">
-                    <span className="text-slate-400">Pendiente Ref.:</span>
-                    <span className="font-semibold">{targetSlope.toFixed(1)}°</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-slate-400">Rugosidad Ref.:</span>
-                    <span>{targetRoughness.toFixed(2)}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="mt-3">
-              <div className="mb-1 flex justify-between text-[11px] text-slate-400">
-                <span>Discrepancia de Pendiente</span>
-                <span className="font-mono tabular-nums text-emerald-300">
-                  Δ {Math.abs(earthSlope - targetSlope).toFixed(1)}°
-                </span>
-              </div>
-              <div className="h-2 w-full overflow-hidden rounded-full bg-slate-800">
-                <div
-                  className="h-full rounded-full bg-emerald-500"
-                  style={{
-                    width: `${Math.min(100, Math.max(0, activeScore.dimensions.topography))}%`,
-                  }}
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* 4. Gravity & Pressure / Atmosphere */}
-          <div className="rounded-xl border border-slate-800/90 bg-[#060913]/60 p-3.5">
-            <div className="flex items-center justify-between text-xs">
-              <span className="flex items-center gap-1.5 font-semibold text-slate-200">
-                <Gauge className="h-3.5 w-3.5 text-purple-400" aria-hidden="true" />
-                4. Gravedad y Presión Atmosférica
-              </span>
-              <span className="rounded border border-purple-500/40 bg-purple-950/30 px-2 py-0.5 text-[11px] font-semibold text-purple-300">
-                Brecha Física Infranqueable
-              </span>
-            </div>
-
-            <div className="mt-3 grid grid-cols-2 gap-3 text-xs">
-              <div className="rounded-lg border border-cyan-500/20 bg-cyan-950/20 p-2.5">
-                <span className="font-medium text-cyan-300">Tierra (1.00 g)</span>
-                <div className="mt-1.5 space-y-1.5 text-slate-200">
-                  <div>
-                    <span className="block text-[11px] text-slate-400">Aceleración:</span>
-                    <span className="font-mono font-semibold tabular-nums">
-                      {earthGravity.toFixed(2)} m/s² (100%)
-                    </span>
-                  </div>
-                  <div>
-                    <span className="block text-[11px] text-slate-400">Presión / Atmósfera:</span>
-                    <span className="font-mono text-[11px]">{earthPressure}</span>
-                    <span className="block text-[10px] text-slate-400">{earthAtmosphere}</span>
-                  </div>
-                </div>
-              </div>
-
-              <div className={`rounded-lg border ${targetBorder} ${targetBg} p-2.5`}>
-                <span className={`font-medium ${targetAccent}`}>
-                  {target.body} ({targetGravityRatio}% g)
-                </span>
-                <div className="mt-1.5 space-y-1.5 text-slate-200">
-                  <div>
-                    <span className="block text-[11px] text-slate-400">Aceleración:</span>
-                    <span className="font-mono font-semibold tabular-nums">
-                      {targetGravity.toFixed(2)} m/s² ({targetGravityRatio}%)
-                    </span>
-                  </div>
-                  <div>
-                    <span className="block text-[11px] text-slate-400">Presión / Atmósfera:</span>
-                    <span className="font-mono text-[11px]">{targetPressure}</span>
-                    <span className="block text-[10px] text-slate-400">{targetAtmosphere}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Gravity comparison visual bar */}
-            <div className="mt-3">
-              <div className="mb-1 flex justify-between text-[11px] text-slate-400">
-                <span>Carga gravitatoria en {target.body}</span>
-                <span className="font-mono tabular-nums text-purple-300">
-                  {targetGravityRatio}% respecto a la Tierra
-                </span>
-              </div>
-              <div className="h-2 w-full overflow-hidden rounded-full bg-slate-800">
-                <div
-                  className="h-full rounded-full bg-purple-500"
-                  style={{ width: `${targetGravityRatio}%` }}
-                />
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* 5-Axis ASI Visual Breakdown */}
-      <section aria-labelledby="asi-breakdown-heading" className="space-y-3">
-        <div className="flex items-center justify-between border-b border-[#D4AF37]/20 pb-2">
-          <h3
-            id="asi-breakdown-heading"
-            className="flex items-center gap-2 text-sm font-bold tracking-wide text-slate-100 uppercase"
-          >
-            <Layers className="h-4 w-4 text-[#D4AF37]" aria-hidden="true" />
-            Desglose de los 5 Ejes del ASI
-          </h3>
-          <span className="text-xs text-slate-400">Ponderaciones de misión</span>
-        </div>
-
-        <div className="space-y-3 rounded-xl border border-slate-800/90 bg-[#060913]/60 p-3.5">
-          {ASI_DIMENSION_CONFIG.map(({ key, label, desc }) => {
-            const score = activeScore.dimensions[key];
-            const weight = activeScore.weights[key] * 100;
-
-            return (
-              <div key={key} className="space-y-1">
-                <div className="flex items-center justify-between text-xs">
-                  <div>
-                    <span className="font-medium text-slate-200">{label}</span>
-                    <span className="ml-1.5 font-mono text-[11px] text-slate-400">
-                      (peso: {weight.toFixed(0)}%)
-                    </span>
-                  </div>
-                  <span className="font-mono font-bold tabular-nums text-[#D4AF37]">
-                    {score.toFixed(1)} / 100
+              <div className="grid grid-cols-2 gap-2 font-mono text-xs tabular-nums">
+                <div className="rounded-lg border border-[rgba(100,180,210,0.16)] bg-[#132434]/60 p-2">
+                  <span className="block font-sans text-[10px] text-[#94A3B8]">
+                    Temp. Media Anual
+                  </span>
+                  <span className="font-bold text-[#F1F5F9]">
+                    {earthMeanTemp.toFixed(1)}°C
                   </span>
                 </div>
-                <div className="h-2 w-full overflow-hidden rounded-full bg-slate-800">
-                  <div
-                    className={`h-full rounded-full transition-all duration-500 ${targetBar}`}
-                    style={{ width: `${Math.min(100, Math.max(0, score))}%` }}
-                  />
+                <div className="rounded-lg border border-[rgba(100,180,210,0.16)] bg-[#132434]/60 p-2">
+                  <span className="block font-sans text-[10px] text-[#94A3B8]">
+                    Rango (Mín / Máx)
+                  </span>
+                  <span className="font-bold text-[#F1F5F9]">
+                    {site.climatology.tmin_c.toFixed(1)}° / {site.climatology.tmax_c.toFixed(1)}°C
+                  </span>
                 </div>
-                <p className="text-[11px] leading-tight text-slate-400">{desc}</p>
+                <div className="rounded-lg border border-[rgba(100,180,210,0.16)] bg-[#132434]/60 p-2">
+                  <span className="block font-sans text-[10px] text-[#94A3B8]">
+                    Amplitud Térmica ΔT
+                  </span>
+                  <span className="font-bold text-[#00D9F5]">
+                    {earthTempSwing.toFixed(1)}°C
+                  </span>
+                </div>
+                <div className="rounded-lg border border-[rgba(100,180,210,0.16)] bg-[#132434]/60 p-2">
+                  <span className="block font-sans text-[10px] text-[#94A3B8]">
+                    Precipitación
+                  </span>
+                  <span className="font-bold text-[#F1F5F9]">
+                    {site.climatology.precipitation_mm_day.toFixed(2)} mm/d
+                  </span>
+                </div>
+                <div className="rounded-lg border border-[rgba(100,180,210,0.16)] bg-[#132434]/60 p-2">
+                  <span className="block font-sans text-[10px] text-[#94A3B8]">
+                    Presión Superficial
+                  </span>
+                  <span className="font-bold text-[#F1F5F9]">
+                    {site.climatology.surface_pressure_kpa.toFixed(1)} kPa
+                  </span>
+                </div>
+                <div className="rounded-lg border border-[rgba(100,180,210,0.16)] bg-[#132434]/60 p-2">
+                  <span className="block font-sans text-[10px] text-[#94A3B8]">
+                    Irradiancia / Viento
+                  </span>
+                  <span className="font-bold text-[#F1F5F9]">
+                    {site.climatology.solar_irradiance_kwh_m2_day.toFixed(1)} kWh ·{" "}
+                    {site.climatology.wind_m_s.toFixed(1)} m/s
+                  </span>
+                </div>
               </div>
-            );
-          })}
-        </div>
-      </section>
+            </div>
 
-      {/* Strengths & Limitations */}
-      <section aria-labelledby="strengths-limits-heading" className="space-y-3">
-        <h3
-          id="strengths-limits-heading"
-          className="border-b border-[#D4AF37]/20 pb-2 text-sm font-bold tracking-wide text-slate-100 uppercase"
+            {/* DEM & Scenario Priors */}
+            <div className="space-y-1.5">
+              <span className="block text-[10px] font-semibold tracking-wider text-[#94A3B8] uppercase">
+                Topografía DEM y Priors de Escenario
+              </span>
+              <div className="grid grid-cols-2 gap-2 font-mono text-xs tabular-nums">
+                <div className="rounded-lg border border-[rgba(100,180,210,0.16)] bg-[#132434]/60 p-2">
+                  <span className="block font-sans text-[10px] text-[#94A3B8]">
+                    Pendiente (DEM / Prior)
+                  </span>
+                  <span className="font-bold text-[#F1F5F9]">
+                    {site.dem_telemetry.dem_slope_deg.toFixed(1)}° / {earthSlope.toFixed(1)}°
+                  </span>
+                </div>
+                <div className="rounded-lg border border-[rgba(100,180,210,0.16)] bg-[#132434]/60 p-2">
+                  <span className="block font-sans text-[10px] text-[#94A3B8]">
+                    Relieve DEM / Rugosidad
+                  </span>
+                  <span className="font-bold text-[#F1F5F9]">
+                    {site.dem_telemetry.dem_roughness_m.toFixed(1)} m / {earthRoughness.toFixed(2)}
+                  </span>
+                </div>
+                <div className="rounded-lg border border-[rgba(100,180,210,0.16)] bg-[#132434]/60 p-2">
+                  <span className="block font-sans text-[10px] text-[#94A3B8]">
+                    Tubos Lávicos / Refugio
+                  </span>
+                  <span className="font-bold text-[#F1F5F9]">
+                    {(site.terrain.lava_tubes * 100).toFixed(0)}% /{" "}
+                    {(site.terrain.shelter * 100).toFixed(0)}%
+                  </span>
+                </div>
+                <div className="rounded-lg border border-[rgba(100,180,210,0.16)] bg-[#132434]/60 p-2">
+                  <span className="block font-sans text-[10px] text-[#94A3B8]">
+                    Hielo / Hist. Acuosa
+                  </span>
+                  <span className="font-bold text-[#F1F5F9]">
+                    {(earthIce * 100).toFixed(0)}% /{" "}
+                    {(earthAqueous * 100).toFixed(0)}%
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Lithological memberships */}
+            <div>
+              <span className="block text-[10px] font-semibold tracking-wider text-[#94A3B8] uppercase">
+                Membresías Geológicas del Sitio (0–100%)
+              </span>
+              <div className="mt-1.5 flex flex-wrap gap-1.5">
+                {geologyEntries.length > 0 ? (
+                  geologyEntries.map(({ label, val }) => (
+                    <span
+                      key={label}
+                      className="rounded border border-[rgba(100,180,210,0.2)] bg-[#071018] px-2 py-0.5 font-mono text-[10px] text-slate-300"
+                    >
+                      {label}: {(val * 100).toFixed(0)}%
+                    </span>
+                  ))
+                ) : (
+                  <span className="font-mono text-[10px] text-[#94A3B8]">
+                    Estimado por prior de escenario en punto libre
+                  </span>
+                )}
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-4 border-t border-[rgba(100,180,210,0.16)] pt-2.5 text-[11px] text-[#94A3B8]">
+            <span>
+              Período climático: {site.climatology.period ?? " Escenario anual"} · Gravedad:{" "}
+              <strong className="font-mono text-slate-200">9.81 m/s²</strong>
+            </span>
+          </div>
+        </section>
+
+        {/* COLUMN 2 — ANÁLISIS CUANTITATIVO ASI */}
+        <section
+          aria-label="Columna central: análisis cuantitativo del índice ASI"
+          className="flex flex-col justify-between rounded-xl border border-[#F5B82E]/35 bg-[#0D1925]/95 p-4"
         >
-          Validez y Límites de la Analogía
-        </h3>
+          <div className="space-y-4">
+            <div className="flex items-center justify-between border-b border-[rgba(100,180,210,0.18)] pb-2.5">
+              <div className="flex items-center gap-2">
+                <Layers className="h-4 w-4 text-[#F5B82E]" aria-hidden="true" />
+                <h3 className="text-xs font-bold tracking-wider text-[#F5B82E] uppercase">
+                  Columna II · Análisis ASI (5 Ejes)
+                </h3>
+              </div>
+              <span className="font-mono text-xs font-bold text-[#F5B82E]">
+                {activeScore.overall_asi.toFixed(1)} / 100
+              </span>
+            </div>
 
+            {/* Circular Gauge + 5-Axis Radar side by side */}
+            <div className="grid grid-cols-1 items-center gap-2 rounded-xl border border-[rgba(100,180,210,0.16)] bg-[#071018]/80 p-3 sm:grid-cols-2">
+              <div className="flex flex-col items-center justify-center">
+                <AsiCircularGauge score={activeScore.overall_asi} isMars={isMars} />
+                <span className="mt-1.5 text-center text-[10px] text-[#94A3B8]">
+                  Similitud ponderada de escenario (no probabilidad)
+                </span>
+              </div>
+              <AsiRadarChart
+                dimensions={activeScore.dimensions}
+                weights={activeScore.weights}
+                isMars={isMars}
+              />
+            </div>
+
+            {/* 5 Weighted Dimension Bars */}
+            <div className="space-y-2.5">
+              {ASI_DIMENSION_CONFIG.map(({ key, label, desc }) => {
+                const score = activeScore.dimensions[key];
+                const weight = activeScore.weights[key] * 100;
+
+                return (
+                  <div key={key} className="space-y-1">
+                    <div className="flex items-center justify-between text-xs">
+                      <div>
+                        <span className="font-medium text-[#F1F5F9]">{label}</span>
+                        <span className="ml-1.5 font-mono text-[10px] text-[#94A3B8]">
+                          (peso: {weight.toFixed(0)}%)
+                        </span>
+                      </div>
+                      <span className="font-mono font-bold tabular-nums text-[#F5B82E]">
+                        {score.toFixed(1)}%
+                      </span>
+                    </div>
+                    <div className="h-2 w-full overflow-hidden rounded-full bg-[#132434]">
+                      <div
+                        className={`h-full rounded-full ${targetBar}`}
+                        style={{ width: `${Math.min(100, Math.max(0, score))}%` }}
+                      />
+                    </div>
+                    <p className="text-[10px] leading-tight text-[#94A3B8]">{desc}</p>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Key Environmental Gaps Summary */}
+            <div className="rounded-lg border border-[rgba(100,180,210,0.18)] bg-[#132434]/50 p-3 text-xs">
+              <span className="block text-[10px] font-bold tracking-wider text-[#00D9F5] uppercase">
+                Brechas Ambientales Directas
+              </span>
+              <div className="mt-2 grid grid-cols-2 gap-2 font-mono text-[11px] tabular-nums">
+                <div>
+                  <span className="block font-sans text-[10px] text-[#94A3B8]">
+                    Δ Temp. Media:
+                  </span>
+                  <span className="font-bold text-[#F5B82E]">
+                    {Math.abs(earthMeanTemp - targetMeanTemp).toFixed(1)}°C
+                  </span>
+                </div>
+                <div>
+                  <span className="block font-sans text-[10px] text-[#94A3B8]">
+                    Δ Amplitud Térmica:
+                  </span>
+                  <span className="font-bold text-[#F1F5F9]">
+                    {Math.abs(earthTempSwing - targetTempSwing).toFixed(1)}°C
+                  </span>
+                </div>
+                <div>
+                  <span className="block font-sans text-[10px] text-[#94A3B8]">
+                    Δ Pendiente:
+                  </span>
+                  <span className="font-bold text-[#34D399]">
+                    {targetSlope !== null
+                      ? `${Math.abs(earthSlope - targetSlope).toFixed(1)}°`
+                      : "No medida"}
+                  </span>
+                </div>
+                <div>
+                  <span className="block font-sans text-[10px] text-[#94A3B8]">
+                    Relación Gravedad:
+                  </span>
+                  <span className="font-bold text-purple-300">
+                    {targetGravity.toFixed(2)} vs 9.81 m/s² ({targetGravityRatio}%)
+                  </span>
+                </div>
+                <div className="col-span-2 border-t border-[rgba(100,180,210,0.14)] pt-1.5">
+                  <span className="font-sans text-[10px] text-[#94A3B8]">
+                    Índice Aridez (Tierra vs {bodyLabel}):{" "}
+                  </span>
+                  <span className="font-bold text-[#00D9F5]">
+                    {(earthDryness * 100).toFixed(1)}% vs {(targetDryness * 100).toFixed(1)}%
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Objective Motor Conclusion (Fase 3 / Fase 6 compliance) */}
+          <div className="mt-4 rounded-lg border border-[#F5B82E]/30 bg-[#071018]/90 p-3 text-xs">
+            <div className="flex items-center gap-1.5 font-semibold text-[#F5B82E]">
+              <Info className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+              <span>Interpretación Cuantitativa del Motor ASI</span>
+            </div>
+            <p className="mt-1 leading-relaxed text-slate-300">
+              Para el objetivo <strong>{target.name.split("/")[0]}</strong>, el motor
+              calcula un ASI ponderado de{" "}
+              <strong className="font-mono text-[#F5B82E]">
+                {activeScore.overall_asi.toFixed(1)}%
+              </strong>
+              , impulsado principalmente por{" "}
+              <strong>{topDim.label.toLowerCase()}</strong> (
+              <span className="font-mono">
+                {activeScore.dimensions[topDim.key].toFixed(1)}%
+              </span>
+              , peso {(activeScore.weights[topDim.key] * 100).toFixed(0)}%) y limitado en{" "}
+              <strong>{weakestDim.label.toLowerCase()}</strong> (
+              <span className="font-mono">
+                {activeScore.dimensions[weakestDim.key].toFixed(1)}%
+              </span>
+              ). Este valor representa similitud exploratoria de escenario y no
+              certifica aptitud operativa ni seguridad de misión.
+            </p>
+          </div>
+        </section>
+
+        {/* COLUMN 3 — LUNA O MARTE (Objetivo Extraterrestre) */}
+        <section
+          aria-label={`Columna derecha: propiedades documentadas de ${target.name}`}
+          className={`flex flex-col justify-between rounded-xl border ${targetBorder} bg-[#0D1925]/90 p-4`}
+        >
+          <div className="space-y-4">
+            <div className="flex items-center justify-between border-b border-[rgba(100,180,210,0.18)] pb-2.5">
+              <div className="flex items-center gap-2">
+                {isMars ? (
+                  <Orbit className="h-4 w-4 text-[#E07A5F]" aria-hidden="true" />
+                ) : (
+                  <Moon className="h-4 w-4 text-[#00D9F5]" aria-hidden="true" />
+                )}
+                <h3 className={`text-xs font-bold tracking-wider uppercase ${targetAccent}`}>
+                  Columna III · {bodyLabel} (Referencia)
+                </h3>
+              </div>
+              <span className="rounded bg-[#132434] px-2 py-0.5 font-mono text-[10px] text-slate-200">
+                NASA PDS
+              </span>
+            </div>
+
+            <div>
+              <h4 className="text-sm font-bold text-[#F1F5F9]">{target.name}</h4>
+              <p className="mt-1 text-xs leading-relaxed text-slate-300">
+                {target.context}
+              </p>
+            </div>
+
+            {/* Documented Planetary Parameters */}
+            <div className="space-y-1.5">
+              <span className="block text-[10px] font-semibold tracking-wider text-[#94A3B8] uppercase">
+                Parámetros de Escenario y Constantes Nominales
+              </span>
+              <div className="grid grid-cols-2 gap-2 font-mono text-xs tabular-nums">
+                <div className="rounded-lg border border-[rgba(100,180,210,0.16)] bg-[#132434]/60 p-2">
+                  <span className="block font-sans text-[10px] text-[#94A3B8]">
+                    Temp. Media Escenario
+                  </span>
+                  <span className="font-bold text-[#F1F5F9]">
+                    {targetMeanTemp.toFixed(1)}°C
+                  </span>
+                </div>
+                <div className="rounded-lg border border-[rgba(100,180,210,0.16)] bg-[#132434]/60 p-2">
+                  <span className="block font-sans text-[10px] text-[#94A3B8]">
+                    Rango Escenario
+                  </span>
+                  <span className="font-bold text-[#F1F5F9]">
+                    {target.temp_min_c !== undefined && target.temp_max_c !== undefined
+                      ? `${target.temp_min_c}° a ${target.temp_max_c}°C`
+                      : `±${(targetTempSwing / 2).toFixed(0)}°C`}
+                  </span>
+                </div>
+                <div className="rounded-lg border border-[rgba(100,180,210,0.16)] bg-[#132434]/60 p-2">
+                  <span className="block font-sans text-[10px] text-[#94A3B8]">
+                    Amplitud Térmica ΔT
+                  </span>
+                  <span className={`font-bold ${targetAccent}`}>
+                    {targetTempSwing.toFixed(1)}°C
+                  </span>
+                </div>
+                <div className="rounded-lg border border-[rgba(100,180,210,0.16)] bg-[#132434]/60 p-2">
+                  <span className="block font-sans text-[10px] text-[#94A3B8]">
+                    Sequedad Superficial
+                  </span>
+                  <span className="font-bold text-[#F1F5F9]">
+                    {(targetDryness * 100).toFixed(0)}% (Sin lluvia líquida)
+                  </span>
+                </div>
+                <div className="rounded-lg border border-[rgba(100,180,210,0.16)] bg-[#132434]/60 p-2">
+                  <span className="block font-sans text-[10px] text-[#94A3B8]">
+                    Gravedad Nominal
+                  </span>
+                  <span className="font-bold text-[#F1F5F9]">
+                    {targetGravity.toFixed(2)} m/s² ({targetGravityRatio}% g)
+                  </span>
+                </div>
+                <div className="rounded-lg border border-[rgba(100,180,210,0.16)] bg-[#132434]/60 p-2">
+                  <span className="block font-sans text-[10px] text-[#94A3B8]">
+                    Presión Nominal
+                  </span>
+                  <span className="font-bold text-[#F1F5F9]">
+                    {target.pressure_kpa !== undefined
+                      ? `${target.pressure_kpa} kPa`
+                      : isMars
+                      ? "0.65 kPa"
+                      : "0.0 kPa (Vacío)"}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Target Terrain Priors & Unmeasured Indicators */}
+            <div className="space-y-1.5">
+              <span className="block text-[10px] font-semibold tracking-wider text-[#94A3B8] uppercase">
+                Priors Morfológicos y Mineralogía Regional
+              </span>
+              <div className="grid grid-cols-2 gap-2 font-mono text-xs tabular-nums">
+                <div className="rounded-lg border border-[rgba(100,180,210,0.16)] bg-[#132434]/60 p-2">
+                  <span className="block font-sans text-[10px] text-[#94A3B8]">
+                    Pendiente Escenario
+                  </span>
+                  <span className="font-bold text-[#F1F5F9]">
+                    {targetSlope !== null ? `${targetSlope.toFixed(1)}°` : "No disponible"}
+                  </span>
+                </div>
+                <div className="rounded-lg border border-[rgba(100,180,210,0.16)] bg-[#132434]/60 p-2">
+                  <span className="block font-sans text-[10px] text-[#94A3B8]">
+                    Rugosidad / Hielo
+                  </span>
+                  <span className="font-bold text-[#F1F5F9]">
+                    {targetRoughness !== null ? targetRoughness.toFixed(2) : "—"} /{" "}
+                    {targetIce !== null ? `${(targetIce * 100).toFixed(0)}%` : "—"}
+                  </span>
+                </div>
+              </div>
+              {target.mineralogy_summary && (
+                <p className="rounded-lg border border-[rgba(100,180,210,0.16)] bg-[#071018]/70 p-2.5 text-xs leading-relaxed text-slate-300">
+                  <strong className="text-slate-100">Contexto Mineralógico:</strong>{" "}
+                  {target.mineralogy_summary}
+                </p>
+              )}
+            </div>
+
+            {/* Explicitly Unmeasured / Unavailable Data */}
+            <div className="rounded-lg border border-[rgba(100,180,210,0.18)] bg-[#071018]/80 p-2.5 text-[11px] text-[#94A3B8]">
+              <span className="flex items-center gap-1 font-semibold text-slate-200">
+                <Database className="h-3.5 w-3.5 text-[#00D9F5]" aria-hidden="true" />
+                Instrumentación y Datos No Medidos Localmente
+              </span>
+              <p className="mt-1">
+                <strong>Instrumentos:</strong> {target.instrument || "Archivo NASA"}.{" "}
+                <strong>PDS:</strong>{" "}
+                <span className="font-mono text-[10px]">
+                  {target.pds_dataset || "Cita documental"}
+                </span>
+                .
+              </p>
+              <p className="mt-1 text-[10px] text-slate-400">
+                * Dosis de radiación ionizante local, ensayo geoquímico in situ de
+                tubos subterráneos y humedad relativa atmosférica no aplican o no
+                están medidos en este perfil.
+              </p>
+            </div>
+          </div>
+
+          <div className="mt-4 border-t border-[rgba(100,180,210,0.16)] pt-3">
+            <a
+              href={target.source_url}
+              target="_blank"
+              rel="noreferrer noopener"
+              className="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-[#F5B82E] bg-[#F5B82E]/15 px-3 py-2 text-xs font-semibold text-[#F5B82E] transition-colors hover:bg-[#F5B82E]/25"
+            >
+              <span>Consultar Fuente Oficial en NASA.gov</span>
+              <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" />
+            </a>
+          </div>
+        </section>
+      </div>
+
+      {/* 3. SCIENTIFIC STRENGTHS & DOCUMENTED LIMITATIONS (FASE 3 / FASE 6) */}
+      <section aria-labelledby="strengths-limits-heading" className="grid gap-3 sm:grid-cols-2">
         {/* Strengths */}
-        <div className="rounded-xl border border-emerald-500/30 bg-emerald-950/15 p-3.5">
-          <div className="mb-2 flex items-center gap-1.5 text-xs font-semibold text-emerald-400">
+        <div className="rounded-xl border border-[#34D399]/35 bg-[#0D1925]/90 p-4">
+          <div className="mb-2 flex items-center gap-1.5 text-xs font-bold tracking-wider text-[#34D399] uppercase">
             <CheckCircle2 className="h-4 w-4" aria-hidden="true" />
-            Dónde cumple la analogía (Score ≥ 70/100)
+            Dimensiones con Alta Afinidad (Score ≥ 70/100)
           </div>
           {activeScore.analogy_strengths.length === 0 ? (
-            <p className="text-xs text-slate-400">
-              Ningún eje superó el umbral de 70/100 para este objetivo. La afinidad global es moderada o selectiva.
+            <p className="text-xs text-[#94A3B8]">
+              Ninguna dimensión individual superó el umbral de 70/100 frente a este
+              objetivo; la similitud es parcial o específica de sub-variables.
             </p>
           ) : (
-            <ul className="space-y-1 text-xs text-slate-300">
+            <ul className="space-y-1.5 text-xs text-slate-200">
               {activeScore.analogy_strengths.map((str, idx) => (
-                <li key={idx} className="flex items-start gap-1.5">
-                  <span className="text-emerald-400">•</span>
+                <li key={idx} className="flex items-start gap-2">
+                  <span className="font-bold text-[#34D399]">•</span>
                   <span>{str}</span>
                 </li>
               ))}
@@ -558,51 +804,22 @@ export function SideBySideComparison({
           )}
         </div>
 
-        {/* Limitations */}
-        <div className="rounded-xl border border-amber-500/30 bg-amber-950/15 p-3.5">
-          <div className="mb-2 flex items-center gap-1.5 text-xs font-semibold text-amber-400">
+        {/* Documented Breakdowns / Limitations */}
+        <div className="rounded-xl border border-[#F5B82E]/35 bg-[#0D1925]/90 p-4">
+          <div className="mb-2 flex items-center gap-1.5 text-xs font-bold tracking-wider text-[#F5B82E] uppercase">
             <AlertTriangle className="h-4 w-4" aria-hidden="true" />
-            Dónde se rompe la analogía (Factores Críticos)
+            Limitaciones Científicas y Brechas Físicas Documentadas
           </div>
           <ul className="space-y-1.5 text-xs text-slate-300">
             {Object.entries(activeScore.analogy_breakdowns).map(([key, msg]) => (
               <li key={key} className="leading-relaxed">
-                <span className="font-semibold text-slate-200 uppercase">{key}:</span>{" "}
-                <span className="text-slate-300">{msg}</span>
+                <span className="font-semibold text-[#F1F5F9] uppercase">{key}:</span>{" "}
+                <span>{msg}</span>
               </li>
             ))}
           </ul>
         </div>
       </section>
-
-      {/* Official NASA Reference Card */}
-      <div className="rounded-xl border border-[#D4AF37]/50 bg-[#0D1424] p-4 shadow-[0_0_15px_rgba(212,175,55,0.12)]">
-        <div className="flex items-start justify-between gap-3">
-          <div>
-            <span className="inline-block rounded border border-[#D4AF37]/40 bg-[#D4AF37]/10 px-2 py-0.5 text-[10px] font-semibold tracking-wider text-[#D4AF37] uppercase">
-              Referencia Oficial NASA
-            </span>
-            <h4 className="mt-1.5 text-sm font-semibold text-slate-100">
-              {target.name}
-            </h4>
-            <p className="mt-1 text-xs leading-relaxed text-slate-300">
-              {target.context}
-            </p>
-          </div>
-        </div>
-
-        <div className="mt-3 pt-3 border-t border-slate-800/80">
-          <a
-            href={target.source_url}
-            target="_blank"
-            rel="noreferrer noopener"
-            className="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-[#D4AF37] bg-[#D4AF37]/20 px-3 py-2 text-xs font-semibold text-[#D4AF37] transition-all hover:bg-[#D4AF37]/30 hover:shadow-[0_0_12px_rgba(212,175,55,0.3)] focus:outline-none focus:ring-2 focus:ring-[#D4AF37]"
-          >
-            Consultar Publicación Científica Oficial en NASA.gov
-            <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" />
-          </a>
-        </div>
-      </div>
     </div>
   );
 }
