@@ -1,0 +1,20 @@
+# Dependencies
+node_modules/
+frontend/node_modules/
+.venv/
+engine/.venv/
+__pycache__/
+*.py[cod]
+
+# Next.js build output
+frontend/.next/
+frontend/out/
+frontend/build/
+
+# Environment & secrets
+.env
+.env*.local
+
+# OS & IDE
+.DS_Store
+*.log

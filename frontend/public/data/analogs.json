@@ -1,0 +1,1870 @@
+{
+  "schema_version": "1.0.0",
+  "methodology": {
+    "name": "Exploratory Analog Similarity Index",
+    "version": "0.1.0",
+    "score_range": [
+      0,
+      100
+    ],
+    "dimensions": [
+      "topography",
+      "geology",
+      "thermal",
+      "hydrology_ice",
+      "subsurface_ops"
+    ],
+    "geology_order": [
+      "basalt",
+      "regolith",
+      "sedimentary",
+      "evaporite",
+      "impact"
+    ],
+    "climatology_units": {
+      "T2M_MAX": "degC",
+      "T2M_MIN": "degC",
+      "PRECTOTCORR": "mm/day",
+      "WS10M": "m/s",
+      "RH2M": "%"
+    },
+    "prior_status": "Illustrative scenario priors; not measured or calibrated site properties.",
+    "interpretation": "Weighted scenario similarity, not a validated probability, mission readiness score or NASA endorsement.",
+    "climate_limitations": "POWER grid-cell 2 m air climate does not resolve caves, summit relief or extraterrestrial surface thermal cycles. Fallback values are illustrative estimates, not observations.",
+    "geography": "Representative WGS84 points and approximate elevations; Galapagos combines Santa Cruz/Isabela but samples only Santa Cruz.",
+    "formula": "overall_asi = sum(target_weight[d] * dimension_score[d]); details in engine/README.md",
+    "thermal_scales_c": {
+      "mean": 100,
+      "range": 100
+    },
+    "source_counts": {
+      "nasa_power": 9,
+      "fallback": 1
+    }
+  },
+  "references": {
+    "shackleton-crater": {
+      "id": "shackleton-crater",
+      "name": "Shackleton Crater / Lunar South Pole (Artemis)",
+      "body": "Moon",
+      "terrain": {
+        "slope_deg": 20,
+        "roughness": 0.85,
+        "geology": [
+          0.05,
+          1,
+          0.05,
+          0,
+          1
+        ],
+        "ice": 0.95,
+        "aqueous_history": 0,
+        "lava_tubes": 0,
+        "shelter": 0.25
+      },
+      "temperature_mean_c": -183,
+      "temperature_range_c": 10,
+      "dryness": 1,
+      "weights": [
+        0.25,
+        0.2,
+        0.2,
+        0.3,
+        0.05
+      ],
+      "context": "Cold-trap interior scenario; does not represent the illuminated rim. Ice relevance is a hypothesis, not a local abundance measurement.",
+      "source_url": "https://science.nasa.gov/resource/shackleton-craters-illuminated-rim-shadowed-interior/"
+    },
+    "mare-tranquillitatis": {
+      "id": "mare-tranquillitatis",
+      "name": "Mare Tranquillitatis / Lunar Lava Tubes",
+      "body": "Moon",
+      "terrain": {
+        "slope_deg": 5,
+        "roughness": 0.55,
+        "geology": [
+          1,
+          0.8,
+          0,
+          0,
+          0.1
+        ],
+        "ice": 0,
+        "aqueous_history": 0,
+        "lava_tubes": 1,
+        "shelter": 1
+      },
+      "temperature_mean_c": 17,
+      "temperature_range_c": 2,
+      "dryness": 1,
+      "weights": [
+        0.15,
+        0.3,
+        0.15,
+        0.1,
+        0.3
+      ],
+      "context": "Shaded pit / hypothetical connected cave scenario; 17 C is modeled pit shade, not lunar surface climate or a proven habitable cave.",
+      "source_url": "https://www.nasa.gov/solar-system/nasas-lro-finds-lunar-pits-harbor-comfortable-temperatures/"
+    },
+    "jezero-crater": {
+      "id": "jezero-crater",
+      "name": "Jezero Crater / Mars Delta and Basalt",
+      "body": "Mars",
+      "terrain": {
+        "slope_deg": 6,
+        "roughness": 0.6,
+        "geology": [
+          0.8,
+          0.8,
+          1,
+          0.3,
+          0.5
+        ],
+        "ice": 0.1,
+        "aqueous_history": 1,
+        "lava_tubes": 0,
+        "shelter": 0.1
+      },
+      "temperature_mean_c": -60,
+      "temperature_range_c": 70,
+      "dryness": 1,
+      "weights": [
+        0.2,
+        0.35,
+        0.15,
+        0.25,
+        0.05
+      ],
+      "context": "Present dry surface thermal scenario combined with ancient aqueous geology; not a reconstruction of ancient climate.",
+      "source_url": "https://www.jpl.nasa.gov/news/nasas-perseverance-rover-deciphers-ancient-history-of-martian-lake/"
+    },
+    "olympus-mons-flank": {
+      "id": "olympus-mons-flank",
+      "name": "Olympus Mons Flank / Mars Volcanic Lava Tubes",
+      "body": "Mars",
+      "terrain": {
+        "slope_deg": 8,
+        "roughness": 0.8,
+        "geology": [
+          1,
+          0.7,
+          0.05,
+          0,
+          0.1
+        ],
+        "ice": 0.1,
+        "aqueous_history": 0.05,
+        "lava_tubes": 1,
+        "shelter": 0.9
+      },
+      "temperature_mean_c": -65,
+      "temperature_range_c": 80,
+      "dryness": 1,
+      "weights": [
+        0.25,
+        0.3,
+        0.15,
+        0.1,
+        0.2
+      ],
+      "context": "Exposed volcanic flank thermal scenario with tube exploration relevance; no measured subsurface temperature assumed.",
+      "source_url": "https://science.nasa.gov/photojournal/the-flows-of-olympus/"
+    }
+  },
+  "sites": [
+    {
+      "id": "galapagos-lava-tubes",
+      "name": "Galapagos Lava Tubes - Santa Cruz / Isabela",
+      "country": "Ecuador",
+      "latitude": -0.67,
+      "longitude": -90.38,
+      "elevation_m": 400,
+      "terrain": {
+        "slope_deg": 5,
+        "roughness": 0.65,
+        "geology": [
+          1,
+          0.4,
+          0.05,
+          0,
+          0
+        ],
+        "ice": 0,
+        "aqueous_history": 0.1,
+        "lava_tubes": 1,
+        "shelter": 1
+      },
+      "climatology": {
+        "tmax_c": 30.42,
+        "tmin_c": 17.51,
+        "precipitation_mm_day": 0.83,
+        "wind_m_s": 4.39,
+        "relative_humidity_pct": 78.94,
+        "source": "nasa_power",
+        "fallback_reason": null,
+        "source_url": "https://power.larc.nasa.gov/api/temporal/climatology/point?parameters=T2M_MAX%2CT2M_MIN%2CPRECTOTCORR%2CWS10M%2CRH2M&community=RE&longitude=-90.38&latitude=-0.67&format=JSON",
+        "period": null,
+        "aggregation": "T2M_MAX: ANN; T2M_MIN: ANN; PRECTOTCORR: ANN; WS10M: ANN; RH2M: ANN"
+      },
+      "rationale": "Basaltic lava tubes support cave robotics and habitat geometry trials.",
+      "prior_status": "Illustrative scenario priors; not measured or calibrated site properties.",
+      "scores": {
+        "shackleton-crater": {
+          "dimensions": {
+            "topography": 65.0,
+            "geology": 16.39,
+            "thermal": 38.84,
+            "hydrology_ice": 41.86,
+            "subsurface_ops": 7.5
+          },
+          "overall_asi": 40.23,
+          "weights": {
+            "topography": 0.25,
+            "geology": 0.2,
+            "thermal": 0.2,
+            "hydrology_ice": 0.3,
+            "subsurface_ops": 0.05
+          },
+          "analogy_strengths": [],
+          "analogy_breakdowns": {
+            "gravity": "Earth gravity (9.81 m/s2) cannot reproduce Moon gravity (1.62 m/s2); traction and structural loading differ.",
+            "atmosphere_vacuum": "Earth air does not reproduce lunar vacuum.",
+            "radiation": "Earth atmosphere and magnetic shielding do not reproduce extraterrestrial ionizing radiation; POWER parameters here do not measure UV or radiation dose.",
+            "weathering": "Liquid water, oxygen and biology alter terrestrial materials differently from space weathering and Martian surface chemistry.",
+            "thermal_comparability": "POWER 2 m air climatology is only a proxy against scenario surface/pit temperatures; it cannot validate cave stability, cryogenic exposure or lunar day/night cycles.",
+            "site_specific": "Santa Cruz climate point cannot resolve Isabela or cave microclimates; humid biological weathering and protected-area access constraints."
+          }
+        },
+        "mare-tranquillitatis": {
+          "dimensions": {
+            "topography": 95.0,
+            "geology": 71.79,
+            "thermal": 91.46,
+            "hydrology_ice": 79.86,
+            "subsurface_ops": 100.0
+          },
+          "overall_asi": 87.49,
+          "weights": {
+            "topography": 0.15,
+            "geology": 0.3,
+            "thermal": 0.15,
+            "hydrology_ice": 0.1,
+            "subsurface_ops": 0.3
+          },
+          "analogy_strengths": [
+            "topography: 95.00/100 scenario similarity",
+            "geology: 71.79/100 scenario similarity",
+            "thermal: 91.46/100 scenario similarity",
+            "hydrology_ice: 79.86/100 scenario similarity",
+            "subsurface_ops: 100.00/100 scenario similarity"
+          ],
+          "analogy_breakdowns": {
+            "gravity": "Earth gravity (9.81 m/s2) cannot reproduce Moon gravity (1.62 m/s2); traction and structural loading differ.",
+            "atmosphere_vacuum": "Earth air does not reproduce lunar vacuum.",
+            "radiation": "Earth atmosphere and magnetic shielding do not reproduce extraterrestrial ionizing radiation; POWER parameters here do not measure UV or radiation dose.",
+            "weathering": "Liquid water, oxygen and biology alter terrestrial materials differently from space weathering and Martian surface chemistry.",
+            "thermal_comparability": "POWER 2 m air climatology is only a proxy against scenario surface/pit temperatures; it cannot validate cave stability, cryogenic exposure or lunar day/night cycles.",
+            "site_specific": "Santa Cruz climate point cannot resolve Isabela or cave microclimates; humid biological weathering and protected-area access constraints."
+          }
+        },
+        "jezero-crater": {
+          "dimensions": {
+            "topography": 95.83,
+            "geology": 34.72,
+            "thermal": 26.78,
+            "hydrology_ice": 59.86,
+            "subsurface_ops": 3.0
+          },
+          "overall_asi": 50.45,
+          "weights": {
+            "topography": 0.2,
+            "geology": 0.35,
+            "thermal": 0.15,
+            "hydrology_ice": 0.25,
+            "subsurface_ops": 0.05
+          },
+          "analogy_strengths": [
+            "topography: 95.83/100 scenario similarity"
+          ],
+          "analogy_breakdowns": {
+            "gravity": "Earth gravity (9.81 m/s2) cannot reproduce Mars gravity (3.71 m/s2); traction and structural loading differ.",
+            "atmosphere_vacuum": "Earth air does not reproduce the thin, CO2-dominated Martian atmosphere.",
+            "radiation": "Earth atmosphere and magnetic shielding do not reproduce extraterrestrial ionizing radiation; POWER parameters here do not measure UV or radiation dose.",
+            "weathering": "Liquid water, oxygen and biology alter terrestrial materials differently from space weathering and Martian surface chemistry.",
+            "thermal_comparability": "POWER 2 m air climatology is only a proxy against scenario surface/pit temperatures; it cannot validate cave stability, cryogenic exposure or lunar day/night cycles.",
+            "site_specific": "Santa Cruz climate point cannot resolve Isabela or cave microclimates; humid biological weathering and protected-area access constraints."
+          }
+        },
+        "olympus-mons-flank": {
+          "dimensions": {
+            "topography": 87.5,
+            "geology": 78.38,
+            "thermal": 19.78,
+            "hydrology_ice": 76.86,
+            "subsurface_ops": 97.0
+          },
+          "overall_asi": 75.44,
+          "weights": {
+            "topography": 0.25,
+            "geology": 0.3,
+            "thermal": 0.15,
+            "hydrology_ice": 0.1,
+            "subsurface_ops": 0.2
+          },
+          "analogy_strengths": [
+            "topography: 87.50/100 scenario similarity",
+            "geology: 78.38/100 scenario similarity",
+            "hydrology_ice: 76.86/100 scenario similarity",
+            "subsurface_ops: 97.00/100 scenario similarity"
+          ],
+          "analogy_breakdowns": {
+            "gravity": "Earth gravity (9.81 m/s2) cannot reproduce Mars gravity (3.71 m/s2); traction and structural loading differ.",
+            "atmosphere_vacuum": "Earth air does not reproduce the thin, CO2-dominated Martian atmosphere.",
+            "radiation": "Earth atmosphere and magnetic shielding do not reproduce extraterrestrial ionizing radiation; POWER parameters here do not measure UV or radiation dose.",
+            "weathering": "Liquid water, oxygen and biology alter terrestrial materials differently from space weathering and Martian surface chemistry.",
+            "thermal_comparability": "POWER 2 m air climatology is only a proxy against scenario surface/pit temperatures; it cannot validate cave stability, cryogenic exposure or lunar day/night cycles.",
+            "site_specific": "Santa Cruz climate point cannot resolve Isabela or cave microclimates; humid biological weathering and protected-area access constraints."
+          }
+        }
+      },
+      "best_target": "mare-tranquillitatis",
+      "overall_asi": 87.49,
+      "analogy_strengths": [
+        "topography: 95.00/100 scenario similarity",
+        "geology: 71.79/100 scenario similarity",
+        "thermal: 91.46/100 scenario similarity",
+        "hydrology_ice: 79.86/100 scenario similarity",
+        "subsurface_ops: 100.00/100 scenario similarity"
+      ],
+      "analogy_breakdowns": {
+        "gravity": "Earth gravity (9.81 m/s2) cannot reproduce Moon gravity (1.62 m/s2); traction and structural loading differ.",
+        "atmosphere_vacuum": "Earth air does not reproduce lunar vacuum.",
+        "radiation": "Earth atmosphere and magnetic shielding do not reproduce extraterrestrial ionizing radiation; POWER parameters here do not measure UV or radiation dose.",
+        "weathering": "Liquid water, oxygen and biology alter terrestrial materials differently from space weathering and Martian surface chemistry.",
+        "thermal_comparability": "POWER 2 m air climatology is only a proxy against scenario surface/pit temperatures; it cannot validate cave stability, cryogenic exposure or lunar day/night cycles.",
+        "site_specific": "Santa Cruz climate point cannot resolve Isabela or cave microclimates; humid biological weathering and protected-area access constraints."
+      }
+    },
+    {
+      "id": "chimborazo",
+      "name": "Chimborazo High-Altitude Volcanic Permafrost",
+      "country": "Ecuador",
+      "latitude": -1.47,
+      "longitude": -78.82,
+      "elevation_m": 5000,
+      "terrain": {
+        "slope_deg": 22,
+        "roughness": 0.9,
+        "geology": [
+          0.55,
+          0.7,
+          0.05,
+          0,
+          0
+        ],
+        "ice": 0.8,
+        "aqueous_history": 0.1,
+        "lava_tubes": 0.05,
+        "shelter": 0.15
+      },
+      "climatology": {
+        "tmax_c": 21.52,
+        "tmin_c": 1.03,
+        "precipitation_mm_day": 3.83,
+        "wind_m_s": 2.97,
+        "relative_humidity_pct": 84.48,
+        "source": "nasa_power",
+        "fallback_reason": null,
+        "source_url": "https://power.larc.nasa.gov/api/temporal/climatology/point?parameters=T2M_MAX%2CT2M_MIN%2CPRECTOTCORR%2CWS10M%2CRH2M&community=RE&longitude=-78.82&latitude=-1.47&format=JSON",
+        "period": null,
+        "aggregation": "T2M_MAX: ANN; T2M_MIN: ANN; PRECTOTCORR: ANN; WS10M: ANN; RH2M: ANN"
+      },
+      "rationale": "High-altitude cold terrain supports frost and rover mobility experiments.",
+      "prior_status": "Illustrative scenario priors; not measured or calibrated site properties.",
+      "scores": {
+        "shackleton-crater": {
+          "dimensions": {
+            "topography": 94.17,
+            "geology": 30.77,
+            "thermal": 35.8,
+            "hydrology_ice": 60.28,
+            "subsurface_ops": 93.5
+          },
+          "overall_asi": 59.62,
+          "weights": {
+            "topography": 0.25,
+            "geology": 0.2,
+            "thermal": 0.2,
+            "hydrology_ice": 0.3,
+            "subsurface_ops": 0.05
+          },
+          "analogy_strengths": [
+            "topography: 94.17/100 scenario similarity",
+            "subsurface_ops: 93.50/100 scenario similarity"
+          ],
+          "analogy_breakdowns": {
+            "gravity": "Earth gravity (9.81 m/s2) cannot reproduce Moon gravity (1.62 m/s2); traction and structural loading differ.",
+            "atmosphere_vacuum": "Earth air does not reproduce lunar vacuum.",
+            "radiation": "Earth atmosphere and magnetic shielding do not reproduce extraterrestrial ionizing radiation; POWER parameters here do not measure UV or radiation dose.",
+            "weathering": "Liquid water, oxygen and biology alter terrestrial materials differently from space weathering and Martian surface chemistry.",
+            "thermal_comparability": "POWER 2 m air climatology is only a proxy against scenario surface/pit temperatures; it cannot validate cave stability, cryogenic exposure or lunar day/night cycles.",
+            "site_specific": "Permafrost relevance is a scenario prior, not mapped extent; volcanic material is not uniformly basalt and POWER smooths summit relief."
+          }
+        },
+        "mare-tranquillitatis": {
+          "dimensions": {
+            "topography": 54.17,
+            "geology": 64.1,
+            "thermal": 89.17,
+            "hydrology_ice": 34.28,
+            "subsurface_ops": 8.0
+          },
+          "overall_asi": 46.56,
+          "weights": {
+            "topography": 0.15,
+            "geology": 0.3,
+            "thermal": 0.15,
+            "hydrology_ice": 0.1,
+            "subsurface_ops": 0.3
+          },
+          "analogy_strengths": [
+            "thermal: 89.17/100 scenario similarity"
+          ],
+          "analogy_breakdowns": {
+            "gravity": "Earth gravity (9.81 m/s2) cannot reproduce Moon gravity (1.62 m/s2); traction and structural loading differ.",
+            "atmosphere_vacuum": "Earth air does not reproduce lunar vacuum.",
+            "radiation": "Earth atmosphere and magnetic shielding do not reproduce extraterrestrial ionizing radiation; POWER parameters here do not measure UV or radiation dose.",
+            "weathering": "Liquid water, oxygen and biology alter terrestrial materials differently from space weathering and Martian surface chemistry.",
+            "thermal_comparability": "POWER 2 m air climatology is only a proxy against scenario surface/pit temperatures; it cannot validate cave stability, cryogenic exposure or lunar day/night cycles.",
+            "site_specific": "Permafrost relevance is a scenario prior, not mapped extent; volcanic material is not uniformly basalt and POWER smooths summit relief."
+          }
+        },
+        "jezero-crater": {
+          "dimensions": {
+            "topography": 58.33,
+            "geology": 38.24,
+            "thermal": 37.43,
+            "hydrology_ice": 22.28,
+            "subsurface_ops": 95.0
+          },
+          "overall_asi": 40.98,
+          "weights": {
+            "topography": 0.2,
+            "geology": 0.35,
+            "thermal": 0.15,
+            "hydrology_ice": 0.25,
+            "subsurface_ops": 0.05
+          },
+          "analogy_strengths": [
+            "subsurface_ops: 95.00/100 scenario similarity"
+          ],
+          "analogy_breakdowns": {
+            "gravity": "Earth gravity (9.81 m/s2) cannot reproduce Mars gravity (3.71 m/s2); traction and structural loading differ.",
+            "atmosphere_vacuum": "Earth air does not reproduce the thin, CO2-dominated Martian atmosphere.",
+            "radiation": "Earth atmosphere and magnetic shielding do not reproduce extraterrestrial ionizing radiation; POWER parameters here do not measure UV or radiation dose.",
+            "weathering": "Liquid water, oxygen and biology alter terrestrial materials differently from space weathering and Martian surface chemistry.",
+            "thermal_comparability": "POWER 2 m air climatology is only a proxy against scenario surface/pit temperatures; it cannot validate cave stability, cryogenic exposure or lunar day/night cycles.",
+            "site_specific": "Permafrost relevance is a scenario prior, not mapped extent; volcanic material is not uniformly basalt and POWER smooths summit relief."
+          }
+        },
+        "olympus-mons-flank": {
+          "dimensions": {
+            "topography": 71.67,
+            "geology": 70.27,
+            "thermal": 30.43,
+            "hydrology_ice": 39.28,
+            "subsurface_ops": 11.0
+          },
+          "overall_asi": 49.69,
+          "weights": {
+            "topography": 0.25,
+            "geology": 0.3,
+            "thermal": 0.15,
+            "hydrology_ice": 0.1,
+            "subsurface_ops": 0.2
+          },
+          "analogy_strengths": [
+            "topography: 71.67/100 scenario similarity",
+            "geology: 70.27/100 scenario similarity"
+          ],
+          "analogy_breakdowns": {
+            "gravity": "Earth gravity (9.81 m/s2) cannot reproduce Mars gravity (3.71 m/s2); traction and structural loading differ.",
+            "atmosphere_vacuum": "Earth air does not reproduce the thin, CO2-dominated Martian atmosphere.",
+            "radiation": "Earth atmosphere and magnetic shielding do not reproduce extraterrestrial ionizing radiation; POWER parameters here do not measure UV or radiation dose.",
+            "weathering": "Liquid water, oxygen and biology alter terrestrial materials differently from space weathering and Martian surface chemistry.",
+            "thermal_comparability": "POWER 2 m air climatology is only a proxy against scenario surface/pit temperatures; it cannot validate cave stability, cryogenic exposure or lunar day/night cycles.",
+            "site_specific": "Permafrost relevance is a scenario prior, not mapped extent; volcanic material is not uniformly basalt and POWER smooths summit relief."
+          }
+        }
+      },
+      "best_target": "shackleton-crater",
+      "overall_asi": 59.62,
+      "analogy_strengths": [
+        "topography: 94.17/100 scenario similarity",
+        "subsurface_ops: 93.50/100 scenario similarity"
+      ],
+      "analogy_breakdowns": {
+        "gravity": "Earth gravity (9.81 m/s2) cannot reproduce Moon gravity (1.62 m/s2); traction and structural loading differ.",
+        "atmosphere_vacuum": "Earth air does not reproduce lunar vacuum.",
+        "radiation": "Earth atmosphere and magnetic shielding do not reproduce extraterrestrial ionizing radiation; POWER parameters here do not measure UV or radiation dose.",
+        "weathering": "Liquid water, oxygen and biology alter terrestrial materials differently from space weathering and Martian surface chemistry.",
+        "thermal_comparability": "POWER 2 m air climatology is only a proxy against scenario surface/pit temperatures; it cannot validate cave stability, cryogenic exposure or lunar day/night cycles.",
+        "site_specific": "Permafrost relevance is a scenario prior, not mapped extent; volcanic material is not uniformly basalt and POWER smooths summit relief."
+      }
+    },
+    {
+      "id": "cotopaxi",
+      "name": "Cotopaxi Pyroclastic Plains",
+      "country": "Ecuador",
+      "latitude": -0.68,
+      "longitude": -78.44,
+      "elevation_m": 3900,
+      "terrain": {
+        "slope_deg": 7,
+        "roughness": 0.65,
+        "geology": [
+          0.45,
+          0.9,
+          0.15,
+          0,
+          0
+        ],
+        "ice": 0.25,
+        "aqueous_history": 0.15,
+        "lava_tubes": 0.1,
+        "shelter": 0.15
+      },
+      "climatology": {
+        "tmax_c": 10,
+        "tmin_c": -1,
+        "precipitation_mm_day": 2,
+        "wind_m_s": 5,
+        "relative_humidity_pct": 75,
+        "source": "fallback",
+        "fallback_reason": "NASA POWER unavailable or invalid (ReadTimeout)",
+        "source_url": "https://power.larc.nasa.gov/api/temporal/climatology/point?parameters=T2M_MAX%2CT2M_MIN%2CPRECTOTCORR%2CWS10M%2CRH2M&community=RE&longitude=-78.44&latitude=-0.68&format=JSON",
+        "period": null,
+        "aggregation": "illustrative annual scenario"
+      },
+      "rationale": "Loose volcanic deposits provide traction, abrasion and dust handling analogs.",
+      "prior_status": "Illustrative scenario priors; not measured or calibrated site properties.",
+      "scores": {
+        "shackleton-crater": {
+          "dimensions": {
+            "topography": 68.33,
+            "geology": 38.46,
+            "thermal": 39.6,
+            "hydrology_ice": 42.33,
+            "subsurface_ops": 90.0
+          },
+          "overall_asi": 49.9,
+          "weights": {
+            "topography": 0.25,
+            "geology": 0.2,
+            "thermal": 0.2,
+            "hydrology_ice": 0.3,
+            "subsurface_ops": 0.05
+          },
+          "analogy_strengths": [
+            "subsurface_ops: 90.00/100 scenario similarity"
+          ],
+          "analogy_breakdowns": {
+            "gravity": "Earth gravity (9.81 m/s2) cannot reproduce Moon gravity (1.62 m/s2); traction and structural loading differ.",
+            "atmosphere_vacuum": "Earth air does not reproduce lunar vacuum.",
+            "radiation": "Earth atmosphere and magnetic shielding do not reproduce extraterrestrial ionizing radiation; POWER parameters here do not measure UV or radiation dose.",
+            "weathering": "Liquid water, oxygen and biology alter terrestrial materials differently from space weathering and Martian surface chemistry.",
+            "thermal_comparability": "POWER 2 m air climatology is only a proxy against scenario surface/pit temperatures; it cannot validate cave stability, cryogenic exposure or lunar day/night cycles.",
+            "site_specific": "Andesitic pyroclastics differ from lunar regolith; active volcanic hazards and wet weather require field assessment."
+          }
+        },
+        "mare-tranquillitatis": {
+          "dimensions": {
+            "topography": 91.67,
+            "geology": 58.14,
+            "thermal": 88.9,
+            "hydrology_ice": 60.33,
+            "subsurface_ops": 11.5
+          },
+          "overall_asi": 54.01,
+          "weights": {
+            "topography": 0.15,
+            "geology": 0.3,
+            "thermal": 0.15,
+            "hydrology_ice": 0.1,
+            "subsurface_ops": 0.3
+          },
+          "analogy_strengths": [
+            "topography: 91.67/100 scenario similarity",
+            "thermal: 88.90/100 scenario similarity"
+          ],
+          "analogy_breakdowns": {
+            "gravity": "Earth gravity (9.81 m/s2) cannot reproduce Moon gravity (1.62 m/s2); traction and structural loading differ.",
+            "atmosphere_vacuum": "Earth air does not reproduce lunar vacuum.",
+            "radiation": "Earth atmosphere and magnetic shielding do not reproduce extraterrestrial ionizing radiation; POWER parameters here do not measure UV or radiation dose.",
+            "weathering": "Liquid water, oxygen and biology alter terrestrial materials differently from space weathering and Martian surface chemistry.",
+            "thermal_comparability": "POWER 2 m air climatology is only a proxy against scenario surface/pit temperatures; it cannot validate cave stability, cryogenic exposure or lunar day/night cycles.",
+            "site_specific": "Andesitic pyroclastics differ from lunar regolith; active volcanic hazards and wet weather require field assessment."
+          }
+        },
+        "jezero-crater": {
+          "dimensions": {
+            "topography": 95.83,
+            "geology": 40.0,
+            "thermal": 37.7,
+            "hydrology_ice": 50.33,
+            "subsurface_ops": 91.5
+          },
+          "overall_asi": 55.98,
+          "weights": {
+            "topography": 0.2,
+            "geology": 0.35,
+            "thermal": 0.15,
+            "hydrology_ice": 0.25,
+            "subsurface_ops": 0.05
+          },
+          "analogy_strengths": [
+            "topography: 95.83/100 scenario similarity",
+            "subsurface_ops: 91.50/100 scenario similarity"
+          ],
+          "analogy_breakdowns": {
+            "gravity": "Earth gravity (9.81 m/s2) cannot reproduce Mars gravity (3.71 m/s2); traction and structural loading differ.",
+            "atmosphere_vacuum": "Earth air does not reproduce the thin, CO2-dominated Martian atmosphere.",
+            "radiation": "Earth atmosphere and magnetic shielding do not reproduce extraterrestrial ionizing radiation; POWER parameters here do not measure UV or radiation dose.",
+            "weathering": "Liquid water, oxygen and biology alter terrestrial materials differently from space weathering and Martian surface chemistry.",
+            "thermal_comparability": "POWER 2 m air climatology is only a proxy against scenario surface/pit temperatures; it cannot validate cave stability, cryogenic exposure or lunar day/night cycles.",
+            "site_specific": "Andesitic pyroclastics differ from lunar regolith; active volcanic hazards and wet weather require field assessment."
+          }
+        },
+        "olympus-mons-flank": {
+          "dimensions": {
+            "topography": 90.83,
+            "geology": 55.81,
+            "thermal": 30.7,
+            "hydrology_ice": 65.33,
+            "subsurface_ops": 14.5
+          },
+          "overall_asi": 53.49,
+          "weights": {
+            "topography": 0.25,
+            "geology": 0.3,
+            "thermal": 0.15,
+            "hydrology_ice": 0.1,
+            "subsurface_ops": 0.2
+          },
+          "analogy_strengths": [
+            "topography: 90.83/100 scenario similarity"
+          ],
+          "analogy_breakdowns": {
+            "gravity": "Earth gravity (9.81 m/s2) cannot reproduce Mars gravity (3.71 m/s2); traction and structural loading differ.",
+            "atmosphere_vacuum": "Earth air does not reproduce the thin, CO2-dominated Martian atmosphere.",
+            "radiation": "Earth atmosphere and magnetic shielding do not reproduce extraterrestrial ionizing radiation; POWER parameters here do not measure UV or radiation dose.",
+            "weathering": "Liquid water, oxygen and biology alter terrestrial materials differently from space weathering and Martian surface chemistry.",
+            "thermal_comparability": "POWER 2 m air climatology is only a proxy against scenario surface/pit temperatures; it cannot validate cave stability, cryogenic exposure or lunar day/night cycles.",
+            "site_specific": "Andesitic pyroclastics differ from lunar regolith; active volcanic hazards and wet weather require field assessment."
+          }
+        }
+      },
+      "best_target": "jezero-crater",
+      "overall_asi": 55.98,
+      "analogy_strengths": [
+        "topography: 95.83/100 scenario similarity",
+        "subsurface_ops: 91.50/100 scenario similarity"
+      ],
+      "analogy_breakdowns": {
+        "gravity": "Earth gravity (9.81 m/s2) cannot reproduce Mars gravity (3.71 m/s2); traction and structural loading differ.",
+        "atmosphere_vacuum": "Earth air does not reproduce the thin, CO2-dominated Martian atmosphere.",
+        "radiation": "Earth atmosphere and magnetic shielding do not reproduce extraterrestrial ionizing radiation; POWER parameters here do not measure UV or radiation dose.",
+        "weathering": "Liquid water, oxygen and biology alter terrestrial materials differently from space weathering and Martian surface chemistry.",
+        "thermal_comparability": "POWER 2 m air climatology is only a proxy against scenario surface/pit temperatures; it cannot validate cave stability, cryogenic exposure or lunar day/night cycles.",
+        "site_specific": "Andesitic pyroclastics differ from lunar regolith; active volcanic hazards and wet weather require field assessment."
+      }
+    },
+    {
+      "id": "salar-de-uyuni",
+      "name": "Salar de Uyuni",
+      "country": "Bolivia",
+      "latitude": -20.13,
+      "longitude": -67.49,
+      "elevation_m": 3656,
+      "terrain": {
+        "slope_deg": 0.5,
+        "roughness": 0.15,
+        "geology": [
+          0.05,
+          0.25,
+          0.8,
+          1,
+          0
+        ],
+        "ice": 0.1,
+        "aqueous_history": 1,
+        "lava_tubes": 0,
+        "shelter": 0
+      },
+      "climatology": {
+        "tmax_c": 25.07,
+        "tmin_c": -14.47,
+        "precipitation_mm_day": 0.91,
+        "wind_m_s": 2.82,
+        "relative_humidity_pct": 42.84,
+        "source": "nasa_power",
+        "fallback_reason": null,
+        "source_url": "https://power.larc.nasa.gov/api/temporal/climatology/point?parameters=T2M_MAX%2CT2M_MIN%2CPRECTOTCORR%2CWS10M%2CRH2M&community=RE&longitude=-67.49&latitude=-20.13&format=JSON",
+        "period": null,
+        "aggregation": "T2M_MAX: ANN; T2M_MIN: ANN; PRECTOTCORR: ANN; WS10M: ANN; RH2M: ANN"
+      },
+      "rationale": "Evaporites and basin sediments support ancient aqueous-environment studies.",
+      "prior_status": "Illustrative scenario priors; not measured or calibrated site properties.",
+      "scores": {
+        "shackleton-crater": {
+          "dimensions": {
+            "topography": 32.5,
+            "geology": 9.09,
+            "thermal": 28.18,
+            "hydrology_ice": 26.94,
+            "subsurface_ops": 92.5
+          },
+          "overall_asi": 28.29,
+          "weights": {
+            "topography": 0.25,
+            "geology": 0.2,
+            "thermal": 0.2,
+            "hydrology_ice": 0.3,
+            "subsurface_ops": 0.05
+          },
+          "analogy_strengths": [
+            "subsurface_ops: 92.50/100 scenario similarity"
+          ],
+          "analogy_breakdowns": {
+            "gravity": "Earth gravity (9.81 m/s2) cannot reproduce Moon gravity (1.62 m/s2); traction and structural loading differ.",
+            "atmosphere_vacuum": "Earth air does not reproduce lunar vacuum.",
+            "radiation": "Earth atmosphere and magnetic shielding do not reproduce extraterrestrial ionizing radiation; POWER parameters here do not measure UV or radiation dose.",
+            "weathering": "Liquid water, oxygen and biology alter terrestrial materials differently from space weathering and Martian surface chemistry.",
+            "thermal_comparability": "POWER 2 m air climatology is only a proxy against scenario surface/pit temperatures; it cannot validate cave stability, cryogenic exposure or lunar day/night cycles.",
+            "site_specific": "Seasonal flooding and salt crust chemistry differ from present Martian conditions."
+          }
+        },
+        "mare-tranquillitatis": {
+          "dimensions": {
+            "topography": 72.5,
+            "geology": 8.11,
+            "thermal": 77.96,
+            "hydrology_ice": 56.94,
+            "subsurface_ops": 0.0
+          },
+          "overall_asi": 30.7,
+          "weights": {
+            "topography": 0.15,
+            "geology": 0.3,
+            "thermal": 0.15,
+            "hydrology_ice": 0.1,
+            "subsurface_ops": 0.3
+          },
+          "analogy_strengths": [
+            "topography: 72.50/100 scenario similarity",
+            "thermal: 77.96/100 scenario similarity"
+          ],
+          "analogy_breakdowns": {
+            "gravity": "Earth gravity (9.81 m/s2) cannot reproduce Moon gravity (1.62 m/s2); traction and structural loading differ.",
+            "atmosphere_vacuum": "Earth air does not reproduce lunar vacuum.",
+            "radiation": "Earth atmosphere and magnetic shielding do not reproduce extraterrestrial ionizing radiation; POWER parameters here do not measure UV or radiation dose.",
+            "weathering": "Liquid water, oxygen and biology alter terrestrial materials differently from space weathering and Martian surface chemistry.",
+            "thermal_comparability": "POWER 2 m air climatology is only a proxy against scenario surface/pit temperatures; it cannot validate cave stability, cryogenic exposure or lunar day/night cycles.",
+            "site_specific": "Seasonal flooding and salt crust chemistry differ from present Martian conditions."
+          }
+        },
+        "jezero-crater": {
+          "dimensions": {
+            "topography": 68.33,
+            "geology": 34.15,
+            "thermal": 48.64,
+            "hydrology_ice": 80.94,
+            "subsurface_ops": 97.0
+          },
+          "overall_asi": 58.0,
+          "weights": {
+            "topography": 0.2,
+            "geology": 0.35,
+            "thermal": 0.15,
+            "hydrology_ice": 0.25,
+            "subsurface_ops": 0.05
+          },
+          "analogy_strengths": [
+            "hydrology_ice: 80.94/100 scenario similarity",
+            "subsurface_ops: 97.00/100 scenario similarity"
+          ],
+          "analogy_breakdowns": {
+            "gravity": "Earth gravity (9.81 m/s2) cannot reproduce Mars gravity (3.71 m/s2); traction and structural loading differ.",
+            "atmosphere_vacuum": "Earth air does not reproduce the thin, CO2-dominated Martian atmosphere.",
+            "radiation": "Earth atmosphere and magnetic shielding do not reproduce extraterrestrial ionizing radiation; POWER parameters here do not measure UV or radiation dose.",
+            "weathering": "Liquid water, oxygen and biology alter terrestrial materials differently from space weathering and Martian surface chemistry.",
+            "thermal_comparability": "POWER 2 m air climatology is only a proxy against scenario surface/pit temperatures; it cannot validate cave stability, cryogenic exposure or lunar day/night cycles.",
+            "site_specific": "Seasonal flooding and salt crust chemistry differ from present Martian conditions."
+          }
+        },
+        "olympus-mons-flank": {
+          "dimensions": {
+            "topography": 55.0,
+            "geology": 9.72,
+            "thermal": 41.64,
+            "hydrology_ice": 61.94,
+            "subsurface_ops": 3.0
+          },
+          "overall_asi": 29.71,
+          "weights": {
+            "topography": 0.25,
+            "geology": 0.3,
+            "thermal": 0.15,
+            "hydrology_ice": 0.1,
+            "subsurface_ops": 0.2
+          },
+          "analogy_strengths": [],
+          "analogy_breakdowns": {
+            "gravity": "Earth gravity (9.81 m/s2) cannot reproduce Mars gravity (3.71 m/s2); traction and structural loading differ.",
+            "atmosphere_vacuum": "Earth air does not reproduce the thin, CO2-dominated Martian atmosphere.",
+            "radiation": "Earth atmosphere and magnetic shielding do not reproduce extraterrestrial ionizing radiation; POWER parameters here do not measure UV or radiation dose.",
+            "weathering": "Liquid water, oxygen and biology alter terrestrial materials differently from space weathering and Martian surface chemistry.",
+            "thermal_comparability": "POWER 2 m air climatology is only a proxy against scenario surface/pit temperatures; it cannot validate cave stability, cryogenic exposure or lunar day/night cycles.",
+            "site_specific": "Seasonal flooding and salt crust chemistry differ from present Martian conditions."
+          }
+        }
+      },
+      "best_target": "jezero-crater",
+      "overall_asi": 58.0,
+      "analogy_strengths": [
+        "hydrology_ice: 80.94/100 scenario similarity",
+        "subsurface_ops: 97.00/100 scenario similarity"
+      ],
+      "analogy_breakdowns": {
+        "gravity": "Earth gravity (9.81 m/s2) cannot reproduce Mars gravity (3.71 m/s2); traction and structural loading differ.",
+        "atmosphere_vacuum": "Earth air does not reproduce the thin, CO2-dominated Martian atmosphere.",
+        "radiation": "Earth atmosphere and magnetic shielding do not reproduce extraterrestrial ionizing radiation; POWER parameters here do not measure UV or radiation dose.",
+        "weathering": "Liquid water, oxygen and biology alter terrestrial materials differently from space weathering and Martian surface chemistry.",
+        "thermal_comparability": "POWER 2 m air climatology is only a proxy against scenario surface/pit temperatures; it cannot validate cave stability, cryogenic exposure or lunar day/night cycles.",
+        "site_specific": "Seasonal flooding and salt crust chemistry differ from present Martian conditions."
+      }
+    },
+    {
+      "id": "qaidam-basin",
+      "name": "Qaidam Basin",
+      "country": "China",
+      "latitude": 38.5,
+      "longitude": 93,
+      "elevation_m": 2800,
+      "terrain": {
+        "slope_deg": 4,
+        "roughness": 0.55,
+        "geology": [
+          0.1,
+          0.7,
+          1,
+          0.9,
+          0
+        ],
+        "ice": 0.15,
+        "aqueous_history": 0.9,
+        "lava_tubes": 0.05,
+        "shelter": 0.1
+      },
+      "climatology": {
+        "tmax_c": 34.67,
+        "tmin_c": -25.37,
+        "precipitation_mm_day": 0.08,
+        "wind_m_s": 3.95,
+        "relative_humidity_pct": 32.89,
+        "source": "nasa_power",
+        "fallback_reason": null,
+        "source_url": "https://power.larc.nasa.gov/api/temporal/climatology/point?parameters=T2M_MAX%2CT2M_MIN%2CPRECTOTCORR%2CWS10M%2CRH2M&community=RE&longitude=93&latitude=38.5&format=JSON",
+        "period": null,
+        "aggregation": "T2M_MAX: ANN; T2M_MIN: ANN; PRECTOTCORR: ANN; WS10M: ANN; RH2M: ANN"
+      },
+      "rationale": "Arid sedimentary and saline terrain supports Mars weathering and rover studies.",
+      "prior_status": "Illustrative scenario priors; not measured or calibrated site properties.",
+      "scores": {
+        "shackleton-crater": {
+          "dimensions": {
+            "topography": 58.33,
+            "geology": 20.0,
+            "thermal": 19.98,
+            "hydrology_ice": 47.04,
+            "subsurface_ops": 92.0
+          },
+          "overall_asi": 41.29,
+          "weights": {
+            "topography": 0.25,
+            "geology": 0.2,
+            "thermal": 0.2,
+            "hydrology_ice": 0.3,
+            "subsurface_ops": 0.05
+          },
+          "analogy_strengths": [
+            "subsurface_ops: 92.00/100 scenario similarity"
+          ],
+          "analogy_breakdowns": {
+            "gravity": "Earth gravity (9.81 m/s2) cannot reproduce Moon gravity (1.62 m/s2); traction and structural loading differ.",
+            "atmosphere_vacuum": "Earth air does not reproduce lunar vacuum.",
+            "radiation": "Earth atmosphere and magnetic shielding do not reproduce extraterrestrial ionizing radiation; POWER parameters here do not measure UV or radiation dose.",
+            "weathering": "Liquid water, oxygen and biology alter terrestrial materials differently from space weathering and Martian surface chemistry.",
+            "thermal_comparability": "POWER 2 m air climatology is only a proxy against scenario surface/pit temperatures; it cannot validate cave stability, cryogenic exposure or lunar day/night cycles.",
+            "site_specific": "Basin-wide heterogeneity is not captured by a single point; salts are not proof of identical Martian mineralogy."
+          }
+        },
+        "mare-tranquillitatis": {
+          "dimensions": {
+            "topography": 98.33,
+            "geology": 21.05,
+            "thermal": 69.37,
+            "hydrology_ice": 73.04,
+            "subsurface_ops": 6.5
+          },
+          "overall_asi": 40.73,
+          "weights": {
+            "topography": 0.15,
+            "geology": 0.3,
+            "thermal": 0.15,
+            "hydrology_ice": 0.1,
+            "subsurface_ops": 0.3
+          },
+          "analogy_strengths": [
+            "topography: 98.33/100 scenario similarity",
+            "hydrology_ice: 73.04/100 scenario similarity"
+          ],
+          "analogy_breakdowns": {
+            "gravity": "Earth gravity (9.81 m/s2) cannot reproduce Moon gravity (1.62 m/s2); traction and structural loading differ.",
+            "atmosphere_vacuum": "Earth air does not reproduce lunar vacuum.",
+            "radiation": "Earth atmosphere and magnetic shielding do not reproduce extraterrestrial ionizing radiation; POWER parameters here do not measure UV or radiation dose.",
+            "weathering": "Liquid water, oxygen and biology alter terrestrial materials differently from space weathering and Martian surface chemistry.",
+            "thermal_comparability": "POWER 2 m air climatology is only a proxy against scenario surface/pit temperatures; it cannot validate cave stability, cryogenic exposure or lunar day/night cycles.",
+            "site_specific": "Basin-wide heterogeneity is not captured by a single point; salts are not proof of identical Martian mineralogy."
+          }
+        },
+        "jezero-crater": {
+          "dimensions": {
+            "topography": 94.17,
+            "geology": 52.5,
+            "thermal": 57.23,
+            "hydrology_ice": 93.04,
+            "subsurface_ops": 96.5
+          },
+          "overall_asi": 73.88,
+          "weights": {
+            "topography": 0.2,
+            "geology": 0.35,
+            "thermal": 0.15,
+            "hydrology_ice": 0.25,
+            "subsurface_ops": 0.05
+          },
+          "analogy_strengths": [
+            "topography: 94.17/100 scenario similarity",
+            "hydrology_ice: 93.04/100 scenario similarity",
+            "subsurface_ops: 96.50/100 scenario similarity"
+          ],
+          "analogy_breakdowns": {
+            "gravity": "Earth gravity (9.81 m/s2) cannot reproduce Mars gravity (3.71 m/s2); traction and structural loading differ.",
+            "atmosphere_vacuum": "Earth air does not reproduce the thin, CO2-dominated Martian atmosphere.",
+            "radiation": "Earth atmosphere and magnetic shielding do not reproduce extraterrestrial ionizing radiation; POWER parameters here do not measure UV or radiation dose.",
+            "weathering": "Liquid water, oxygen and biology alter terrestrial materials differently from space weathering and Martian surface chemistry.",
+            "thermal_comparability": "POWER 2 m air climatology is only a proxy against scenario surface/pit temperatures; it cannot validate cave stability, cryogenic exposure or lunar day/night cycles.",
+            "site_specific": "Basin-wide heterogeneity is not captured by a single point; salts are not proof of identical Martian mineralogy."
+          }
+        },
+        "olympus-mons-flank": {
+          "dimensions": {
+            "topography": 80.83,
+            "geology": 22.97,
+            "thermal": 50.23,
+            "hydrology_ice": 78.04,
+            "subsurface_ops": 9.5
+          },
+          "overall_asi": 44.34,
+          "weights": {
+            "topography": 0.25,
+            "geology": 0.3,
+            "thermal": 0.15,
+            "hydrology_ice": 0.1,
+            "subsurface_ops": 0.2
+          },
+          "analogy_strengths": [
+            "topography: 80.83/100 scenario similarity",
+            "hydrology_ice: 78.04/100 scenario similarity"
+          ],
+          "analogy_breakdowns": {
+            "gravity": "Earth gravity (9.81 m/s2) cannot reproduce Mars gravity (3.71 m/s2); traction and structural loading differ.",
+            "atmosphere_vacuum": "Earth air does not reproduce the thin, CO2-dominated Martian atmosphere.",
+            "radiation": "Earth atmosphere and magnetic shielding do not reproduce extraterrestrial ionizing radiation; POWER parameters here do not measure UV or radiation dose.",
+            "weathering": "Liquid water, oxygen and biology alter terrestrial materials differently from space weathering and Martian surface chemistry.",
+            "thermal_comparability": "POWER 2 m air climatology is only a proxy against scenario surface/pit temperatures; it cannot validate cave stability, cryogenic exposure or lunar day/night cycles.",
+            "site_specific": "Basin-wide heterogeneity is not captured by a single point; salts are not proof of identical Martian mineralogy."
+          }
+        }
+      },
+      "best_target": "jezero-crater",
+      "overall_asi": 73.88,
+      "analogy_strengths": [
+        "topography: 94.17/100 scenario similarity",
+        "hydrology_ice: 93.04/100 scenario similarity",
+        "subsurface_ops: 96.50/100 scenario similarity"
+      ],
+      "analogy_breakdowns": {
+        "gravity": "Earth gravity (9.81 m/s2) cannot reproduce Mars gravity (3.71 m/s2); traction and structural loading differ.",
+        "atmosphere_vacuum": "Earth air does not reproduce the thin, CO2-dominated Martian atmosphere.",
+        "radiation": "Earth atmosphere and magnetic shielding do not reproduce extraterrestrial ionizing radiation; POWER parameters here do not measure UV or radiation dose.",
+        "weathering": "Liquid water, oxygen and biology alter terrestrial materials differently from space weathering and Martian surface chemistry.",
+        "thermal_comparability": "POWER 2 m air climatology is only a proxy against scenario surface/pit temperatures; it cannot validate cave stability, cryogenic exposure or lunar day/night cycles.",
+        "site_specific": "Basin-wide heterogeneity is not captured by a single point; salts are not proof of identical Martian mineralogy."
+      }
+    },
+    {
+      "id": "dallol",
+      "name": "Dallol Salt / Hydrothermal",
+      "country": "Ethiopia",
+      "latitude": 14.24,
+      "longitude": 40.3,
+      "elevation_m": -125,
+      "terrain": {
+        "slope_deg": 3,
+        "roughness": 0.7,
+        "geology": [
+          0.15,
+          0.3,
+          0.65,
+          1,
+          0
+        ],
+        "ice": 0,
+        "aqueous_history": 1,
+        "lava_tubes": 0,
+        "shelter": 0.05
+      },
+      "climatology": {
+        "tmax_c": 40.27,
+        "tmin_c": 11.26,
+        "precipitation_mm_day": 1.23,
+        "wind_m_s": 3.51,
+        "relative_humidity_pct": 46.84,
+        "source": "nasa_power",
+        "fallback_reason": null,
+        "source_url": "https://power.larc.nasa.gov/api/temporal/climatology/point?parameters=T2M_MAX%2CT2M_MIN%2CPRECTOTCORR%2CWS10M%2CRH2M&community=RE&longitude=40.3&latitude=14.24&format=JSON",
+        "period": null,
+        "aggregation": "T2M_MAX: ANN; T2M_MIN: ANN; PRECTOTCORR: ANN; WS10M: ANN; RH2M: ANN"
+      },
+      "rationale": "Hydrothermal salts offer geochemical process analogs for aqueous alteration.",
+      "prior_status": "Illustrative scenario priors; not measured or calibrated site properties.",
+      "scores": {
+        "shackleton-crater": {
+          "dimensions": {
+            "topography": 64.17,
+            "geology": 10.53,
+            "thermal": 32.4,
+            "hydrology_ice": 19.94,
+            "subsurface_ops": 94.0
+          },
+          "overall_asi": 35.31,
+          "weights": {
+            "topography": 0.25,
+            "geology": 0.2,
+            "thermal": 0.2,
+            "hydrology_ice": 0.3,
+            "subsurface_ops": 0.05
+          },
+          "analogy_strengths": [
+            "subsurface_ops: 94.00/100 scenario similarity"
+          ],
+          "analogy_breakdowns": {
+            "gravity": "Earth gravity (9.81 m/s2) cannot reproduce Moon gravity (1.62 m/s2); traction and structural loading differ.",
+            "atmosphere_vacuum": "Earth air does not reproduce lunar vacuum.",
+            "radiation": "Earth atmosphere and magnetic shielding do not reproduce extraterrestrial ionizing radiation; POWER parameters here do not measure UV or radiation dose.",
+            "weathering": "Liquid water, oxygen and biology alter terrestrial materials differently from space weathering and Martian surface chemistry.",
+            "thermal_comparability": "POWER 2 m air climatology is only a proxy against scenario surface/pit temperatures; it cannot validate cave stability, cryogenic exposure or lunar day/night cycles.",
+            "site_specific": "Extreme heat and acidic active fluids are a poor match to modern cold Mars; hazardous field conditions."
+          }
+        },
+        "mare-tranquillitatis": {
+          "dimensions": {
+            "topography": 89.17,
+            "geology": 12.68,
+            "thermal": 83.94,
+            "hydrology_ice": 57.94,
+            "subsurface_ops": 1.5
+          },
+          "overall_asi": 36.01,
+          "weights": {
+            "topography": 0.15,
+            "geology": 0.3,
+            "thermal": 0.15,
+            "hydrology_ice": 0.1,
+            "subsurface_ops": 0.3
+          },
+          "analogy_strengths": [
+            "topography: 89.17/100 scenario similarity",
+            "thermal: 83.94/100 scenario similarity"
+          ],
+          "analogy_breakdowns": {
+            "gravity": "Earth gravity (9.81 m/s2) cannot reproduce Moon gravity (1.62 m/s2); traction and structural loading differ.",
+            "atmosphere_vacuum": "Earth air does not reproduce lunar vacuum.",
+            "radiation": "Earth atmosphere and magnetic shielding do not reproduce extraterrestrial ionizing radiation; POWER parameters here do not measure UV or radiation dose.",
+            "weathering": "Liquid water, oxygen and biology alter terrestrial materials differently from space weathering and Martian surface chemistry.",
+            "thermal_comparability": "POWER 2 m air climatology is only a proxy against scenario surface/pit temperatures; it cannot validate cave stability, cryogenic exposure or lunar day/night cycles.",
+            "site_specific": "Extreme heat and acidic active fluids are a poor match to modern cold Mars; hazardous field conditions."
+          }
+        },
+        "jezero-crater": {
+          "dimensions": {
+            "topography": 90.0,
+            "geology": 34.15,
+            "thermal": 32.15,
+            "hydrology_ice": 73.94,
+            "subsurface_ops": 98.5
+          },
+          "overall_asi": 58.18,
+          "weights": {
+            "topography": 0.2,
+            "geology": 0.35,
+            "thermal": 0.15,
+            "hydrology_ice": 0.25,
+            "subsurface_ops": 0.05
+          },
+          "analogy_strengths": [
+            "topography: 90.00/100 scenario similarity",
+            "hydrology_ice: 73.94/100 scenario similarity",
+            "subsurface_ops: 98.50/100 scenario similarity"
+          ],
+          "analogy_breakdowns": {
+            "gravity": "Earth gravity (9.81 m/s2) cannot reproduce Mars gravity (3.71 m/s2); traction and structural loading differ.",
+            "atmosphere_vacuum": "Earth air does not reproduce the thin, CO2-dominated Martian atmosphere.",
+            "radiation": "Earth atmosphere and magnetic shielding do not reproduce extraterrestrial ionizing radiation; POWER parameters here do not measure UV or radiation dose.",
+            "weathering": "Liquid water, oxygen and biology alter terrestrial materials differently from space weathering and Martian surface chemistry.",
+            "thermal_comparability": "POWER 2 m air climatology is only a proxy against scenario surface/pit temperatures; it cannot validate cave stability, cryogenic exposure or lunar day/night cycles.",
+            "site_specific": "Extreme heat and acidic active fluids are a poor match to modern cold Mars; hazardous field conditions."
+          }
+        },
+        "olympus-mons-flank": {
+          "dimensions": {
+            "topography": 86.67,
+            "geology": 14.49,
+            "thermal": 25.15,
+            "hydrology_ice": 54.94,
+            "subsurface_ops": 4.5
+          },
+          "overall_asi": 36.18,
+          "weights": {
+            "topography": 0.25,
+            "geology": 0.3,
+            "thermal": 0.15,
+            "hydrology_ice": 0.1,
+            "subsurface_ops": 0.2
+          },
+          "analogy_strengths": [
+            "topography: 86.67/100 scenario similarity"
+          ],
+          "analogy_breakdowns": {
+            "gravity": "Earth gravity (9.81 m/s2) cannot reproduce Mars gravity (3.71 m/s2); traction and structural loading differ.",
+            "atmosphere_vacuum": "Earth air does not reproduce the thin, CO2-dominated Martian atmosphere.",
+            "radiation": "Earth atmosphere and magnetic shielding do not reproduce extraterrestrial ionizing radiation; POWER parameters here do not measure UV or radiation dose.",
+            "weathering": "Liquid water, oxygen and biology alter terrestrial materials differently from space weathering and Martian surface chemistry.",
+            "thermal_comparability": "POWER 2 m air climatology is only a proxy against scenario surface/pit temperatures; it cannot validate cave stability, cryogenic exposure or lunar day/night cycles.",
+            "site_specific": "Extreme heat and acidic active fluids are a poor match to modern cold Mars; hazardous field conditions."
+          }
+        }
+      },
+      "best_target": "jezero-crater",
+      "overall_asi": 58.18,
+      "analogy_strengths": [
+        "topography: 90.00/100 scenario similarity",
+        "hydrology_ice: 73.94/100 scenario similarity",
+        "subsurface_ops: 98.50/100 scenario similarity"
+      ],
+      "analogy_breakdowns": {
+        "gravity": "Earth gravity (9.81 m/s2) cannot reproduce Mars gravity (3.71 m/s2); traction and structural loading differ.",
+        "atmosphere_vacuum": "Earth air does not reproduce the thin, CO2-dominated Martian atmosphere.",
+        "radiation": "Earth atmosphere and magnetic shielding do not reproduce extraterrestrial ionizing radiation; POWER parameters here do not measure UV or radiation dose.",
+        "weathering": "Liquid water, oxygen and biology alter terrestrial materials differently from space weathering and Martian surface chemistry.",
+        "thermal_comparability": "POWER 2 m air climatology is only a proxy against scenario surface/pit temperatures; it cannot validate cave stability, cryogenic exposure or lunar day/night cycles.",
+        "site_specific": "Extreme heat and acidic active fluids are a poor match to modern cold Mars; hazardous field conditions."
+      }
+    },
+    {
+      "id": "craters-of-the-moon",
+      "name": "Craters of the Moon",
+      "country": "United States",
+      "latitude": 43.42,
+      "longitude": -113.52,
+      "elevation_m": 1800,
+      "terrain": {
+        "slope_deg": 6,
+        "roughness": 0.85,
+        "geology": [
+          1,
+          0.65,
+          0.05,
+          0,
+          0
+        ],
+        "ice": 0.1,
+        "aqueous_history": 0.05,
+        "lava_tubes": 1,
+        "shelter": 0.85
+      },
+      "climatology": {
+        "tmax_c": 36.91,
+        "tmin_c": -32.62,
+        "precipitation_mm_day": 1.14,
+        "wind_m_s": 3.37,
+        "relative_humidity_pct": 59.83,
+        "source": "nasa_power",
+        "fallback_reason": null,
+        "source_url": "https://power.larc.nasa.gov/api/temporal/climatology/point?parameters=T2M_MAX%2CT2M_MIN%2CPRECTOTCORR%2CWS10M%2CRH2M&community=RE&longitude=-113.52&latitude=43.42&format=JSON",
+        "period": null,
+        "aggregation": "T2M_MAX: ANN; T2M_MIN: ANN; PRECTOTCORR: ANN; WS10M: ANN; RH2M: ANN"
+      },
+      "rationale": "Basaltic flows and lava tubes support lunar and Martian cave operations.",
+      "prior_status": "Illustrative scenario priors; not measured or calibrated site properties.",
+      "scores": {
+        "shackleton-crater": {
+          "dimensions": {
+            "topography": 76.67,
+            "geology": 24.59,
+            "thermal": 16.19,
+            "hydrology_ice": 43.69,
+            "subsurface_ops": 12.0
+          },
+          "overall_asi": 41.03,
+          "weights": {
+            "topography": 0.25,
+            "geology": 0.2,
+            "thermal": 0.2,
+            "hydrology_ice": 0.3,
+            "subsurface_ops": 0.05
+          },
+          "analogy_strengths": [
+            "topography: 76.67/100 scenario similarity"
+          ],
+          "analogy_breakdowns": {
+            "gravity": "Earth gravity (9.81 m/s2) cannot reproduce Moon gravity (1.62 m/s2); traction and structural loading differ.",
+            "atmosphere_vacuum": "Earth air does not reproduce lunar vacuum.",
+            "radiation": "Earth atmosphere and magnetic shielding do not reproduce extraterrestrial ionizing radiation; POWER parameters here do not measure UV or radiation dose.",
+            "weathering": "Liquid water, oxygen and biology alter terrestrial materials differently from space weathering and Martian surface chemistry.",
+            "thermal_comparability": "POWER 2 m air climatology is only a proxy against scenario surface/pit temperatures; it cannot validate cave stability, cryogenic exposure or lunar day/night cycles.",
+            "site_specific": "Terrestrial air, seasonal snow and biological alteration remain substantial differences."
+          }
+        },
+        "mare-tranquillitatis": {
+          "dimensions": {
+            "topography": 83.33,
+            "geology": 84.62,
+            "thermal": 64.08,
+            "hydrology_ice": 73.69,
+            "subsurface_ops": 95.5
+          },
+          "overall_asi": 83.52,
+          "weights": {
+            "topography": 0.15,
+            "geology": 0.3,
+            "thermal": 0.15,
+            "hydrology_ice": 0.1,
+            "subsurface_ops": 0.3
+          },
+          "analogy_strengths": [
+            "topography: 83.33/100 scenario similarity",
+            "geology: 84.62/100 scenario similarity",
+            "hydrology_ice: 73.69/100 scenario similarity",
+            "subsurface_ops: 95.50/100 scenario similarity"
+          ],
+          "analogy_breakdowns": {
+            "gravity": "Earth gravity (9.81 m/s2) cannot reproduce Moon gravity (1.62 m/s2); traction and structural loading differ.",
+            "atmosphere_vacuum": "Earth air does not reproduce lunar vacuum.",
+            "radiation": "Earth atmosphere and magnetic shielding do not reproduce extraterrestrial ionizing radiation; POWER parameters here do not measure UV or radiation dose.",
+            "weathering": "Liquid water, oxygen and biology alter terrestrial materials differently from space weathering and Martian surface chemistry.",
+            "thermal_comparability": "POWER 2 m air climatology is only a proxy against scenario surface/pit temperatures; it cannot validate cave stability, cryogenic exposure or lunar day/night cycles.",
+            "site_specific": "Terrestrial air, seasonal snow and biological alteration remain substantial differences."
+          }
+        },
+        "jezero-crater": {
+          "dimensions": {
+            "topography": 87.5,
+            "geology": 41.67,
+            "thermal": 62.53,
+            "hydrology_ice": 59.69,
+            "subsurface_ops": 7.5
+          },
+          "overall_asi": 56.76,
+          "weights": {
+            "topography": 0.2,
+            "geology": 0.35,
+            "thermal": 0.15,
+            "hydrology_ice": 0.25,
+            "subsurface_ops": 0.05
+          },
+          "analogy_strengths": [
+            "topography: 87.50/100 scenario similarity"
+          ],
+          "analogy_breakdowns": {
+            "gravity": "Earth gravity (9.81 m/s2) cannot reproduce Mars gravity (3.71 m/s2); traction and structural loading differ.",
+            "atmosphere_vacuum": "Earth air does not reproduce the thin, CO2-dominated Martian atmosphere.",
+            "radiation": "Earth atmosphere and magnetic shielding do not reproduce extraterrestrial ionizing radiation; POWER parameters here do not measure UV or radiation dose.",
+            "weathering": "Liquid water, oxygen and biology alter terrestrial materials differently from space weathering and Martian surface chemistry.",
+            "thermal_comparability": "POWER 2 m air climatology is only a proxy against scenario surface/pit temperatures; it cannot validate cave stability, cryogenic exposure or lunar day/night cycles.",
+            "site_specific": "Terrestrial air, seasonal snow and biological alteration remain substantial differences."
+          }
+        },
+        "olympus-mons-flank": {
+          "dimensions": {
+            "topography": 94.17,
+            "geology": 91.89,
+            "thermal": 55.53,
+            "hydrology_ice": 78.69,
+            "subsurface_ops": 98.5
+          },
+          "overall_asi": 87.01,
+          "weights": {
+            "topography": 0.25,
+            "geology": 0.3,
+            "thermal": 0.15,
+            "hydrology_ice": 0.1,
+            "subsurface_ops": 0.2
+          },
+          "analogy_strengths": [
+            "topography: 94.17/100 scenario similarity",
+            "geology: 91.89/100 scenario similarity",
+            "hydrology_ice: 78.69/100 scenario similarity",
+            "subsurface_ops: 98.50/100 scenario similarity"
+          ],
+          "analogy_breakdowns": {
+            "gravity": "Earth gravity (9.81 m/s2) cannot reproduce Mars gravity (3.71 m/s2); traction and structural loading differ.",
+            "atmosphere_vacuum": "Earth air does not reproduce the thin, CO2-dominated Martian atmosphere.",
+            "radiation": "Earth atmosphere and magnetic shielding do not reproduce extraterrestrial ionizing radiation; POWER parameters here do not measure UV or radiation dose.",
+            "weathering": "Liquid water, oxygen and biology alter terrestrial materials differently from space weathering and Martian surface chemistry.",
+            "thermal_comparability": "POWER 2 m air climatology is only a proxy against scenario surface/pit temperatures; it cannot validate cave stability, cryogenic exposure or lunar day/night cycles.",
+            "site_specific": "Terrestrial air, seasonal snow and biological alteration remain substantial differences."
+          }
+        }
+      },
+      "best_target": "olympus-mons-flank",
+      "overall_asi": 87.01,
+      "analogy_strengths": [
+        "topography: 94.17/100 scenario similarity",
+        "geology: 91.89/100 scenario similarity",
+        "hydrology_ice: 78.69/100 scenario similarity",
+        "subsurface_ops: 98.50/100 scenario similarity"
+      ],
+      "analogy_breakdowns": {
+        "gravity": "Earth gravity (9.81 m/s2) cannot reproduce Mars gravity (3.71 m/s2); traction and structural loading differ.",
+        "atmosphere_vacuum": "Earth air does not reproduce the thin, CO2-dominated Martian atmosphere.",
+        "radiation": "Earth atmosphere and magnetic shielding do not reproduce extraterrestrial ionizing radiation; POWER parameters here do not measure UV or radiation dose.",
+        "weathering": "Liquid water, oxygen and biology alter terrestrial materials differently from space weathering and Martian surface chemistry.",
+        "thermal_comparability": "POWER 2 m air climatology is only a proxy against scenario surface/pit temperatures; it cannot validate cave stability, cryogenic exposure or lunar day/night cycles.",
+        "site_specific": "Terrestrial air, seasonal snow and biological alteration remain substantial differences."
+      }
+    },
+    {
+      "id": "haughton-crater",
+      "name": "Haughton Crater",
+      "country": "Canada",
+      "latitude": 75.38,
+      "longitude": -89.67,
+      "elevation_m": 250,
+      "terrain": {
+        "slope_deg": 12,
+        "roughness": 0.75,
+        "geology": [
+          0.05,
+          0.8,
+          0.7,
+          0.05,
+          1
+        ],
+        "ice": 1,
+        "aqueous_history": 0.6,
+        "lava_tubes": 0.05,
+        "shelter": 0.2
+      },
+      "climatology": {
+        "tmax_c": 16.81,
+        "tmin_c": -48.55,
+        "precipitation_mm_day": 0.85,
+        "wind_m_s": 4.11,
+        "relative_humidity_pct": 94.36,
+        "source": "nasa_power",
+        "fallback_reason": null,
+        "source_url": "https://power.larc.nasa.gov/api/temporal/climatology/point?parameters=T2M_MAX%2CT2M_MIN%2CPRECTOTCORR%2CWS10M%2CRH2M&community=RE&longitude=-89.67&latitude=75.38&format=JSON",
+        "period": null,
+        "aggregation": "T2M_MAX: ANN; T2M_MIN: ANN; PRECTOTCORR: ANN; WS10M: ANN; RH2M: ANN"
+      },
+      "rationale": "Impact terrain and polar permafrost support cold-region mobility trials.",
+      "prior_status": "Illustrative scenario priors; not measured or calibrated site properties.",
+      "scores": {
+        "shackleton-crater": {
+          "dimensions": {
+            "topography": 81.67,
+            "geology": 67.86,
+            "thermal": 17.86,
+            "hydrology_ice": 67.62,
+            "subsurface_ops": 95.0
+          },
+          "overall_asi": 62.6,
+          "weights": {
+            "topography": 0.25,
+            "geology": 0.2,
+            "thermal": 0.2,
+            "hydrology_ice": 0.3,
+            "subsurface_ops": 0.05
+          },
+          "analogy_strengths": [
+            "topography: 81.67/100 scenario similarity",
+            "subsurface_ops: 95.00/100 scenario similarity"
+          ],
+          "analogy_breakdowns": {
+            "gravity": "Earth gravity (9.81 m/s2) cannot reproduce Moon gravity (1.62 m/s2); traction and structural loading differ.",
+            "atmosphere_vacuum": "Earth air does not reproduce lunar vacuum.",
+            "radiation": "Earth atmosphere and magnetic shielding do not reproduce extraterrestrial ionizing radiation; POWER parameters here do not measure UV or radiation dose.",
+            "weathering": "Liquid water, oxygen and biology alter terrestrial materials differently from space weathering and Martian surface chemistry.",
+            "thermal_comparability": "POWER 2 m air climatology is only a proxy against scenario surface/pit temperatures; it cannot validate cave stability, cryogenic exposure or lunar day/night cycles.",
+            "site_specific": "Carbonate-rich target rocks differ from lunar highlands; polar air is far warmer than lunar cold traps."
+          }
+        },
+        "mare-tranquillitatis": {
+          "dimensions": {
+            "topography": 78.33,
+            "geology": 26.76,
+            "thermal": 54.93,
+            "hydrology_ice": 29.62,
+            "subsurface_ops": 9.5
+          },
+          "overall_asi": 33.83,
+          "weights": {
+            "topography": 0.15,
+            "geology": 0.3,
+            "thermal": 0.15,
+            "hydrology_ice": 0.1,
+            "subsurface_ops": 0.3
+          },
+          "analogy_strengths": [
+            "topography: 78.33/100 scenario similarity"
+          ],
+          "analogy_breakdowns": {
+            "gravity": "Earth gravity (9.81 m/s2) cannot reproduce Moon gravity (1.62 m/s2); traction and structural loading differ.",
+            "atmosphere_vacuum": "Earth air does not reproduce lunar vacuum.",
+            "radiation": "Earth atmosphere and magnetic shielding do not reproduce extraterrestrial ionizing radiation; POWER parameters here do not measure UV or radiation dose.",
+            "weathering": "Liquid water, oxygen and biology alter terrestrial materials differently from space weathering and Martian surface chemistry.",
+            "thermal_comparability": "POWER 2 m air climatology is only a proxy against scenario surface/pit temperatures; it cannot validate cave stability, cryogenic exposure or lunar day/night cycles.",
+            "site_specific": "Carbonate-rich target rocks differ from lunar highlands; polar air is far warmer than lunar cold traps."
+          }
+        },
+        "jezero-crater": {
+          "dimensions": {
+            "topography": 82.5,
+            "geology": 53.85,
+            "thermal": 71.67,
+            "hydrology_ice": 37.62,
+            "subsurface_ops": 93.5
+          },
+          "overall_asi": 60.18,
+          "weights": {
+            "topography": 0.2,
+            "geology": 0.35,
+            "thermal": 0.15,
+            "hydrology_ice": 0.25,
+            "subsurface_ops": 0.05
+          },
+          "analogy_strengths": [
+            "topography: 82.50/100 scenario similarity",
+            "thermal: 71.67/100 scenario similarity",
+            "subsurface_ops: 93.50/100 scenario similarity"
+          ],
+          "analogy_breakdowns": {
+            "gravity": "Earth gravity (9.81 m/s2) cannot reproduce Mars gravity (3.71 m/s2); traction and structural loading differ.",
+            "atmosphere_vacuum": "Earth air does not reproduce the thin, CO2-dominated Martian atmosphere.",
+            "radiation": "Earth atmosphere and magnetic shielding do not reproduce extraterrestrial ionizing radiation; POWER parameters here do not measure UV or radiation dose.",
+            "weathering": "Liquid water, oxygen and biology alter terrestrial materials differently from space weathering and Martian surface chemistry.",
+            "thermal_comparability": "POWER 2 m air climatology is only a proxy against scenario surface/pit temperatures; it cannot validate cave stability, cryogenic exposure or lunar day/night cycles.",
+            "site_specific": "Carbonate-rich target rocks differ from lunar highlands; polar air is far warmer than lunar cold traps."
+          }
+        },
+        "olympus-mons-flank": {
+          "dimensions": {
+            "topography": 90.83,
+            "geology": 25.35,
+            "thermal": 64.67,
+            "hydrology_ice": 34.62,
+            "subsurface_ops": 12.5
+          },
+          "overall_asi": 45.98,
+          "weights": {
+            "topography": 0.25,
+            "geology": 0.3,
+            "thermal": 0.15,
+            "hydrology_ice": 0.1,
+            "subsurface_ops": 0.2
+          },
+          "analogy_strengths": [
+            "topography: 90.83/100 scenario similarity"
+          ],
+          "analogy_breakdowns": {
+            "gravity": "Earth gravity (9.81 m/s2) cannot reproduce Mars gravity (3.71 m/s2); traction and structural loading differ.",
+            "atmosphere_vacuum": "Earth air does not reproduce the thin, CO2-dominated Martian atmosphere.",
+            "radiation": "Earth atmosphere and magnetic shielding do not reproduce extraterrestrial ionizing radiation; POWER parameters here do not measure UV or radiation dose.",
+            "weathering": "Liquid water, oxygen and biology alter terrestrial materials differently from space weathering and Martian surface chemistry.",
+            "thermal_comparability": "POWER 2 m air climatology is only a proxy against scenario surface/pit temperatures; it cannot validate cave stability, cryogenic exposure or lunar day/night cycles.",
+            "site_specific": "Carbonate-rich target rocks differ from lunar highlands; polar air is far warmer than lunar cold traps."
+          }
+        }
+      },
+      "best_target": "shackleton-crater",
+      "overall_asi": 62.6,
+      "analogy_strengths": [
+        "topography: 81.67/100 scenario similarity",
+        "subsurface_ops: 95.00/100 scenario similarity"
+      ],
+      "analogy_breakdowns": {
+        "gravity": "Earth gravity (9.81 m/s2) cannot reproduce Moon gravity (1.62 m/s2); traction and structural loading differ.",
+        "atmosphere_vacuum": "Earth air does not reproduce lunar vacuum.",
+        "radiation": "Earth atmosphere and magnetic shielding do not reproduce extraterrestrial ionizing radiation; POWER parameters here do not measure UV or radiation dose.",
+        "weathering": "Liquid water, oxygen and biology alter terrestrial materials differently from space weathering and Martian surface chemistry.",
+        "thermal_comparability": "POWER 2 m air climatology is only a proxy against scenario surface/pit temperatures; it cannot validate cave stability, cryogenic exposure or lunar day/night cycles.",
+        "site_specific": "Carbonate-rich target rocks differ from lunar highlands; polar air is far warmer than lunar cold traps."
+      }
+    },
+    {
+      "id": "atacama-yungay",
+      "name": "Atacama Yungay",
+      "country": "Chile",
+      "latitude": -24.09,
+      "longitude": -69.99,
+      "elevation_m": 1000,
+      "terrain": {
+        "slope_deg": 3,
+        "roughness": 0.5,
+        "geology": [
+          0.1,
+          0.75,
+          0.8,
+          0.8,
+          0
+        ],
+        "ice": 0,
+        "aqueous_history": 0.65,
+        "lava_tubes": 0,
+        "shelter": 0.05
+      },
+      "climatology": {
+        "tmax_c": 32.93,
+        "tmin_c": -0.64,
+        "precipitation_mm_day": 0.02,
+        "wind_m_s": 3.03,
+        "relative_humidity_pct": 44.09,
+        "source": "nasa_power",
+        "fallback_reason": null,
+        "source_url": "https://power.larc.nasa.gov/api/temporal/climatology/point?parameters=T2M_MAX%2CT2M_MIN%2CPRECTOTCORR%2CWS10M%2CRH2M&community=RE&longitude=-69.99&latitude=-24.09&format=JSON",
+        "period": null,
+        "aggregation": "T2M_MAX: ANN; T2M_MIN: ANN; PRECTOTCORR: ANN; WS10M: ANN; RH2M: ANN"
+      },
+      "rationale": "Hyperaridity and salt-bearing soils support Mars surface sampling studies.",
+      "prior_status": "Illustrative scenario priors; not measured or calibrated site properties.",
+      "scores": {
+        "shackleton-crater": {
+          "dimensions": {
+            "topography": 54.17,
+            "geology": 22.97,
+            "thermal": 30.57,
+            "hydrology_ice": 48.22,
+            "subsurface_ops": 94.0
+          },
+          "overall_asi": 43.42,
+          "weights": {
+            "topography": 0.25,
+            "geology": 0.2,
+            "thermal": 0.2,
+            "hydrology_ice": 0.3,
+            "subsurface_ops": 0.05
+          },
+          "analogy_strengths": [
+            "subsurface_ops: 94.00/100 scenario similarity"
+          ],
+          "analogy_breakdowns": {
+            "gravity": "Earth gravity (9.81 m/s2) cannot reproduce Moon gravity (1.62 m/s2); traction and structural loading differ.",
+            "atmosphere_vacuum": "Earth air does not reproduce lunar vacuum.",
+            "radiation": "Earth atmosphere and magnetic shielding do not reproduce extraterrestrial ionizing radiation; POWER parameters here do not measure UV or radiation dose.",
+            "weathering": "Liquid water, oxygen and biology alter terrestrial materials differently from space weathering and Martian surface chemistry.",
+            "thermal_comparability": "POWER 2 m air climatology is only a proxy against scenario surface/pit temperatures; it cannot validate cave stability, cryogenic exposure or lunar day/night cycles.",
+            "site_specific": "Fog, microbes and oxygen-driven weathering persist; aridity alone does not reproduce Mars."
+          }
+        },
+        "mare-tranquillitatis": {
+          "dimensions": {
+            "topography": 94.17,
+            "geology": 24.29,
+            "thermal": 86.86,
+            "hydrology_ice": 86.22,
+            "subsurface_ops": 1.5
+          },
+          "overall_asi": 43.51,
+          "weights": {
+            "topography": 0.15,
+            "geology": 0.3,
+            "thermal": 0.15,
+            "hydrology_ice": 0.1,
+            "subsurface_ops": 0.3
+          },
+          "analogy_strengths": [
+            "topography: 94.17/100 scenario similarity",
+            "thermal: 86.86/100 scenario similarity",
+            "hydrology_ice: 86.22/100 scenario similarity"
+          ],
+          "analogy_breakdowns": {
+            "gravity": "Earth gravity (9.81 m/s2) cannot reproduce Moon gravity (1.62 m/s2); traction and structural loading differ.",
+            "atmosphere_vacuum": "Earth air does not reproduce lunar vacuum.",
+            "radiation": "Earth atmosphere and magnetic shielding do not reproduce extraterrestrial ionizing radiation; POWER parameters here do not measure UV or radiation dose.",
+            "weathering": "Liquid water, oxygen and biology alter terrestrial materials differently from space weathering and Martian surface chemistry.",
+            "thermal_comparability": "POWER 2 m air climatology is only a proxy against scenario surface/pit temperatures; it cannot validate cave stability, cryogenic exposure or lunar day/night cycles.",
+            "site_specific": "Fog, microbes and oxygen-driven weathering persist; aridity alone does not reproduce Mars."
+          }
+        },
+        "jezero-crater": {
+          "dimensions": {
+            "topography": 90.0,
+            "geology": 50.0,
+            "thermal": 39.74,
+            "hydrology_ice": 88.22,
+            "subsurface_ops": 98.5
+          },
+          "overall_asi": 68.44,
+          "weights": {
+            "topography": 0.2,
+            "geology": 0.35,
+            "thermal": 0.15,
+            "hydrology_ice": 0.25,
+            "subsurface_ops": 0.05
+          },
+          "analogy_strengths": [
+            "topography: 90.00/100 scenario similarity",
+            "hydrology_ice: 88.22/100 scenario similarity",
+            "subsurface_ops: 98.50/100 scenario similarity"
+          ],
+          "analogy_breakdowns": {
+            "gravity": "Earth gravity (9.81 m/s2) cannot reproduce Mars gravity (3.71 m/s2); traction and structural loading differ.",
+            "atmosphere_vacuum": "Earth air does not reproduce the thin, CO2-dominated Martian atmosphere.",
+            "radiation": "Earth atmosphere and magnetic shielding do not reproduce extraterrestrial ionizing radiation; POWER parameters here do not measure UV or radiation dose.",
+            "weathering": "Liquid water, oxygen and biology alter terrestrial materials differently from space weathering and Martian surface chemistry.",
+            "thermal_comparability": "POWER 2 m air climatology is only a proxy against scenario surface/pit temperatures; it cannot validate cave stability, cryogenic exposure or lunar day/night cycles.",
+            "site_specific": "Fog, microbes and oxygen-driven weathering persist; aridity alone does not reproduce Mars."
+          }
+        },
+        "olympus-mons-flank": {
+          "dimensions": {
+            "topography": 76.67,
+            "geology": 24.64,
+            "thermal": 32.74,
+            "hydrology_ice": 83.22,
+            "subsurface_ops": 4.5
+          },
+          "overall_asi": 40.69,
+          "weights": {
+            "topography": 0.25,
+            "geology": 0.3,
+            "thermal": 0.15,
+            "hydrology_ice": 0.1,
+            "subsurface_ops": 0.2
+          },
+          "analogy_strengths": [
+            "topography: 76.67/100 scenario similarity",
+            "hydrology_ice: 83.22/100 scenario similarity"
+          ],
+          "analogy_breakdowns": {
+            "gravity": "Earth gravity (9.81 m/s2) cannot reproduce Mars gravity (3.71 m/s2); traction and structural loading differ.",
+            "atmosphere_vacuum": "Earth air does not reproduce the thin, CO2-dominated Martian atmosphere.",
+            "radiation": "Earth atmosphere and magnetic shielding do not reproduce extraterrestrial ionizing radiation; POWER parameters here do not measure UV or radiation dose.",
+            "weathering": "Liquid water, oxygen and biology alter terrestrial materials differently from space weathering and Martian surface chemistry.",
+            "thermal_comparability": "POWER 2 m air climatology is only a proxy against scenario surface/pit temperatures; it cannot validate cave stability, cryogenic exposure or lunar day/night cycles.",
+            "site_specific": "Fog, microbes and oxygen-driven weathering persist; aridity alone does not reproduce Mars."
+          }
+        }
+      },
+      "best_target": "jezero-crater",
+      "overall_asi": 68.44,
+      "analogy_strengths": [
+        "topography: 90.00/100 scenario similarity",
+        "hydrology_ice: 88.22/100 scenario similarity",
+        "subsurface_ops: 98.50/100 scenario similarity"
+      ],
+      "analogy_breakdowns": {
+        "gravity": "Earth gravity (9.81 m/s2) cannot reproduce Mars gravity (3.71 m/s2); traction and structural loading differ.",
+        "atmosphere_vacuum": "Earth air does not reproduce the thin, CO2-dominated Martian atmosphere.",
+        "radiation": "Earth atmosphere and magnetic shielding do not reproduce extraterrestrial ionizing radiation; POWER parameters here do not measure UV or radiation dose.",
+        "weathering": "Liquid water, oxygen and biology alter terrestrial materials differently from space weathering and Martian surface chemistry.",
+        "thermal_comparability": "POWER 2 m air climatology is only a proxy against scenario surface/pit temperatures; it cannot validate cave stability, cryogenic exposure or lunar day/night cycles.",
+        "site_specific": "Fog, microbes and oxygen-driven weathering persist; aridity alone does not reproduce Mars."
+      }
+    },
+    {
+      "id": "askja",
+      "name": "Askja Volcanic Field",
+      "country": "Iceland",
+      "latitude": 65.03,
+      "longitude": -16.75,
+      "elevation_m": 1100,
+      "terrain": {
+        "slope_deg": 10,
+        "roughness": 0.9,
+        "geology": [
+          1,
+          0.8,
+          0.1,
+          0,
+          0.1
+        ],
+        "ice": 0.4,
+        "aqueous_history": 0.2,
+        "lava_tubes": 0.7,
+        "shelter": 0.65
+      },
+      "climatology": {
+        "tmax_c": 10.31,
+        "tmin_c": -23.83,
+        "precipitation_mm_day": 2.36,
+        "wind_m_s": 6.3,
+        "relative_humidity_pct": 94.09,
+        "source": "nasa_power",
+        "fallback_reason": null,
+        "source_url": "https://power.larc.nasa.gov/api/temporal/climatology/point?parameters=T2M_MAX%2CT2M_MIN%2CPRECTOTCORR%2CWS10M%2CRH2M&community=RE&longitude=-16.75&latitude=65.03&format=JSON",
+        "period": null,
+        "aggregation": "T2M_MAX: ANN; T2M_MIN: ANN; PRECTOTCORR: ANN; WS10M: ANN; RH2M: ANN"
+      },
+      "rationale": "Young basalt, rough lava and volcanic deposits support rover traverse trials.",
+      "prior_status": "Illustrative scenario priors; not measured or calibrated site properties.",
+      "scores": {
+        "shackleton-crater": {
+          "dimensions": {
+            "topography": 80.83,
+            "geology": 32.26,
+            "thermal": 30.34,
+            "hydrology_ice": 45.9,
+            "subsurface_ops": 39.0
+          },
+          "overall_asi": 48.45,
+          "weights": {
+            "topography": 0.25,
+            "geology": 0.2,
+            "thermal": 0.2,
+            "hydrology_ice": 0.3,
+            "subsurface_ops": 0.05
+          },
+          "analogy_strengths": [
+            "topography: 80.83/100 scenario similarity"
+          ],
+          "analogy_breakdowns": {
+            "gravity": "Earth gravity (9.81 m/s2) cannot reproduce Moon gravity (1.62 m/s2); traction and structural loading differ.",
+            "atmosphere_vacuum": "Earth air does not reproduce lunar vacuum.",
+            "radiation": "Earth atmosphere and magnetic shielding do not reproduce extraterrestrial ionizing radiation; POWER parameters here do not measure UV or radiation dose.",
+            "weathering": "Liquid water, oxygen and biology alter terrestrial materials differently from space weathering and Martian surface chemistry.",
+            "thermal_comparability": "POWER 2 m air climatology is only a proxy against scenario surface/pit temperatures; it cannot validate cave stability, cryogenic exposure or lunar day/night cycles.",
+            "site_specific": "Snow, precipitation and active volcanism differ from dry extraterrestrial surfaces; tube relevance needs local survey."
+          }
+        },
+        "mare-tranquillitatis": {
+          "dimensions": {
+            "topography": 74.17,
+            "geology": 95.0,
+            "thermal": 72.89,
+            "hydrology_ice": 51.9,
+            "subsurface_ops": 68.5
+          },
+          "overall_asi": 76.3,
+          "weights": {
+            "topography": 0.15,
+            "geology": 0.3,
+            "thermal": 0.15,
+            "hydrology_ice": 0.1,
+            "subsurface_ops": 0.3
+          },
+          "analogy_strengths": [
+            "topography: 74.17/100 scenario similarity",
+            "geology: 95.00/100 scenario similarity",
+            "thermal: 72.89/100 scenario similarity"
+          ],
+          "analogy_breakdowns": {
+            "gravity": "Earth gravity (9.81 m/s2) cannot reproduce Moon gravity (1.62 m/s2); traction and structural loading differ.",
+            "atmosphere_vacuum": "Earth air does not reproduce lunar vacuum.",
+            "radiation": "Earth atmosphere and magnetic shielding do not reproduce extraterrestrial ionizing radiation; POWER parameters here do not measure UV or radiation dose.",
+            "weathering": "Liquid water, oxygen and biology alter terrestrial materials differently from space weathering and Martian surface chemistry.",
+            "thermal_comparability": "POWER 2 m air climatology is only a proxy against scenario surface/pit temperatures; it cannot validate cave stability, cryogenic exposure or lunar day/night cycles.",
+            "site_specific": "Snow, precipitation and active volcanism differ from dry extraterrestrial surfaces; tube relevance needs local survey."
+          }
+        },
+        "jezero-crater": {
+          "dimensions": {
+            "topography": 78.33,
+            "geology": 50.0,
+            "thermal": 53.71,
+            "hydrology_ice": 43.9,
+            "subsurface_ops": 34.5
+          },
+          "overall_asi": 53.92,
+          "weights": {
+            "topography": 0.2,
+            "geology": 0.35,
+            "thermal": 0.15,
+            "hydrology_ice": 0.25,
+            "subsurface_ops": 0.05
+          },
+          "analogy_strengths": [
+            "topography: 78.33/100 scenario similarity"
+          ],
+          "analogy_breakdowns": {
+            "gravity": "Earth gravity (9.81 m/s2) cannot reproduce Mars gravity (3.71 m/s2); traction and structural loading differ.",
+            "atmosphere_vacuum": "Earth air does not reproduce the thin, CO2-dominated Martian atmosphere.",
+            "radiation": "Earth atmosphere and magnetic shielding do not reproduce extraterrestrial ionizing radiation; POWER parameters here do not measure UV or radiation dose.",
+            "weathering": "Liquid water, oxygen and biology alter terrestrial materials differently from space weathering and Martian surface chemistry.",
+            "thermal_comparability": "POWER 2 m air climatology is only a proxy against scenario surface/pit temperatures; it cannot validate cave stability, cryogenic exposure or lunar day/night cycles.",
+            "site_specific": "Snow, precipitation and active volcanism differ from dry extraterrestrial surfaces; tube relevance needs local survey."
+          }
+        },
+        "olympus-mons-flank": {
+          "dimensions": {
+            "topography": 91.67,
+            "geology": 92.5,
+            "thermal": 46.71,
+            "hydrology_ice": 56.9,
+            "subsurface_ops": 71.5
+          },
+          "overall_asi": 77.66,
+          "weights": {
+            "topography": 0.25,
+            "geology": 0.3,
+            "thermal": 0.15,
+            "hydrology_ice": 0.1,
+            "subsurface_ops": 0.2
+          },
+          "analogy_strengths": [
+            "topography: 91.67/100 scenario similarity",
+            "geology: 92.50/100 scenario similarity",
+            "subsurface_ops: 71.50/100 scenario similarity"
+          ],
+          "analogy_breakdowns": {
+            "gravity": "Earth gravity (9.81 m/s2) cannot reproduce Mars gravity (3.71 m/s2); traction and structural loading differ.",
+            "atmosphere_vacuum": "Earth air does not reproduce the thin, CO2-dominated Martian atmosphere.",
+            "radiation": "Earth atmosphere and magnetic shielding do not reproduce extraterrestrial ionizing radiation; POWER parameters here do not measure UV or radiation dose.",
+            "weathering": "Liquid water, oxygen and biology alter terrestrial materials differently from space weathering and Martian surface chemistry.",
+            "thermal_comparability": "POWER 2 m air climatology is only a proxy against scenario surface/pit temperatures; it cannot validate cave stability, cryogenic exposure or lunar day/night cycles.",
+            "site_specific": "Snow, precipitation and active volcanism differ from dry extraterrestrial surfaces; tube relevance needs local survey."
+          }
+        }
+      },
+      "best_target": "olympus-mons-flank",
+      "overall_asi": 77.66,
+      "analogy_strengths": [
+        "topography: 91.67/100 scenario similarity",
+        "geology: 92.50/100 scenario similarity",
+        "subsurface_ops: 71.50/100 scenario similarity"
+      ],
+      "analogy_breakdowns": {
+        "gravity": "Earth gravity (9.81 m/s2) cannot reproduce Mars gravity (3.71 m/s2); traction and structural loading differ.",
+        "atmosphere_vacuum": "Earth air does not reproduce the thin, CO2-dominated Martian atmosphere.",
+        "radiation": "Earth atmosphere and magnetic shielding do not reproduce extraterrestrial ionizing radiation; POWER parameters here do not measure UV or radiation dose.",
+        "weathering": "Liquid water, oxygen and biology alter terrestrial materials differently from space weathering and Martian surface chemistry.",
+        "thermal_comparability": "POWER 2 m air climatology is only a proxy against scenario surface/pit temperatures; it cannot validate cave stability, cryogenic exposure or lunar day/night cycles.",
+        "site_specific": "Snow, precipitation and active volcanism differ from dry extraterrestrial surfaces; tube relevance needs local survey."
+      }
+    }
+  ]
+}

@@ -1,0 +1,79 @@
+@import "tailwindcss";
+@import "maplibre-gl/dist/maplibre-gl.css";
+
+:root {
+  --bg-space: #060913;
+  --surface-panel: #0d1424;
+  --border-subtle: rgba(30, 41, 59, 0.85);
+  --text-primary: #f1f5f9;
+  --text-secondary: #94a3b8;
+  --accent-earth: #06b6d4;
+  --accent-mars: #e07a5f;
+  --accent-moon: #cbd5e1;
+  --scrollbar-thumb: #1e293b;
+  --scrollbar-track: #060913;
+
+  color-scheme: dark;
+  accent-color: var(--accent-earth);
+  scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+}
+
+@theme inline {
+  --color-background: var(--bg-space);
+  --color-foreground: var(--text-primary);
+  --font-sans: var(--font-space-grotesk);
+  --font-mono: var(--font-jetbrains-mono);
+}
+
+@supports not (scrollbar-color: auto) {
+  *::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  *::-webkit-scrollbar-thumb {
+    background: var(--scrollbar-thumb);
+    border-radius: 4px;
+  }
+  *::-webkit-scrollbar-track {
+    background: var(--scrollbar-track);
+  }
+}
+
+body {
+  background-color: var(--bg-space);
+  color: var(--text-primary);
+  font-family: var(--font-space-grotesk), system-ui, sans-serif;
+}
+
+:where(a:any-link, button, input, select, [tabindex]):focus-visible {
+  outline: 2px solid var(--accent-earth);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* MapLibre dark HUD overrides */
+.maplibregl-ctrl-attrib {
+  background: rgba(6, 9, 19, 0.78) !important;
+  color: #94a3b8 !important;
+  font-size: 11px !important;
+}
+.maplibregl-ctrl-attrib a {
+  color: #38bdf8 !important;
+}
+.maplibregl-ctrl-group {
+  background: #0d1424 !important;
+  border: 1px solid rgba(30, 41, 59, 0.85) !important;
+}
+.maplibregl-ctrl-group button {
+  filter: invert(0.9) hue-rotate(180deg);
+}
