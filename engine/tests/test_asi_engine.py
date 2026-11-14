@@ -7,7 +7,8 @@ import pytest
 
 from asi_engine import (Climate, DIMENSIONS, EARTH_SITES, MONTHS, PARAMETERS,
                         REFERENCE_PROFILES, fetch_climatology, parse_power,
-                        score_site, score_target, similarity, fetch_dem, score_custom_coordinates)
+                        score_site, score_target, similarity, fetch_dem, score_custom_coordinates,
+                        grid_search_region)
 from build_dataset import build_dataset, to_geojson, write_dataset
 
 
@@ -329,6 +330,76 @@ def test_custom_offline_and_catalog_metadata(monkeypatch):
 def test_custom_invalid_coordinates(lat, lon):
     with pytest.raises(ValueError):
         score_custom_coordinates(lat, lon, offline=True)
+
+
+@pytest.mark.parametrize("field,value", [
+    ("min_lat", -91), ("max_lat", 91), ("min_lat", 1), ("min_lat", 2),
+    ("min_lon", -181), ("max_lon", 181), ("min_lon", 1), ("min_lon", 2),
+    *[(field, value) for field in ("min_lat", "max_lat", "min_lon", "max_lon")
+      for value in (float("nan"), float("inf"), -float("inf"), True, None, "0")],
+    *[("grid_size", value) for value in (1, 11, 0, -1, 3.0, 2.5, True, False, None, "3")],
+])
+def test_grid_search_validation_before_scoring(monkeypatch, field, value):
+    def forbidden(*args, **kwargs):
+        pytest.fail("Invalid grid must not score any coordinates")
+    monkeypatch.setattr("asi_engine.score_custom_coordinates", forbidden)
+    kwargs = dict(min_lat=-1, max_lat=1, min_lon=-1, max_lon=1, grid_size=3)
+    kwargs[field] = value
+    with pytest.raises(ValueError):
+        grid_search_region(**kwargs)
+
+
+@pytest.mark.parametrize("grid_size", [2, 3, 10])
+def test_grid_search_offline_shape_and_metadata(monkeypatch, grid_size):
+    def forbidden(*args, **kwargs):
+        pytest.fail("Offline grid made a network request")
+    monkeypatch.setattr(httpx.Client, "get", forbidden)
+    result = grid_search_region(-90, 90, -180, 180, grid_size, offline=True)
+    assert result["bounds"] == dict(min_lat=-90, max_lat=90, min_lon=-180, max_lon=180)
+    assert result["grid_size"] == grid_size
+    assert len(result["points"]) == grid_size ** 2
+    lats = [-90 + 180 * i / (grid_size - 1) for i in range(grid_size)]
+    lons = [-180 + 360 * i / (grid_size - 1) for i in range(grid_size)]
+    assert {(p["lat"], p["lon"]) for p in result["points"]} == {
+        (lat, lon) for lat in lats for lon in lons}
+    for point in result["points"]:
+        expected = score_custom_coordinates(point["lat"], point["lon"], offline=True)
+        target = REFERENCE_PROFILES[expected["best_target"]]
+        assert point["best_target"] == target.id
+        assert point["best_target_name"] == target.name
+        assert point["body"] == target.body
+        assert point["best_asi_score"] == expected["overall_asi"]
+        for actual, original in (("scores", "scores"), ("analogy_strengths", "analogy_strengths"),
+                                 ("analogy_gaps", "analogy_breakdowns"),
+                                 ("dem_metrics", "dem_telemetry"),
+                                 ("nasa_power_climatology", "climatology")):
+            assert point[actual] == expected[original]
+        assert point["dem_metrics"]["source"] == point["nasa_power_climatology"]["source"] == "fallback"
+
+
+@pytest.mark.parametrize("offline", [False, True])
+def test_grid_search_ranking_and_geojson(monkeypatch, offline):
+    template = score_custom_coordinates(0, 0, offline=True)
+    calls = []
+    def score(lat, lon, offline=False):
+        calls.append((lat, lon, offline))
+        return {**template, "overall_asi": 50 + lat * 10 - lon,
+                "rationale": f"Probe at {lat}, {lon}"}
+    monkeypatch.setattr("asi_engine.score_custom_coordinates", score)
+    result = grid_search_region(-1, 1, -2, 2, offline=offline)
+    assert result["grid_size"] == 3
+    assert calls == [(lat, lon, offline) for lat in (-1, 0, 1) for lon in (-2, 0, 2)]
+    assert [p["best_asi_score"] for p in result["points"]] == [62, 60, 58, 52, 50, 48, 42, 40, 38]
+    geojson = result["geojson"]
+    assert geojson["type"] == "FeatureCollection"
+    assert len(geojson["features"]) == 9
+    for feature, point in zip(geojson["features"], result["points"]):
+        assert feature["type"] == "Feature"
+        assert feature["geometry"] == {"type": "Point", "coordinates": [point["lon"], point["lat"]]}
+        assert feature["properties"] == {key: point[key] for key in (
+            "lat", "lon", "best_asi_score", "best_target", "best_target_name", "body", "rationale")}
+        assert feature["properties"]["rationale"] == f"Probe at {point['lat']}, {point['lon']}"
+    assert json.loads(json.dumps(result, allow_nan=False)) == result
 
 
 def test_custom_live(monkeypatch):

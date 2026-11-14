@@ -438,6 +438,51 @@ def score_custom_coordinates(lat: float, lon: float, offline: bool = False) -> d
     return result
 
 
+def grid_search_region(min_lat: float, max_lat: float, min_lon: float, max_lon: float,
+                       grid_size: int = 3, offline: bool = False) -> dict:
+    """Rank an inclusive, uniformly spaced latitude/longitude grid of probes."""
+    min_lat, max_lat = finite(min_lat, "min_lat"), finite(max_lat, "max_lat")
+    min_lon, max_lon = finite(min_lon, "min_lon"), finite(max_lon, "max_lon")
+    if not -90 <= min_lat < max_lat <= 90:
+        raise ValueError("bounds must satisfy -90 <= min_lat < max_lat <= 90")
+    if not -180 <= min_lon < max_lon <= 180:
+        raise ValueError("bounds must satisfy -180 <= min_lon < max_lon <= 180")
+    if isinstance(grid_size, bool) or not isinstance(grid_size, int) or not 2 <= grid_size <= 10:
+        raise ValueError("grid_size must be an integer in [2, 10]")
+
+    def axis(low: float, high: float) -> list[float]:
+        return [low + (high - low) * i / (grid_size - 1)
+                for i in range(grid_size - 1)] + [high]
+
+    points = []
+    for lat in axis(min_lat, max_lat):
+        for lon in axis(min_lon, max_lon):
+            result = score_custom_coordinates(lat, lon, offline=offline)
+            target = REFERENCE_PROFILES[result["best_target"]]
+            points.append({
+                "lat": lat, "lon": lon, "best_target": result["best_target"],
+                "best_target_name": target.name, "best_asi_score": result["overall_asi"],
+                "body": target.body, "scores": result["scores"],
+                "analogy_strengths": result["analogy_strengths"],
+                "analogy_gaps": result["analogy_breakdowns"],
+                "dem_metrics": result["dem_telemetry"],
+                "nasa_power_climatology": result["climatology"],
+                "rationale": result["rationale"],
+            })
+    points.sort(key=lambda point: point["best_asi_score"], reverse=True)
+    features = [{
+        "type": "Feature",
+        "geometry": {"type": "Point", "coordinates": [point["lon"], point["lat"]]},
+        "properties": {key: point[key] for key in (
+            "lat", "lon", "best_asi_score", "best_target", "best_target_name", "body", "rationale")},
+    } for point in points]
+    return {
+        "bounds": {"min_lat": min_lat, "max_lat": max_lat, "min_lon": min_lon, "max_lon": max_lon},
+        "grid_size": grid_size, "points": points,
+        "geojson": {"type": "FeatureCollection", "features": features},
+    }
+
+
 def similarity(a: float, b: float, scale: float = 1.0) -> float:
     """Bounded linear similarity; scale is distance giving zero similarity."""
     if finite(scale, "scale") <= 0:
