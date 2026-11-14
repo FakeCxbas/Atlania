@@ -63,3 +63,12 @@ Ejecuta Codex mediante `run_command` eligiendo el modelo según la complejidad:
 - Tanto Antigravity como Codex comparten la base persistente de **Engram** (`~/.engram/engram.db`).
 - Tras completar un hito o una delegación importante a Codex, registra la decisión clave con `mem_save` (proyecto `NasaAppChallenge`) para mantener chats cortos y recuperar contexto instantáneamente al abrir nuevas conversaciones.
 
+
+## 5. Trazabilidad Git y sincronización
+
+Por preferencia explícita del usuario, en cada tarea de este repositorio:
+- Ejecutar `git fetch origin --prune` al comenzar y antes de publicar; revisar e integrar los cambios de la rama base sin descartar trabajo local.
+- Trabajar en una rama dedicada al issue, con commits Conventional Commits y referencia al issue correspondiente.
+- Ejecutar las verificaciones relevantes después de integrar actualizaciones.
+- Publicar la rama y abrir o actualizar su pull request usando la plantilla del repositorio, enlazando el issue y detallando las verificaciones.
+- Mantener el PR al día y comunicar su enlace y cualquier bloqueo de autenticación; no presentar un PR como publicado si no se verificó su creación.

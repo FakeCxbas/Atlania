@@ -1,6 +1,7 @@
 "use client";
 
-import type { AnalogSite, DimensionScores, TargetProfile } from "@/types/analog";
+import type { AnalogDataset, AnalogSite, TargetProfile } from "@/types/analog";
+import { DIMENSIONS, downloadDossier } from "@/lib/dossier";
 import {
   AlertTriangle,
   CheckCircle2,
@@ -12,21 +13,15 @@ import {
 } from "lucide-react";
 
 interface TelemetryDrawerProps {
+  dataset: AnalogDataset;
   site: AnalogSite | null;
   references: Record<string, TargetProfile>;
   activeTargetId: string;
   onSelectTarget: (targetId: string) => void;
 }
 
-const DIMENSION_LABELS: { key: keyof DimensionScores; label: string }[] = [
-  { key: "topography", label: "Topography & Slope" },
-  { key: "geology", label: "Geology & Mineralogy" },
-  { key: "thermal", label: "Thermal Regime" },
-  { key: "hydrology_ice", label: "Aridity / Ice Potential" },
-  { key: "subsurface_ops", label: "Subsurface & Ops" },
-];
-
 export function TelemetryDrawer({
+  dataset,
   site,
   references,
   activeTargetId,
@@ -113,6 +108,29 @@ export function TelemetryDrawer({
         </div>
       </div>
 
+      <div
+        className="flex flex-wrap gap-2 border-b border-slate-800/80 py-3"
+        role="group"
+        aria-label="Export selected site dossier"
+      >
+        <button
+          type="button"
+          onClick={() =>
+            downloadDossier(dataset, site, resolvedTargetId, "json")
+          }
+          className="min-h-11 rounded border border-cyan-500/40 px-3 text-xs text-cyan-300 hover:bg-cyan-500/10"
+        >
+          Export Dossier · JSON
+        </button>
+        <button
+          type="button"
+          onClick={() => downloadDossier(dataset, site, resolvedTargetId, "md")}
+          className="min-h-11 rounded border border-cyan-500/40 px-3 text-xs text-cyan-300 hover:bg-cyan-500/10"
+        >
+          Export Dossier · Markdown
+        </button>
+      </div>
+
       {/* Target Selector for Cross-Comparison */}
       <div className="border-b border-slate-800/80 py-4">
         <label
@@ -164,7 +182,7 @@ export function TelemetryDrawer({
           <span>5-Axis Similarity Breakdown</span>
         </div>
         <div className="space-y-2.5">
-          {DIMENSION_LABELS.map(({ key, label }) => {
+          {DIMENSIONS.map(({ key, label }) => {
             const val = activeScore.dimensions[key];
             return (
               <div key={key}>
@@ -195,7 +213,7 @@ export function TelemetryDrawer({
           </span>
           <span className="font-mono text-[11px] text-slate-400">
             {site.climatology.source === "nasa_power"
-              ? "LIVE CLIMATOLOGY"
+              ? "NASA POWER CLIMATOLOGY"
               : "FALLBACK CLIMATOLOGY"}
           </span>
         </div>
@@ -208,7 +226,7 @@ export function TelemetryDrawer({
             </span>
           </div>
           <div className="rounded border border-slate-800/80 bg-[#060913]/60 p-2">
-            <span className="block text-slate-400">Annual Temp Span</span>
+            <span className="block text-slate-400">Climatology Temp Span</span>
             <span className="font-mono tabular-nums text-slate-100">
               Δ {diurnalSwing.toFixed(1)}°C
             </span>
@@ -305,7 +323,7 @@ export function TelemetryDrawer({
                   • <span className="font-medium text-slate-200">{key}:</span>{" "}
                   {msg}
                 </li>
-              )
+              ),
             )}
           </ul>
         </div>
