@@ -1,7 +1,7 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
-import type { AnalogDataset } from "@/types/analog";
+import { useCallback, useMemo, useRef, useState } from "react";
+import type { AnalogDataset, AnalogSite } from "@/types/analog";
 import { AnalogMap } from "@/components/AnalogMap";
 import { SiteDirectory } from "@/components/SiteDirectory";
 import { TelemetryDrawer } from "@/components/TelemetryDrawer";
@@ -36,6 +36,10 @@ export function MissionControlApp({ dataset }: MissionControlAppProps) {
     dataset.sites[0]?.best_target ?? Object.keys(dataset.references)[0] ?? "",
   );
 
+  const [probeMode, setProbeMode] = useState(false);
+  const [isProbing, setIsProbing] = useState(false);
+  const [probeSite, setProbeSite] = useState<AnalogSite | null>(null);
+
   const filteredSites = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
     return dataset.sites.filter((site) => {
@@ -56,18 +60,27 @@ export function MissionControlApp({ dataset }: MissionControlAppProps) {
     });
   }, [dataset.sites, dataset.references, bodyFilter, searchQuery]);
 
+  const mapSites = useMemo(
+    () => (probeSite ? [...filteredSites, probeSite] : filteredSites),
+    [filteredSites, probeSite]
+  );
+
   const selectedSite = useMemo(() => {
+    if (probeSite && selectedSiteId === probeSite.id) return probeSite;
     return (
       filteredSites.find((s) => s.id === selectedSiteId) ??
       dataset.sites.find((s) => s.id === selectedSiteId) ??
       filteredSites[0] ??
       null
     );
-  }, [filteredSites, dataset.sites, selectedSiteId]);
+  }, [filteredSites, dataset.sites, selectedSiteId, probeSite]);
 
   const handleSelectSite = (siteId: string) => {
     setSelectedSiteId(siteId);
-    const site = dataset.sites.find((s) => s.id === siteId);
+    const site =
+      probeSite && probeSite.id === siteId
+        ? probeSite
+        : dataset.sites.find((s) => s.id === siteId);
     if (site) {
       setActiveTargetId(site.best_target);
       setMobilePanel("telemetry");
@@ -75,6 +88,26 @@ export function MissionControlApp({ dataset }: MissionControlAppProps) {
         telemetryToggle.current?.focus();
     }
   };
+
+  const handleProbeCoordinate = useCallback(async (lat: number, lon: number) => {
+    setIsProbing(true);
+    try {
+      const res = await fetch(
+        `/api/evaluate?lat=${encodeURIComponent(lat.toFixed(4))}&lon=${encodeURIComponent(lon.toFixed(4))}`
+      );
+      if (!res.ok) return;
+      const payload = (await res.json()) as { site?: AnalogSite };
+      if (payload.site) {
+        setProbeSite(payload.site);
+        setSelectedSiteId(payload.site.id);
+        setActiveTargetId(payload.site.best_target);
+        setProbeMode(false);
+        setMobilePanel("telemetry");
+      }
+    } finally {
+      setIsProbing(false);
+    }
+  }, []);
 
   return (
     <div className="flex h-dvh flex-col overflow-hidden bg-[#060913] text-slate-100">
@@ -210,10 +243,14 @@ export function MissionControlApp({ dataset }: MissionControlAppProps) {
 
         <div className="min-h-0 min-w-0 overflow-hidden lg:order-2">
           <AnalogMap
-            sites={filteredSites}
+            sites={mapSites}
             references={dataset.references}
             selectedSiteId={selectedSite?.id ?? null}
             onSelectSite={handleSelectSite}
+            probeMode={probeMode}
+            isProbing={isProbing}
+            onToggleProbeMode={() => setProbeMode((prev) => !prev)}
+            onProbeCoordinate={handleProbeCoordinate}
           />
         </div>
 

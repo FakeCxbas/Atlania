@@ -9,6 +9,10 @@ interface AnalogMapProps {
   references: Record<string, TargetProfile>;
   selectedSiteId: string | null;
   onSelectSite: (siteId: string) => void;
+  probeMode?: boolean;
+  isProbing?: boolean;
+  onToggleProbeMode?: () => void;
+  onProbeCoordinate?: (lat: number, lon: number) => void;
 }
 
 type BasemapMode = "satellite" | "dark" | "nasa-gibs";
@@ -76,6 +80,10 @@ export function AnalogMap({
   references,
   selectedSiteId,
   onSelectSite,
+  probeMode = false,
+  isProbing = false,
+  onToggleProbeMode,
+  onProbeCoordinate,
 }: AnalogMapProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
@@ -215,6 +223,23 @@ export function AnalogMap({
     });
   }, [selectedSiteId, sites]);
 
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+
+    map.getCanvas().style.cursor = probeMode ? "crosshair" : "";
+    if (!probeMode || !onProbeCoordinate) return;
+
+    const handleClick = (e: maplibregl.MapMouseEvent) => {
+      onProbeCoordinate(e.lngLat.lat, e.lngLat.lng);
+    };
+
+    map.on("click", handleClick);
+    return () => {
+      map.off("click", handleClick);
+    };
+  }, [probeMode, onProbeCoordinate]);
+
   return (
     <div className="relative h-full w-full bg-[#060913]">
       <div
@@ -224,36 +249,57 @@ export function AnalogMap({
         aria-label="Interactive planetary analog world map"
       />
 
-      {/* Basemap Layer Switcher */}
-      <div
-        className="absolute left-3 top-3 flex items-center gap-1 rounded-md border border-slate-800/80 bg-[#060913]/85 p-1 backdrop-blur-md"
-        role="group"
-        aria-label="Map basemap layer"
-      >
-        {(
-          [
-            { id: "satellite", label: "Satellite" },
-            { id: "nasa-gibs", label: "NASA GIBS" },
-            { id: "dark", label: "Dark Vector" },
-          ] as const
-        ).map(({ id, label }) => {
-          const active = basemap === id;
-          return (
-            <button
-              key={id}
-              type="button"
-              onClick={() => setBasemap(id)}
-              aria-pressed={active}
-              className={`rounded px-2.5 py-1 text-xs font-medium transition-colors ${
-                active
-                  ? "bg-cyan-500/20 text-cyan-300 border border-cyan-500/60"
-                  : "text-slate-300 hover:text-slate-100 border border-transparent"
-              }`}
-            >
-              {label}
-            </button>
-          );
-        })}
+      {/* Basemap Layer Switcher & Probe Mode */}
+      <div className="absolute left-3 top-3 flex flex-wrap items-center gap-2">
+        <div
+          className="flex items-center gap-1 rounded-md border border-slate-800/80 bg-[#060913]/85 p-1 backdrop-blur-md"
+          role="group"
+          aria-label="Map basemap layer"
+        >
+          {(
+            [
+              { id: "satellite", label: "Satellite" },
+              { id: "nasa-gibs", label: "NASA GIBS" },
+              { id: "dark", label: "Dark Vector" },
+            ] as const
+          ).map(({ id, label }) => {
+            const active = basemap === id;
+            return (
+              <button
+                key={id}
+                type="button"
+                onClick={() => setBasemap(id)}
+                aria-pressed={active}
+                className={`rounded px-2.5 py-1 text-xs font-medium transition-colors ${
+                  active
+                    ? "border border-cyan-500/60 bg-cyan-500/20 text-cyan-300"
+                    : "border border-transparent text-slate-300 hover:text-slate-100"
+                }`}
+              >
+                {label}
+              </button>
+            );
+          })}
+        </div>
+
+        {onToggleProbeMode && (
+          <button
+            type="button"
+            onClick={onToggleProbeMode}
+            aria-pressed={probeMode}
+            className={`rounded-md border px-3 py-1.5 text-xs font-medium backdrop-blur-md transition-colors ${
+              probeMode
+                ? "border-amber-400/70 bg-amber-500/20 text-amber-200"
+                : "border-slate-800/80 bg-[#060913]/85 text-slate-200 hover:border-cyan-500/50"
+            }`}
+          >
+            {isProbing
+              ? "Probing NASA POWER..."
+              : probeMode
+              ? "Probe Active: Click Map"
+              : "Probe Coordinate"}
+          </button>
+        )}
       </div>
 
       {/* HUD Coordinate & Legend Overlay */}
