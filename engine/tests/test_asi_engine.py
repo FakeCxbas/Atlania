@@ -348,3 +348,94 @@ def test_new_power_validation(parameter, value, monthly):
     data["properties"]["parameter"][parameter] = dict.fromkeys(MONTHS, value) if monthly else {"ANN": value}
     with pytest.raises(ValueError):
         parse_power(data, "test")
+
+
+@pytest.mark.parametrize("key", REFERENCE_PROFILES)
+def test_reference_metadata_export(key):
+    reference = REFERENCE_PROFILES[key]
+    exported = build_dataset(offline=True)["references"][key]
+    for field in ("instrument", "pds_dataset", "mineralogy_summary", "metadata_note"):
+        assert exported[field] == getattr(reference, field)
+        assert exported[field]
+    assert "LRO" in reference.instrument if reference.body == "Moon" else "MRO" in reference.instrument
+    assert reference.gravity_ms2 == (1.62 if reference.body == "Moon" else 3.71)
+    assert reference.pressure_kpa == (0.0 if reference.body == "Moon" else 0.65)
+    assert exported["temp_min_c"] == reference.temperature_mean_c - reference.temperature_range_c / 2
+    assert exported["temp_max_c"] == reference.temperature_mean_c + reference.temperature_range_c / 2
+    assert {"id", "name", "body", "temperature_mean_c", "temperature_range_c",
+            "dryness", "context", "source_url"} <= exported.keys()
+
+
+def mock_probe(monkeypatch, *, tmin=24, tmax=31, rain=8, humidity=90, elevations=None):
+    data = payload()
+    for key, value in {"T2M_MIN": tmin, "T2M_MAX": tmax,
+                       "PRECTOTCORR": rain, "RH2M": humidity}.items():
+        data["properties"]["parameter"][key] = {"ANN": value}
+    def get(self, url, **kwargs):
+        body = {"elevation": elevations or [0]*5} if "open-meteo" in url else data
+        return httpx.Response(200, json=body, request=httpx.Request("GET", url))
+    monkeypatch.setattr(httpx.Client, "get", get)
+
+
+def test_humid_tropical_sea_level_probe_is_conservative(monkeypatch):
+    mock_probe(monkeypatch)
+    result = score_custom_coordinates(-2.2, -80.9)
+    assert result["overall_asi"] < 40
+    assert all(score["overall_asi"] < 40 for score in result["scores"].values())
+    for field in ("lava_tubes", "shelter", "aqueous_history", "ice", "roughness"):
+        assert result["terrain"][field] == 0
+    assert result["terrain"]["geology"] == (0, 0, 0, 0, 0)
+    assert all(score["dimensions"]["geology"] == 0 for score in result["scores"].values())
+    assert result["scores"]["mare-tranquillitatis"]["dimensions"]["subsurface_ops"] == 0
+
+
+@pytest.mark.parametrize("roughness", [30, 180])
+def test_custom_uses_live_dem_for_scoring(monkeypatch, roughness):
+    mock_probe(monkeypatch)
+    dem = fetch_dem(EARTH_SITES[0], offline=True)
+    dem.update(source="open_meteo", elevation_m=4000, dem_slope_deg=18, dem_roughness_m=roughness)
+    monkeypatch.setattr("asi_engine.fetch_dem", lambda *a, **kw: dem)
+    result = score_custom_coordinates(0, 0)
+    assert result["terrain"]["slope_deg"] == 18
+    assert result["terrain"]["roughness"] == min(1, roughness / 120)
+    target = REFERENCE_PROFILES["shackleton-crater"]
+    expected = 50 * (similarity(18, target.terrain.slope_deg, 30)
+                     + similarity(min(1, roughness / 120), target.terrain.roughness))
+    assert result["scores"][target.id]["dimensions"]["topography"] == round(expected, 2)
+
+
+@pytest.mark.parametrize("tmin,elevation,lat,expected", [
+    (-5, 0, 0, .7), (-4.9, 0, 0, .25), (0, 3500, 0, .7),
+    (0, 3499, 0, .25), (0, 0, 60, .7), (0, 0, -60, .7),
+    (0, 0, 59.9, .25), (.1, 4000, 70, .25), (5, 0, 0, .25), (5.1, 0, 0, 0),
+])
+def test_custom_cryogenic_thresholds(monkeypatch, tmin, elevation, lat, expected):
+    mock_probe(monkeypatch, tmin=tmin, elevations=[elevation]*5)
+    assert score_custom_coordinates(lat, 0)["terrain"]["ice"] == expected
+
+
+def test_custom_humidity_penalty_and_cold_arid_ranking(monkeypatch):
+    mock_probe(monkeypatch, rain=0, humidity=0)
+    dry = score_custom_coordinates(0, 0)
+    mock_probe(monkeypatch, rain=0, humidity=100)
+    humid = score_custom_coordinates(0, 0)
+    for key in REFERENCE_PROFILES:
+        # Half-unit dryness reduction contributes 20 points to hydrology only.
+        assert dry["scores"][key]["dimensions"]["hydrology_ice"] - humid["scores"][key]["dimensions"]["hydrology_ice"] == pytest.approx(20)
+    mock_probe(monkeypatch)
+    tropical = score_custom_coordinates(0, 0)
+    mock_probe(monkeypatch, tmin=-20, tmax=0, rain=.01, humidity=10,
+               elevations=[4000, 4100, 3900, 4100, 3900])
+    cold = score_custom_coordinates(65, 0)
+    assert cold["overall_asi"] > tropical["overall_asi"]
+    assert 45 <= cold["overall_asi"] <= 65
+
+
+def test_custom_failed_dem_keeps_conservative_terrain(monkeypatch):
+    mock_probe(monkeypatch, tmin=0)
+    fallback = fetch_dem(EARTH_SITES[0], offline=True)
+    monkeypatch.setattr("asi_engine.fetch_dem", lambda *a, **kw: fallback)
+    result = score_custom_coordinates(0, 0)
+    assert result["terrain"]["slope_deg"] == result["terrain"]["roughness"] == 0
+    assert result["elevation_m"] == 0
+    assert result["terrain"]["ice"] == .25

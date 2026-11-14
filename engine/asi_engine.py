@@ -1,8 +1,8 @@
 """Exploratory ASI, not a validated similarity probability or site safety rating.
 
-All terrain/geology/ice/operations numbers are explicit expert-style scenario
-priors, NOT NASA measurements. POWER supplies gridded climate and solar telemetry;
-Open-Meteo supplies DEM telemetry separately from scoring priors.
+Catalog terrain/geology/ice/operations numbers are illustrative scenario priors.
+Custom probes use DEM terrain and POWER climate proxies, with zero memberships
+for unmeasured geology and operations. Neither is a validated site assessment.
 See README.md for equations, units, provenance, and known comparison limitations.
 """
 from __future__ import annotations
@@ -34,7 +34,7 @@ def finite(value: Any, name: str) -> float:
 @dataclass(frozen=True)
 class Terrain:
     slope_deg: float
-    roughness: float  # dimensionless scenario scale 0..1, not DEM-derived
+    roughness: float  # 0..1 scenario scale; custom probes use min(1, DEM stddev / 120 m)
     geology: tuple[float, float, float, float, float]  # memberships, not fractions
     ice: float  # qualitative ice/permafrost relevance, not ice abundance
     aqueous_history: float
@@ -116,6 +116,19 @@ class Reference:
     weights: tuple[float, float, float, float, float]
     context: str
     source_url: str
+    instrument: str = ""
+    pds_dataset: str = ""
+    gravity_ms2: float = 0.0
+    pressure_kpa: float = 0.0
+    temp_min_c: float = 0.0
+    temp_max_c: float = 0.0
+    mineralogy_summary: str = ""
+    metadata_note: str = (
+        "Archive citations provide mission context, not locally extracted telemetry. "
+        "Temperature bounds are illustrative scenario mean +/- half range; gravity "
+        "and pressure are nominal body constants (Mars pressure varies with altitude/season). "
+        "Mineralogy is regional context, not a quantitative local assay."
+    )
 
     def __post_init__(self) -> None:
         finite(self.temperature_mean_c, "temperature_mean_c")
@@ -135,22 +148,38 @@ REFERENCE_PROFILES = {
                   Terrain(20, .85, (.05, 1, .05, 0, 1), .95, 0, 0, .25),
                   -183, 10, 1, (.25, .20, .20, .30, .05),
                   "Cold-trap interior scenario; does not represent the illuminated rim. Ice relevance is a hypothesis, not a local abundance measurement.",
-                  "https://science.nasa.gov/resource/shackleton-craters-illuminated-rim-shadowed-interior/"),
+                  "https://science.nasa.gov/resource/shackleton-craters-illuminated-rim-shadowed-interior/",
+                  instrument="LRO Diviner + LOLA",
+                  pds_dataset="LRO-L-DLRE-5-GCP-V1.0; https://pds-geosciences.wustl.edu/missions/lro/lola.htm",
+                  gravity_ms2=1.62, pressure_kpa=0.0, temp_min_c=-188, temp_max_c=-178,
+                  mineralogy_summary="Highlands impact regolith; anorthositic context and possible cold-trapped volatiles, not verified local ice abundance."),
         Reference("mare-tranquillitatis", "Mare Tranquillitatis / Lunar Lava Tubes", "Moon",
                   Terrain(5, .55, (1, .8, 0, 0, .1), 0, 0, 1, 1),
                   17, 2, 1, (.15, .30, .15, .10, .30),
                   "Shaded pit / hypothetical connected cave scenario; 17 C is modeled pit shade, not lunar surface climate or a proven habitable cave.",
-                  "https://www.nasa.gov/solar-system/nasas-lro-finds-lunar-pits-harbor-comfortable-temperatures/"),
+                  "https://www.nasa.gov/solar-system/nasas-lro-finds-lunar-pits-harbor-comfortable-temperatures/",
+                  instrument="LRO LROC + Diviner",
+                  pds_dataset="LRO-L-LROC-3-CDR-V1.0; LRO-L-DLRE-5-GCP-V1.0",
+                  gravity_ms2=1.62, pressure_kpa=0.0, temp_min_c=16, temp_max_c=18,
+                  mineralogy_summary="Basaltic mare terrain and regolith; pit morphology suggests possible lava-tube access, not confirmed cave extent."),
         Reference("jezero-crater", "Jezero Crater / Mars Delta and Basalt", "Mars",
                   Terrain(6, .6, (.8, .8, 1, .3, .5), .1, 1, 0, .1),
                   -60, 70, 1, (.20, .35, .15, .25, .05),
                   "Present dry surface thermal scenario combined with ancient aqueous geology; not a reconstruction of ancient climate.",
-                  "https://www.jpl.nasa.gov/news/nasas-perseverance-rover-deciphers-ancient-history-of-martian-lake/"),
+                  "https://www.jpl.nasa.gov/news/nasas-perseverance-rover-deciphers-ancient-history-of-martian-lake/",
+                  instrument="Perseverance MEDA + MRO CRISM",
+                  pds_dataset="MEDA doi:10.17189/1522849; https://pds-geosciences.wustl.edu/missions/mro/crism.htm",
+                  gravity_ms2=3.71, pressure_kpa=0.65, temp_min_c=-95, temp_max_c=-25,
+                  mineralogy_summary="Basaltic crater-floor rocks and ancient delta sediments; regional carbonate and hydrated mineral signatures."),
         Reference("olympus-mons-flank", "Olympus Mons Flank / Mars Volcanic Lava Tubes", "Mars",
                   Terrain(8, .8, (1, .7, .05, 0, .1), .1, .05, 1, .9),
                   -65, 80, 1, (.25, .30, .15, .10, .20),
                   "Exposed volcanic flank thermal scenario with tube exploration relevance; no measured subsurface temperature assumed.",
-                  "https://science.nasa.gov/photojournal/the-flows-of-olympus/"),
+                  "https://science.nasa.gov/photojournal/the-flows-of-olympus/",
+                  instrument="MGS MOLA + MRO HiRISE",
+                  pds_dataset="https://pds-geosciences.wustl.edu/missions/mgs/mola.html; https://hirise.lpl.arizona.edu/PDS/",
+                  gravity_ms2=3.71, pressure_kpa=0.65, temp_min_c=-105, temp_max_c=-25,
+                  mineralogy_summary="Volcanic lava-flow terrain interpreted as basaltic; MOLA/HiRISE constrain morphology, not mineral abundances."),
     )
 }
 
@@ -382,17 +411,31 @@ def fetch_dem(site: Site, *, client: httpx.Client | None = None,
 
 
 def score_custom_coordinates(lat: float, lon: float, offline: bool = False) -> dict[str, Any]:
-    """Exploratory coordinate screening with explicitly unmeasured neutral priors."""
+    """Screen coordinates with measured terrain and conservative unmeasured priors."""
     site = Site(f"custom-{lat}-{lon}", "Custom Earth coordinate", "Unknown", lat, lon, 0,
-                Terrain(0, .5, (.5, .5, .5, .5, .5), .5, .5, .5, .5),
+                Terrain(0, 0, (0, 0, 0, 0, 0), 0, 0, 0, 0),
                 Climate(20, 10, 1, 3, 50),
-                "Coordinate screening only; geological, ice and cave properties are unmeasured neutral priors.",
+                "Coordinate screening with DEM terrain and a climate-based ice proxy; unmeasured geology and caves receive zero memberships.",
                 "No local geology, ice, caves, field access or operational suitability is established.",
                 "Under-Recognized", ("Reconnaissance terrain mapping",))
     with httpx.Client(follow_redirects=True) as client:
         climate = fetch_climatology(site, offline=offline, client=client)
         dem = fetch_dem(site, offline=offline, client=client)
-    return score_site(site, climate, dem)
+    if dem["source"] == "open_meteo":
+        site = replace(site, elevation_m=dem["elevation_m"], terrain=replace(
+            site.terrain, slope_deg=dem["dem_slope_deg"],
+            roughness=min(1.0, dem["dem_roughness_m"] / 120.0)))
+    ice_proxy = (0.7 if climate.tmin_c <= -5 or (
+        climate.tmin_c <= 0 and (site.elevation_m >= 3500 or abs(lat) >= 60))
+        else 0.25 if climate.tmin_c <= 5 else 0.0)
+    site = replace(site, terrain=replace(site.terrain, ice=ice_proxy))
+    result = score_site(site, climate, dem, humidity_adjusted=True)
+    result["prior_status"] = (
+        "Custom probe: DEM terrain when available; climate-based ice proxy, not detected ice. "
+        "Unmeasured geology, aqueous history, caves and shelter have zero memberships "
+        "(unknown, not verified absence). Fallback telemetry is illustrative."
+    )
+    return result
 
 
 def similarity(a: float, b: float, scale: float = 1.0) -> float:
@@ -402,13 +445,15 @@ def similarity(a: float, b: float, scale: float = 1.0) -> float:
     return max(0.0, 1.0 - abs(finite(a, "a") - finite(b, "b")) / scale)
 
 
-def score_target(site: Site, climate: Climate, target: Reference) -> dict[str, Any]:
+def score_target(site: Site, climate: Climate, target: Reference, *, humidity_adjusted: bool = False) -> dict[str, Any]:
     earth, other = site.terrain, target.terrain
     geo_union = sum(max(a, b) for a, b in zip(earth.geology, other.geology))
     geology = sum(min(a, b) for a, b in zip(earth.geology, other.geology)) / geo_union if geo_union else 1.0
     mean_c = (climate.tmax_c + climate.tmin_c) / 2
     range_c = climate.tmax_c - climate.tmin_c
     dryness = 1 / (1 + climate.precipitation_mm_day)
+    if humidity_adjusted:
+        dryness *= 1 - 0.5 * (climate.relative_humidity_pct / 100.0)
     raw = {
         "topography": .5 * similarity(earth.slope_deg, other.slope_deg, 30)
                       + .5 * similarity(earth.roughness, other.roughness),
@@ -440,9 +485,10 @@ def score_target(site: Site, climate: Climate, target: Reference) -> dict[str, A
             "analogy_strengths": strengths, "analogy_breakdowns": breakdowns}
 
 
-def score_site(site: Site, climate: Climate, dem_telemetry: dict[str, Any] | None = None) -> dict[str, Any]:
+def score_site(site: Site, climate: Climate, dem_telemetry: dict[str, Any] | None = None, *,
+               humidity_adjusted: bool = False) -> dict[str, Any]:
     dem = dem_telemetry if dem_telemetry is not None else fetch_dem(site, offline=True)
-    scores = {key: score_target(site, climate, target) for key, target in REFERENCE_PROFILES.items()}
+    scores = {key: score_target(site, climate, target, humidity_adjusted=humidity_adjusted) for key, target in REFERENCE_PROFILES.items()}
     best = max(scores, key=lambda key: scores[key]["overall_asi"])
     return {"id": site.id, "name": site.name, "country": site.country,
             "latitude": site.latitude, "longitude": site.longitude, "elevation_m": dem["elevation_m"] if dem["source"] == "open_meteo" else site.elevation_m,
