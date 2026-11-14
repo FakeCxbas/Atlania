@@ -64,7 +64,7 @@ function getBasemapStyle(mode: BasemapMode): string | maplibregl.StyleSpecificat
             "https://services.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}",
           ],
           tileSize: 256,
-          maxzoom: 19,
+          maxzoom: 14,
           attribution: "Esri Reference",
         },
       },
@@ -74,20 +74,20 @@ function getBasemapStyle(mode: BasemapMode): string | maplibregl.StyleSpecificat
           type: "raster",
           source: "nasa-gibs",
           minzoom: 0,
-          maxzoom: 19,
+          maxzoom: 18,
         },
         {
           id: "esri-labels-layer",
           type: "raster",
           source: "esri-labels",
-          minzoom: 5,
-          maxzoom: 19,
+          minzoom: 6,
+          maxzoom: 18,
           paint: {
             "raster-opacity": [
               "interpolate",
               ["linear"],
               ["zoom"],
-              5,
+              6,
               0.35,
               9,
               0.85,
@@ -110,7 +110,7 @@ function getBasemapStyle(mode: BasemapMode): string | maplibregl.StyleSpecificat
           "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
         ],
         tileSize: 256,
-        maxzoom: 18,
+        maxzoom: 14,
         attribution: "Esri, Maxar, Earthstar Geographics | NASA POWER &amp; PDS",
       },
       "esri-labels": {
@@ -119,7 +119,7 @@ function getBasemapStyle(mode: BasemapMode): string | maplibregl.StyleSpecificat
           "https://services.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}",
         ],
         tileSize: 256,
-        maxzoom: 19,
+        maxzoom: 14,
         attribution: "Esri Reference",
       },
     },
@@ -129,20 +129,20 @@ function getBasemapStyle(mode: BasemapMode): string | maplibregl.StyleSpecificat
         type: "raster",
         source: "esri-satellite",
         minzoom: 0,
-        maxzoom: 19,
+        maxzoom: 18,
       },
       {
         id: "esri-labels-layer",
         type: "raster",
         source: "esri-labels",
-        minzoom: 5,
-        maxzoom: 19,
+        minzoom: 6,
+        maxzoom: 18,
         paint: {
           "raster-opacity": [
             "interpolate",
             ["linear"],
             ["zoom"],
-            5,
+            6,
             0.35,
             9,
             0.85,
@@ -200,9 +200,9 @@ export function AnalogMap({
       center: [-78.6, -0.67],
       zoom: 2.1,
       minZoom: 1.3,
-      maxZoom: 17.5,
-      maxPitch: 75,
-      pitch: 28,
+      maxZoom: 15.5,
+      maxPitch: 60,
+      pitch: 24,
     });
 
     map.addControl(
@@ -259,40 +259,14 @@ export function AnalogMap({
             "https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png",
           ],
           tileSize: 256,
-          maxzoom: 15,
+          maxzoom: 12,
           encoding: "terrarium",
         });
       }
 
-      if (!map.getLayer("terrain-hillshade")) {
-        const beforeLayer = map.getLayer("esri-labels-layer")
-          ? "esri-labels-layer"
-          : undefined;
-        map.addLayer(
-          {
-            id: "terrain-hillshade",
-            type: "hillshade",
-            source: "terrain-dem",
-            paint: {
-              "hillshade-exaggeration": 0.42,
-              "hillshade-shadow-color": "#060913",
-              "hillshade-highlight-color": "#F8FAFC",
-              "hillshade-accent-color": "#0D1424",
-            },
-          },
-          beforeLayer
-        );
-      }
-
-      map.setLayoutProperty(
-        "terrain-hillshade",
-        "visibility",
-        terrain3d ? "visible" : "none"
-      );
-
       map.setTerrain(
         terrain3d
-          ? { source: "terrain-dem", exaggeration: 1.55 }
+          ? { source: "terrain-dem", exaggeration: 1.25 }
           : null
       );
     };
