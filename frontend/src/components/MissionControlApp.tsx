@@ -2,11 +2,12 @@
 
 import { useCallback, useMemo, useRef, useState } from "react";
 import type { AnalogDataset, AnalogSite } from "@/types/analog";
+import type { RegionBounds, RegionEvaluationResult } from "@/lib/evaluateRegion";
 import { AnalogMap } from "@/components/AnalogMap";
 import { SiteDirectory } from "@/components/SiteDirectory";
 import { TelemetryDrawer } from "@/components/TelemetryDrawer";
 import { MethodologyDialog } from "@/components/MethodologyDialog";
-import { Globe2, Moon, Orbit } from "lucide-react";
+import { Globe2, Moon, Orbit, X } from "lucide-react";
 
 interface MissionControlAppProps {
   dataset: AnalogDataset;
@@ -40,6 +41,11 @@ export function MissionControlApp({ dataset }: MissionControlAppProps) {
   const [isProbing, setIsProbing] = useState(false);
   const [probeSite, setProbeSite] = useState<AnalogSite | null>(null);
 
+  const [regionProbeMode, setRegionProbeMode] = useState(false);
+  const [isProbingRegion, setIsProbingRegion] = useState(false);
+  const [regionResult, setRegionResult] = useState<RegionEvaluationResult | null>(null);
+  const [regionError, setRegionError] = useState<string | null>(null);
+
   const filteredSites = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
     return dataset.sites.filter((site) => {
@@ -67,27 +73,32 @@ export function MissionControlApp({ dataset }: MissionControlAppProps) {
 
   const selectedSite = useMemo(() => {
     if (probeSite && selectedSiteId === probeSite.id) return probeSite;
+    const regionSite = regionResult?.points.find((p) => p.id === selectedSiteId);
+    if (regionSite) return regionSite;
     return (
       filteredSites.find((s) => s.id === selectedSiteId) ??
       dataset.sites.find((s) => s.id === selectedSiteId) ??
       filteredSites[0] ??
       null
     );
-  }, [filteredSites, dataset.sites, selectedSiteId, probeSite]);
+  }, [filteredSites, dataset.sites, selectedSiteId, probeSite, regionResult]);
 
-  const handleSelectSite = (siteId: string) => {
-    setSelectedSiteId(siteId);
-    const site =
-      probeSite && probeSite.id === siteId
-        ? probeSite
-        : dataset.sites.find((s) => s.id === siteId);
-    if (site) {
-      setActiveTargetId(site.best_target);
-      setMobilePanel("telemetry");
-      if (window.matchMedia("(max-width: 1023px)").matches)
-        telemetryToggle.current?.focus();
-    }
-  };
+  const handleSelectSite = useCallback(
+    (siteId: string) => {
+      setSelectedSiteId(siteId);
+      const site =
+        (probeSite && probeSite.id === siteId ? probeSite : null) ??
+        regionResult?.points.find((p) => p.id === siteId) ??
+        dataset.sites.find((s) => s.id === siteId);
+      if (site) {
+        setActiveTargetId(site.best_target);
+        setMobilePanel("telemetry");
+        if (window.matchMedia("(max-width: 1023px)").matches)
+          telemetryToggle.current?.focus();
+      }
+    },
+    [probeSite, regionResult, dataset.sites]
+  );
 
   const handleProbeCoordinate = useCallback(async (lat: number, lon: number) => {
     setIsProbing(true);
@@ -106,6 +117,36 @@ export function MissionControlApp({ dataset }: MissionControlAppProps) {
       }
     } finally {
       setIsProbing(false);
+    }
+  }, []);
+
+  const handleProbeRegion = useCallback(async (bounds: RegionBounds) => {
+    setIsProbingRegion(true);
+    setRegionError(null);
+    try {
+      const params = new URLSearchParams({
+        minLat: bounds.minLat.toString(),
+        maxLat: bounds.maxLat.toString(),
+        minLon: bounds.minLon.toString(),
+        maxLon: bounds.maxLon.toString(),
+        gridSize: "3",
+      });
+      const res = await fetch(`/api/evaluate-region?${params.toString()}`);
+      const payload = (await res.json()) as RegionEvaluationResult & { error?: string };
+      if (!res.ok) {
+        setRegionError(payload.error ?? "Region scan failed.");
+        return;
+      }
+      setRegionResult(payload);
+      setRegionProbeMode(false);
+      if (payload.points[0]) {
+        setSelectedSiteId(payload.points[0].id);
+        setActiveTargetId(payload.points[0].best_target);
+      }
+    } catch {
+      setRegionError("Unable to reach region evaluation service.");
+    } finally {
+      setIsProbingRegion(false);
     }
   }, []);
 
@@ -241,7 +282,7 @@ export function MissionControlApp({ dataset }: MissionControlAppProps) {
           </div>
         </div>
 
-        <div className="min-h-0 min-w-0 overflow-hidden lg:order-2">
+        <div className="relative min-h-0 min-w-0 overflow-hidden lg:order-2">
           <AnalogMap
             sites={mapSites}
             references={dataset.references}
@@ -249,9 +290,91 @@ export function MissionControlApp({ dataset }: MissionControlAppProps) {
             onSelectSite={handleSelectSite}
             probeMode={probeMode}
             isProbing={isProbing}
-            onToggleProbeMode={() => setProbeMode((prev) => !prev)}
+            onToggleProbeMode={() => {
+              setProbeMode((prev) => !prev);
+              setRegionProbeMode(false);
+            }}
             onProbeCoordinate={handleProbeCoordinate}
+            regionProbeMode={regionProbeMode}
+            isProbingRegion={isProbingRegion}
+            onToggleRegionProbeMode={() => {
+              setRegionProbeMode((prev) => !prev);
+              setProbeMode(false);
+            }}
+            onProbeRegion={handleProbeRegion}
+            regionResult={regionResult}
           />
+
+          {(regionResult || regionError) && (
+            <section
+              aria-label="Region scan analog results"
+              className="absolute bottom-14 right-3 z-10 w-80 max-w-[calc(100%-1.5rem)] rounded-md border border-slate-700/80 bg-[#0D1424]/95 p-3 text-xs text-slate-200 shadow-lg backdrop-blur-md"
+            >
+              <div className="mb-2 flex items-center justify-between gap-2 border-b border-slate-800 pb-1.5">
+                <h2 className="font-mono text-[11px] font-semibold uppercase tracking-wider text-cyan-300">
+                  {regionError
+                    ? "Region Scan Error"
+                    : `Region Grid (${regionResult?.evaluated_count ?? 0} pts)`}
+                </h2>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setRegionResult(null);
+                    setRegionError(null);
+                  }}
+                  aria-label="Clear region scan"
+                  className="rounded p-1 text-slate-400 hover:bg-slate-800 hover:text-slate-100"
+                >
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              </div>
+
+              {regionError ? (
+                <p className="text-rose-300">{regionError}</p>
+              ) : (
+                <ul className="max-h-52 space-y-1.5 overflow-y-auto pr-1">
+                  {regionResult?.points.slice(0, 5).map((pt, idx) => {
+                    const isSelected = selectedSite?.id === pt.id;
+                    const ref = dataset.references[pt.best_target];
+                    const targetBody = ref?.body ?? "Moon";
+                    const targetName = ref?.name ?? pt.best_target;
+                    const why =
+                      pt.analogy_strengths.slice(0, 2).join(" · ") ||
+                      `${Math.round(pt.elevation_m)} m, ${pt.dem_telemetry.dem_slope_deg.toFixed(1)} deg slope`;
+                    return (
+                      <li key={pt.id}>
+                        <button
+                          type="button"
+                          onClick={() => handleSelectSite(pt.id)}
+                          className={`w-full rounded border px-2.5 py-1.5 text-left transition-colors ${
+                            isSelected
+                              ? "border-cyan-500/70 bg-cyan-500/15"
+                              : "border-slate-800/90 bg-[#060913]/70 hover:border-slate-600"
+                          }`}
+                        >
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="font-mono text-[11px] font-medium text-slate-200 tabular-nums">
+                              #{idx + 1} {pt.latitude.toFixed(2)}°, {pt.longitude.toFixed(2)}°
+                            </span>
+                            <span
+                              className={`font-mono text-xs font-semibold tabular-nums ${
+                                targetBody === "Mars" ? "text-[#E07A5F]" : "text-[#06B6D4]"
+                              }`}
+                            >
+                              {pt.overall_asi.toFixed(1)}% · {targetName}
+                            </span>
+                          </div>
+                          <p className="mt-0.5 line-clamp-2 text-[11px] text-slate-400">
+                            {why}
+                          </p>
+                        </button>
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
+            </section>
+          )}
         </div>
 
         <div

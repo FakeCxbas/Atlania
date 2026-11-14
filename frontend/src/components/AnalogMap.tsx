@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import * as maplibregl from "maplibre-gl";
 import type { AnalogSite, TargetProfile } from "@/types/analog";
+import type { RegionBounds, RegionEvaluationResult } from "@/lib/evaluateRegion";
 
 interface AnalogMapProps {
   sites: AnalogSite[];
@@ -13,6 +14,11 @@ interface AnalogMapProps {
   isProbing?: boolean;
   onToggleProbeMode?: () => void;
   onProbeCoordinate?: (lat: number, lon: number) => void;
+  regionProbeMode?: boolean;
+  isProbingRegion?: boolean;
+  onToggleRegionProbeMode?: () => void;
+  onProbeRegion?: (bounds: RegionBounds) => void;
+  regionResult?: RegionEvaluationResult | null;
 }
 
 type BasemapMode = "satellite" | "dark" | "nasa-gibs";
@@ -84,6 +90,11 @@ export function AnalogMap({
   isProbing = false,
   onToggleProbeMode,
   onProbeCoordinate,
+  regionProbeMode = false,
+  isProbingRegion = false,
+  onToggleRegionProbeMode,
+  onProbeRegion,
+  regionResult = null,
 }: AnalogMapProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
@@ -227,18 +238,178 @@ export function AnalogMap({
     const map = mapRef.current;
     if (!map) return;
 
-    map.getCanvas().style.cursor = probeMode ? "crosshair" : "";
-    if (!probeMode || !onProbeCoordinate) return;
+    const activeProbe = probeMode || regionProbeMode;
+    map.getCanvas().style.cursor = activeProbe ? "crosshair" : "";
+    if (!activeProbe) return;
 
     const handleClick = (e: maplibregl.MapMouseEvent) => {
-      onProbeCoordinate(e.lngLat.lat, e.lngLat.lng);
+      if (regionProbeMode && onProbeRegion) {
+        const halfSpan = 0.45;
+        onProbeRegion({
+          minLat: Math.max(-89.5, Number((e.lngLat.lat - halfSpan).toFixed(4))),
+          maxLat: Math.min(89.5, Number((e.lngLat.lat + halfSpan).toFixed(4))),
+          minLon: Math.max(-179.5, Number((e.lngLat.lng - halfSpan).toFixed(4))),
+          maxLon: Math.min(179.5, Number((e.lngLat.lng + halfSpan).toFixed(4))),
+        });
+        return;
+      }
+      if (probeMode && onProbeCoordinate) {
+        onProbeCoordinate(e.lngLat.lat, e.lngLat.lng);
+      }
     };
 
     map.on("click", handleClick);
     return () => {
       map.off("click", handleClick);
     };
-  }, [probeMode, onProbeCoordinate]);
+  }, [probeMode, regionProbeMode, onProbeCoordinate, onProbeRegion]);
+
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+
+    const syncRegionOverlay = () => {
+      if (!map.isStyleLoaded()) return;
+
+      const emptyFc: GeoJSON.FeatureCollection = {
+        type: "FeatureCollection",
+        features: [],
+      };
+
+      const boundsData: GeoJSON.FeatureCollection = regionResult
+        ? {
+            type: "FeatureCollection",
+            features: [
+              {
+                type: "Feature",
+                properties: {},
+                geometry: {
+                  type: "Polygon",
+                  coordinates: [
+                    [
+                      [regionResult.bounds.minLon, regionResult.bounds.minLat],
+                      [regionResult.bounds.maxLon, regionResult.bounds.minLat],
+                      [regionResult.bounds.maxLon, regionResult.bounds.maxLat],
+                      [regionResult.bounds.minLon, regionResult.bounds.maxLat],
+                      [regionResult.bounds.minLon, regionResult.bounds.minLat],
+                    ],
+                  ],
+                },
+              },
+            ],
+          }
+        : emptyFc;
+
+      const gridData: GeoJSON.FeatureCollection = regionResult
+        ? (regionResult.geojson as unknown as GeoJSON.FeatureCollection)
+        : emptyFc;
+
+      const existingBounds = map.getSource("region-bounds") as
+        | maplibregl.GeoJSONSource
+        | undefined;
+      if (existingBounds) {
+        existingBounds.setData(boundsData);
+      } else {
+        map.addSource("region-bounds", { type: "geojson", data: boundsData });
+        map.addLayer({
+          id: "region-bounds-fill",
+          type: "fill",
+          source: "region-bounds",
+          paint: {
+            "fill-color": "#06B6D4",
+            "fill-opacity": 0.08,
+          },
+        });
+        map.addLayer({
+          id: "region-bounds-line",
+          type: "line",
+          source: "region-bounds",
+          paint: {
+            "line-color": "#06B6D4",
+            "line-width": 1.5,
+            "line-dasharray": [3, 2],
+          },
+        });
+      }
+
+      const existingGrid = map.getSource("region-grid") as
+        | maplibregl.GeoJSONSource
+        | undefined;
+      if (existingGrid) {
+        existingGrid.setData(gridData);
+      } else {
+        map.addSource("region-grid", { type: "geojson", data: gridData });
+        map.addLayer({
+          id: "region-grid-points",
+          type: "circle",
+          source: "region-grid",
+          paint: {
+            "circle-radius": [
+              "interpolate",
+              ["linear"],
+              ["get", "best_asi_score"],
+              0,
+              8,
+              60,
+              12,
+              100,
+              16,
+            ],
+            "circle-color": [
+              "interpolate",
+              ["linear"],
+              ["get", "best_asi_score"],
+              0,
+              "#475569",
+              35,
+              "#0284C7",
+              55,
+              "#06B6D4",
+              75,
+              "#E07A5F",
+            ],
+            "circle-opacity": 0.85,
+            "circle-stroke-width": 1.5,
+            "circle-stroke-color": "#060913",
+          },
+        });
+        map.addLayer({
+          id: "region-grid-labels",
+          type: "symbol",
+          source: "region-grid",
+          layout: {
+            "text-field": ["concat", ["to-string", ["round", ["get", "best_asi_score"]]], "%"],
+            "text-size": 11,
+            "text-offset": [0, 1.4],
+            "text-font": ["Open Sans Bold", "Arial Unicode MS Bold"],
+          },
+          paint: {
+            "text-color": "#F8FAFC",
+            "text-halo-color": "#060913",
+            "text-halo-width": 1.5,
+          },
+        });
+      }
+    };
+
+    const handleGridPointClick = (
+      e: maplibregl.MapMouseEvent & { features?: maplibregl.MapGeoJSONFeature[] }
+    ) => {
+      const featureId = e.features?.[0]?.properties?.id;
+      if (typeof featureId === "string") {
+        onSelectSite(featureId);
+      }
+    };
+
+    syncRegionOverlay();
+    map.on("style.load", syncRegionOverlay);
+    map.on("click", "region-grid-points", handleGridPointClick);
+
+    return () => {
+      map.off("style.load", syncRegionOverlay);
+      map.off("click", "region-grid-points", handleGridPointClick);
+    };
+  }, [regionResult, onSelectSite]);
 
   return (
     <div className="relative h-full w-full bg-[#060913]">
@@ -249,7 +420,7 @@ export function AnalogMap({
         aria-label="Interactive planetary analog world map"
       />
 
-      {/* Basemap Layer Switcher & Probe Mode */}
+      {/* Basemap Layer Switcher & Probe Modes */}
       <div className="absolute left-3 top-3 flex flex-wrap items-center gap-2">
         <div
           className="flex items-center gap-1 rounded-md border border-slate-800/80 bg-[#060913]/85 p-1 backdrop-blur-md"
@@ -296,8 +467,27 @@ export function AnalogMap({
             {isProbing
               ? "Probing NASA POWER..."
               : probeMode
-              ? "Probe Active: Click Map"
-              : "Probe Coordinate"}
+              ? "Point Probe: Click Map"
+              : "Probe Point"}
+          </button>
+        )}
+
+        {onToggleRegionProbeMode && (
+          <button
+            type="button"
+            onClick={onToggleRegionProbeMode}
+            aria-pressed={regionProbeMode}
+            className={`rounded-md border px-3 py-1.5 text-xs font-medium backdrop-blur-md transition-colors ${
+              regionProbeMode
+                ? "border-cyan-400/70 bg-cyan-500/20 text-cyan-200"
+                : "border-slate-800/80 bg-[#060913]/85 text-slate-200 hover:border-cyan-500/50"
+            }`}
+          >
+            {isProbingRegion
+              ? "Scanning 3x3 Grid..."
+              : regionProbeMode
+              ? "Region Scan: Click Center"
+              : "Probe Region"}
           </button>
         )}
       </div>
@@ -328,6 +518,16 @@ export function AnalogMap({
           />
           Mars Analog
         </span>
+        {regionResult && (
+          <>
+            <span className="h-3 w-px bg-slate-800" aria-hidden="true" />
+            <span className="font-mono tabular-nums text-slate-300">
+              ASI Grid: Low{" "}
+              <span className="inline-block h-2 w-8 rounded-sm bg-gradient-to-r from-[#475569] via-[#06B6D4] to-[#E07A5F] align-middle" />{" "}
+              High
+            </span>
+          </>
+        )}
       </div>
     </div>
   );
