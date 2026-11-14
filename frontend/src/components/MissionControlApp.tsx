@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import type { AnalogDataset, AnalogSite } from "@/types/analog";
 import {
   buildSiteRationale,
@@ -10,33 +10,34 @@ import {
   type RegionBounds,
   type RegionEvaluationResult,
 } from "@/lib/evaluateRegion";
-import { AnalogMap } from "@/components/AnalogMap";
+import { AnalogMap, type CameraTarget } from "@/components/AnalogMap";
 import { SiteDirectory } from "@/components/SiteDirectory";
 import { TelemetryDrawer } from "@/components/TelemetryDrawer";
 import { MethodologyDialog } from "@/components/MethodologyDialog";
 import { downloadQgisGeoJson } from "@/lib/dossier";
-import { Download, Globe2, Moon, Orbit, X } from "lucide-react";
+import { translateSite, translateTarget } from "@/lib/spanishTranslations";
+import {
+  Compass,
+  Download,
+  Globe2,
+  ListFilter,
+  MapPin,
+  Moon,
+  Orbit,
+  Search,
+  X,
+} from "lucide-react";
 
 interface MissionControlAppProps {
   dataset: AnalogDataset;
 }
 
-type BodyFilter = "ALL" | "Moon" | "Mars" | "ECUADOR";
+type MainTab = "tierra" | "luna" | "marte";
 
 export function MissionControlApp({ dataset }: MissionControlAppProps) {
-  const [mobilePanel, setMobilePanel] = useState<
-    "directory" | "telemetry" | null
-  >(null);
-  const directoryToggle = useRef<HTMLButtonElement>(null);
-  const telemetryToggle = useRef<HTMLButtonElement>(null);
-  const closePanel = () => {
-    (mobilePanel === "directory"
-      ? directoryToggle
-      : telemetryToggle
-    ).current?.focus();
-    setMobilePanel(null);
-  };
-  const [bodyFilter, setBodyFilter] = useState<BodyFilter>("ALL");
+  const [mainTab, setMainTab] = useState<MainTab>("tierra");
+  const [selectedCountry, setSelectedCountry] = useState<string>("TODOS");
+  const [selectedTargetFilter, setSelectedTargetFilter] = useState<string>("ALL");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedSiteId, setSelectedSiteId] = useState<string | null>(
     dataset.sites[0]?.id ?? null,
@@ -44,6 +45,8 @@ export function MissionControlApp({ dataset }: MissionControlAppProps) {
   const [activeTargetId, setActiveTargetId] = useState<string>(
     dataset.sites[0]?.best_target ?? Object.keys(dataset.references)[0] ?? "",
   );
+  const [showDirectory, setShowDirectory] = useState(false);
+  const [cameraTarget, setCameraTarget] = useState<CameraTarget | null>(null);
 
   const [probeMode, setProbeMode] = useState(false);
   const [isProbing, setIsProbing] = useState(false);
@@ -56,25 +59,77 @@ export function MissionControlApp({ dataset }: MissionControlAppProps) {
   const [regionResult, setRegionResult] = useState<RegionEvaluationResult | null>(null);
   const [regionError, setRegionError] = useState<string | null>(null);
 
+  // Pre-translate all sites and references into natural Spanish
+  const translatedSites = useMemo(() => {
+    return dataset.sites.map((site) => translateSite(site));
+  }, [dataset.sites]);
+
+  const translatedReferences = useMemo(() => {
+    const res: Record<string, ReturnType<typeof translateTarget>> = {};
+    for (const [k, v] of Object.entries(dataset.references)) {
+      res[k] = translateTarget(v);
+    }
+    return res;
+  }, [dataset.references]);
+
+  // Distinct countries available for the "Tierra" tab
+  const countryList = useMemo(() => {
+    const map = new Map<string, number>();
+    for (const site of translatedSites) {
+      map.set(site.country, (map.get(site.country) ?? 0) + 1);
+    }
+    // Put Ecuador first as key regional analog, then rest alphabetically
+    const entries = Array.from(map.entries()).sort((a, b) => {
+      if (a[0] === "Ecuador") return -1;
+      if (b[0] === "Ecuador") return 1;
+      return a[0].localeCompare(b[0]);
+    });
+    return entries;
+  }, [translatedSites]);
+
+  // Filter sites strictly based on the active main tab
   const filteredSites = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
-    return dataset.sites.filter((site) => {
-      const target = dataset.references[site.best_target];
-      const body = target?.body ?? "Moon";
 
-      if (bodyFilter === "Moon" && body !== "Moon") return false;
-      if (bodyFilter === "Mars" && body !== "Mars") return false;
-      if (bodyFilter === "ECUADOR" && site.country !== "Ecuador") return false;
+    return translatedSites.filter((site) => {
+      // 1. Filter by Main Tab
+      if (mainTab === "tierra") {
+        if (selectedCountry !== "TODOS" && site.country !== selectedCountry) {
+          return false;
+        }
+      } else if (mainTab === "luna") {
+        const target = dataset.references[site.best_target];
+        if (target?.body !== "Moon") return false;
+        if (selectedTargetFilter !== "ALL" && site.best_target !== selectedTargetFilter) {
+          return false;
+        }
+      } else if (mainTab === "marte") {
+        const target = dataset.references[site.best_target];
+        if (target?.body !== "Mars") return false;
+        if (selectedTargetFilter !== "ALL" && site.best_target !== selectedTargetFilter) {
+          return false;
+        }
+      }
 
+      // 2. Filter by search query
       if (!q) return true;
+      const ref = translatedReferences[site.best_target];
       return (
         site.name.toLowerCase().includes(q) ||
         site.country.toLowerCase().includes(q) ||
         site.rationale.toLowerCase().includes(q) ||
-        (target?.name.toLowerCase().includes(q) ?? false)
+        (ref?.name.toLowerCase().includes(q) ?? false)
       );
     });
-  }, [dataset.sites, dataset.references, bodyFilter, searchQuery]);
+  }, [
+    translatedSites,
+    dataset.references,
+    translatedReferences,
+    mainTab,
+    selectedCountry,
+    selectedTargetFilter,
+    searchQuery,
+  ]);
 
   const mapSites = useMemo(
     () => (probeSite ? [...filteredSites, probeSite] : filteredSites),
@@ -94,32 +149,31 @@ export function MissionControlApp({ dataset }: MissionControlAppProps) {
   }, [rankedRegionResult, dataset.sites, regionRankByActiveTarget, activeTargetId]);
 
   const selectedSite = useMemo(() => {
+    if (!selectedSiteId) return null;
     if (probeSite && selectedSiteId === probeSite.id) return probeSite;
     const regionSite = rankedRegionResult?.points.find((p) => p.id === selectedSiteId);
     if (regionSite) return regionSite;
-    return (
-      filteredSites.find((s) => s.id === selectedSiteId) ??
-      dataset.sites.find((s) => s.id === selectedSiteId) ??
-      filteredSites[0] ??
-      null
-    );
-  }, [filteredSites, dataset.sites, selectedSiteId, probeSite, rankedRegionResult]);
+    return translatedSites.find((s) => s.id === selectedSiteId) ?? null;
+  }, [translatedSites, selectedSiteId, probeSite, rankedRegionResult]);
 
+  // Handle selecting a site from map marker, directory, or region grid
   const handleSelectSite = useCallback(
     (siteId: string) => {
+      setShowDirectory(false);
       setSelectedSiteId(siteId);
+
       const regionSite = rankedRegionResult?.points.find((p) => p.id === siteId);
+      const isCatalogSite = dataset.sites.some((s) => s.id === siteId);
+      if (isCatalogSite) {
+        setCameraTarget({ type: "site", siteId });
+      }
+
       const site =
         (probeSite && probeSite.id === siteId ? probeSite : null) ??
         regionSite ??
         dataset.sites.find((s) => s.id === siteId);
-      if (site) {
-        if (!regionSite || !regionRankByActiveTarget) {
-          setActiveTargetId(site.best_target);
-        }
-        setMobilePanel("telemetry");
-        if (window.matchMedia("(max-width: 1023px)").matches)
-          telemetryToggle.current?.focus();
+      if (site && (!regionSite || !regionRankByActiveTarget)) {
+        setActiveTargetId(site.best_target);
       }
     },
     [probeSite, rankedRegionResult, regionRankByActiveTarget, dataset.sites]
@@ -138,7 +192,7 @@ export function MissionControlApp({ dataset }: MissionControlAppProps) {
         setSelectedSiteId(payload.site.id);
         setActiveTargetId(payload.site.best_target);
         setProbeMode(false);
-        setMobilePanel("telemetry");
+        setShowDirectory(false);
       }
     } finally {
       setIsProbing(false);
@@ -183,65 +237,386 @@ export function MissionControlApp({ dataset }: MissionControlAppProps) {
     [regionGridSize, regionRankByActiveTarget, activeTargetId]
   );
 
+  // Switch Main Tabs
+  const handleTabChange = (tab: MainTab) => {
+    setMainTab(tab);
+    setSelectedCountry("TODOS");
+    setSelectedTargetFilter("ALL");
+
+    if (tab === "luna") {
+      setActiveTargetId("shackleton-crater");
+      const moonSites = translatedSites.filter(
+        (s) => dataset.references[s.best_target]?.body === "Moon"
+      );
+      const best = moonSites.sort((a, b) => b.overall_asi - a.overall_asi)[0];
+      if (best) {
+        setSelectedSiteId(best.id);
+        setCameraTarget({ type: "fitBounds", sites: moonSites });
+      }
+    } else if (tab === "marte") {
+      setActiveTargetId("jezero-crater");
+      const marsSites = translatedSites.filter(
+        (s) => dataset.references[s.best_target]?.body === "Mars"
+      );
+      const best = marsSites.sort((a, b) => b.overall_asi - a.overall_asi)[0];
+      if (best) {
+        setSelectedSiteId(best.id);
+        setCameraTarget({ type: "fitBounds", sites: marsSites });
+      }
+    } else {
+      // Tierra: show all sites
+      setCameraTarget({ type: "world" });
+    }
+  };
+
+  // Country filter selection with auto-camera
+  const handleCountrySelect = (country: string) => {
+    setSelectedCountry(country);
+    if (country === "TODOS") {
+      setCameraTarget({ type: "world" });
+    } else {
+      const countrySites = translatedSites.filter((s) => s.country === country);
+      const best = countrySites.sort((a, b) => b.overall_asi - a.overall_asi)[0];
+      if (best) {
+        setSelectedSiteId(best.id);
+        setActiveTargetId(best.best_target);
+        setShowDirectory(false);
+        setCameraTarget({ type: "fitBounds", sites: countrySites, padding: { left: 490, top: 130, right: 60, bottom: 60 } });
+      }
+    }
+  };
+
+  // Toggle directory: ensure site detail panel is closed to prevent overlap
+  const handleToggleDirectory = () => {
+    setShowDirectory((prev) => {
+      const next = !prev;
+      if (next) {
+        setSelectedSiteId(null);
+      }
+      return next;
+    });
+  };
+
+  // Keyboard accessibility: Escape key closes active panel or directory
+  useEffect(() => {
+    const handleGlobalKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        if (showDirectory) {
+          setShowDirectory(false);
+        } else if (selectedSiteId) {
+          setSelectedSiteId(null);
+        }
+      }
+    };
+    window.addEventListener("keydown", handleGlobalKeyDown);
+    return () => window.removeEventListener("keydown", handleGlobalKeyDown);
+  }, [showDirectory, selectedSiteId]);
+
   return (
-    <div className="flex h-dvh flex-col overflow-hidden bg-[#060913] text-slate-100">
+    <div className="relative h-screen w-screen overflow-hidden bg-[#060913] text-slate-100 font-sans">
       <a
-        href="#main-workspace"
-        className="sr-only focus:not-sr-only focus:fixed focus:left-3 focus:top-3 focus:z-50 focus:rounded focus:bg-cyan-500 focus:px-3 focus:py-2 focus:text-sm focus:font-semibold focus:text-slate-950"
+        href="#map-region"
+        className="sr-only focus:not-sr-only focus:fixed focus:left-3 focus:top-3 focus:z-50 focus:rounded focus:bg-[#D4AF37] focus:px-3 focus:py-2 focus:text-sm focus:font-semibold focus:text-slate-950"
       >
-        Skip to workspace
+        Saltar al mapa interactivo
       </a>
 
-      {/* Top Mission Control Header */}
-      <header className="flex shrink-0 flex-wrap items-center justify-between gap-3 border-b border-slate-800/80 bg-[#0D1424]/95 px-4 py-2.5 backdrop-blur-md">
-        <div className="flex items-center gap-3">
-          <div className="flex h-9 w-9 items-center justify-center rounded border border-cyan-500/40 bg-cyan-500/10 text-cyan-400">
-            <Orbit className="h-5 w-5" aria-hidden="true" />
+      {/* 1. Full-screen Protagonist Map */}
+      <div id="map-region" className="absolute inset-0 z-0">
+        <AnalogMap
+          sites={mapSites}
+          references={translatedReferences}
+          selectedSiteId={selectedSite?.id ?? null}
+          onSelectSite={handleSelectSite}
+          cameraTarget={cameraTarget}
+          probeMode={probeMode}
+          isProbing={isProbing}
+          onToggleProbeMode={() => {
+            setProbeMode((prev) => !prev);
+            setRegionProbeMode(false);
+          }}
+          onProbeCoordinate={handleProbeCoordinate}
+          regionProbeMode={regionProbeMode}
+          isProbingRegion={isProbingRegion}
+          regionGridSize={regionGridSize}
+          onChangeRegionGridSize={setRegionGridSize}
+          onToggleRegionProbeMode={() => {
+            setRegionProbeMode((prev) => !prev);
+            setProbeMode(false);
+          }}
+          onProbeRegion={handleProbeRegion}
+          regionResult={rankedRegionResult}
+        />
+      </div>
+
+      {/* 2. Top Navigation Bar (Fixed z-40, Never Covered by Side Panels) */}
+      <header
+        aria-label="Navegación principal de exploración análoga"
+        className="absolute left-0 right-0 top-0 z-40 border-b border-[#D4AF37]/30 bg-[#060913]/95 px-3 py-2.5 shadow-2xl backdrop-blur-md sm:px-6"
+      >
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          {/* Logo & Platform Name */}
+          <div className="flex items-center gap-2.5">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg border border-[#D4AF37]/50 bg-[#D4AF37]/15 text-[#D4AF37] shadow-[0_0_12px_rgba(212,175,55,0.25)]">
+              <Compass className="h-4 w-4" aria-hidden="true" />
+            </div>
+            <div>
+              <span className="block text-xs font-bold tracking-wider text-slate-100 uppercase sm:text-sm">
+                TERR-ANALOG
+              </span>
+              <span className="text-[10px] text-slate-400">
+                NASA Space Apps · {dataset.methodology.source_counts.nasa_power} NASA POWER +{" "}
+                {dataset.methodology.source_counts.fallback} Fallback
+              </span>
+            </div>
           </div>
-          <div>
-            <h1 className="text-base font-semibold tracking-tight text-slate-100">
-              TERR-ANALOG // Planetary Analog Explorer
-            </h1>
-            <p className="text-xs text-slate-400">
-              NASA Space Apps 2026 ·{" "}
-              {dataset.methodology.source_counts.nasa_power} NASA POWER +{" "}
-              {dataset.methodology.source_counts.fallback} Fallback
-            </p>
+
+          {/* 3 Main Clean Navigation Tabs */}
+          <nav
+            aria-label="Pestañas principales de exploración"
+            className="flex items-center rounded-xl border border-slate-800 bg-[#0D1424]/90 p-1 shadow-inner"
+          >
+            <button
+              type="button"
+              onClick={() => handleTabChange("tierra")}
+              aria-selected={mainTab === "tierra"}
+              className={`flex items-center gap-1.5 rounded-lg px-3.5 py-1.5 text-xs font-semibold transition-all ${
+                mainTab === "tierra"
+                  ? "border border-[#D4AF37] bg-[#D4AF37]/25 text-[#D4AF37] shadow-[0_0_15px_rgba(212,175,55,0.25)]"
+                  : "text-slate-400 hover:text-slate-200"
+              }`}
+            >
+              <Globe2 className="h-3.5 w-3.5 text-cyan-400" aria-hidden="true" />
+              <span>Tierra</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => handleTabChange("luna")}
+              aria-selected={mainTab === "luna"}
+              className={`flex items-center gap-1.5 rounded-lg px-3.5 py-1.5 text-xs font-semibold transition-all ${
+                mainTab === "luna"
+                  ? "border border-[#D4AF37] bg-[#D4AF37]/25 text-[#D4AF37] shadow-[0_0_15px_rgba(212,175,55,0.25)]"
+                  : "text-slate-400 hover:text-slate-200"
+              }`}
+            >
+              <Moon className="h-3.5 w-3.5 text-slate-300" aria-hidden="true" />
+              <span>Luna</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => handleTabChange("marte")}
+              aria-selected={mainTab === "marte"}
+              className={`flex items-center gap-1.5 rounded-lg px-3.5 py-1.5 text-xs font-semibold transition-all ${
+                mainTab === "marte"
+                  ? "border border-[#D4AF37] bg-[#D4AF37]/25 text-[#D4AF37] shadow-[0_0_15px_rgba(212,175,55,0.25)]"
+                  : "text-slate-400 hover:text-slate-200"
+              }`}
+            >
+              <Orbit className="h-3.5 w-3.5 text-[#E07A5F]" aria-hidden="true" />
+              <span>Marte</span>
+            </button>
+          </nav>
+
+          {/* Right Tools: Directory Toggle, Search, Export GeoJSON & Methodology */}
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={handleToggleDirectory}
+              aria-expanded={showDirectory}
+              aria-controls="directory-drawer"
+              className={`flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-semibold shadow-md transition-all ${
+                showDirectory
+                  ? "border-[#D4AF37] bg-[#D4AF37]/25 text-[#D4AF37] shadow-[0_0_12px_rgba(212,175,55,0.25)]"
+                  : "border-slate-800 bg-[#0D1424] text-slate-300 hover:border-slate-700 hover:text-slate-100"
+              }`}
+            >
+              <ListFilter className="h-3.5 w-3.5" aria-hidden="true" />
+              <span className="hidden sm:inline">Directorio</span>
+              <span className="font-mono tabular-nums text-[11px] text-[#D4AF37]">
+                ({filteredSites.length})
+              </span>
+            </button>
+
+            <div className="relative hidden lg:block">
+              <Search
+                className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400"
+                aria-hidden="true"
+              />
+              <input
+                type="search"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Buscar sitio o país..."
+                aria-label="Buscar sitio o país análogo"
+                className="h-8 w-40 rounded-lg border border-slate-800 bg-[#0D1424] pl-8 pr-2.5 text-xs text-slate-100 placeholder:text-slate-500 focus:w-52 focus:border-[#D4AF37]/60 focus:outline-none transition-all"
+              />
+            </div>
+
+            <button
+              type="button"
+              onClick={() => {
+                const exportSites = rankedRegionResult
+                  ? [...mapSites, ...rankedRegionResult.points]
+                  : mapSites;
+                downloadQgisGeoJson(
+                  exportSites,
+                  dataset.references,
+                  rankedRegionResult
+                    ? `terr-analog-region-${rankedRegionResult.grid_size}x${rankedRegionResult.grid_size}.geojson`
+                    : "terr-analog-sites.geojson"
+                );
+              }}
+              title="Exportar GeoJSON compatible con QGIS"
+              className="hidden sm:inline-flex items-center gap-1.5 rounded-lg border border-slate-800 bg-[#0D1424] px-2.5 py-1.5 text-xs font-medium text-slate-300 hover:border-cyan-500/50 hover:text-cyan-300"
+            >
+              <Download className="h-3.5 w-3.5" aria-hidden="true" />
+              <span className="hidden xl:inline">GeoJSON</span>
+            </button>
+
+            <MethodologyDialog dataset={dataset} />
           </div>
         </div>
 
-        {/* Filter Controls */}
-        <div
-          className="flex flex-wrap items-center gap-1.5"
-          role="group"
-          aria-label="Filter analog sites by planetary target or region"
-        >
-          {(
-            [
-              { id: "ALL", label: "All Sites", icon: Globe2 },
-              { id: "Moon", label: "Moon Analogs", icon: Moon },
-              { id: "Mars", label: "Mars Analogs", icon: Orbit },
-              { id: "ECUADOR", label: "Ecuador", icon: Globe2 },
-            ] as const
-          ).map(({ id, label, icon: Icon }) => {
-            const active = bodyFilter === id;
-            return (
+        {/* Row 2: Contextual Sub-Filter Bar (Country for Tierra, Targets for Luna/Marte) */}
+        <div className="mt-2.5 flex items-center gap-1.5 overflow-x-auto pt-1 no-scrollbar border-t border-slate-800/60">
+          {mainTab === "tierra" && (
+            <>
+              <span className="flex shrink-0 items-center gap-1 text-[11px] font-semibold tracking-wider text-[#D4AF37] uppercase mr-1">
+                <MapPin className="h-3 w-3" aria-hidden="true" />
+                Filtrar por País:
+              </span>
               <button
-                key={id}
                 type="button"
-                onClick={() => setBodyFilter(id)}
-                aria-pressed={active}
-                className={`inline-flex min-h-[38px] items-center gap-1.5 rounded border px-3 py-1.5 text-xs font-medium transition-colors ${
-                  active
-                    ? "border-cyan-500/70 bg-cyan-500/15 text-cyan-300"
-                    : "border-slate-800 bg-[#060913]/60 text-slate-300 hover:border-slate-700 hover:text-slate-100"
+                onClick={() => handleCountrySelect("TODOS")}
+                aria-pressed={selectedCountry === "TODOS"}
+                className={`shrink-0 rounded-full border px-3 py-1 text-xs font-medium transition-all ${
+                  selectedCountry === "TODOS"
+                    ? "border-[#D4AF37] bg-[#D4AF37]/20 text-[#D4AF37] shadow-[0_0_10px_rgba(212,175,55,0.2)]"
+                    : "border-slate-800/90 bg-[#0D1424]/90 text-slate-400 hover:text-slate-200"
                 }`}
               >
-                <Icon className="h-3.5 w-3.5" aria-hidden="true" />
-                {label}
+                Todos los Países ({translatedSites.length})
               </button>
-            );
-          })}
+
+              {countryList.map(([country, count]) => {
+                const active = selectedCountry === country;
+                return (
+                  <button
+                    key={country}
+                    type="button"
+                    onClick={() => handleCountrySelect(country)}
+                    aria-pressed={active}
+                    className={`shrink-0 rounded-full border px-3 py-1 text-xs font-medium transition-all ${
+                      active
+                        ? "border-[#D4AF37] bg-[#D4AF37]/20 text-[#D4AF37] shadow-[0_0_10px_rgba(212,175,55,0.2)]"
+                        : "border-slate-800/90 bg-[#0D1424]/90 text-slate-300 hover:border-slate-700 hover:text-slate-100"
+                    }`}
+                  >
+                    <span>{country}</span>
+                    <span className="ml-1.5 font-mono text-[10px] text-slate-400">
+                      ({count})
+                    </span>
+                  </button>
+                );
+              })}
+            </>
+          )}
+
+          {mainTab === "luna" && (
+            <>
+              <span className="flex shrink-0 items-center gap-1 text-[11px] font-semibold tracking-wider text-cyan-400 uppercase mr-1">
+                <Moon className="h-3 w-3" aria-hidden="true" />
+                Objetivos Lunares (Artemis):
+              </span>
+              <button
+                type="button"
+                onClick={() => setSelectedTargetFilter("ALL")}
+                aria-pressed={selectedTargetFilter === "ALL"}
+                className={`shrink-0 rounded-full border px-3 py-1 text-xs font-medium transition-all ${
+                  selectedTargetFilter === "ALL"
+                    ? "border-cyan-400 bg-cyan-400/20 text-cyan-300 shadow-[0_0_10px_rgba(6,182,212,0.2)]"
+                    : "border-slate-800/90 bg-[#0D1424]/90 text-slate-400 hover:text-slate-200"
+                }`}
+              >
+                Todos los Análogos Lunares
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setSelectedTargetFilter("shackleton-crater")}
+                aria-pressed={selectedTargetFilter === "shackleton-crater"}
+                className={`shrink-0 rounded-full border px-3 py-1 text-xs font-medium transition-all ${
+                  selectedTargetFilter === "shackleton-crater"
+                    ? "border-cyan-400 bg-cyan-400/20 text-cyan-300 shadow-[0_0_10px_rgba(6,182,212,0.2)]"
+                    : "border-slate-800/90 bg-[#0D1424]/90 text-slate-300 hover:border-slate-700 hover:text-slate-100"
+                }`}
+              >
+                Cráter Shackleton (Polo Sur Lunar)
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setSelectedTargetFilter("mare-tranquillitatis")}
+                aria-pressed={selectedTargetFilter === "mare-tranquillitatis"}
+                className={`shrink-0 rounded-full border px-3 py-1 text-xs font-medium transition-all ${
+                  selectedTargetFilter === "mare-tranquillitatis"
+                    ? "border-cyan-400 bg-cyan-400/20 text-cyan-300 shadow-[0_0_10px_rgba(6,182,212,0.2)]"
+                    : "border-slate-800/90 bg-[#0D1424]/90 text-slate-300 hover:border-slate-700 hover:text-slate-100"
+                }`}
+              >
+                Mare Tranquillitatis (Tubos de Lava)
+              </button>
+            </>
+          )}
+
+          {mainTab === "marte" && (
+            <>
+              <span className="flex shrink-0 items-center gap-1 text-[11px] font-semibold tracking-wider text-[#E07A5F] uppercase mr-1">
+                <Orbit className="h-3 w-3" aria-hidden="true" />
+                Objetivos Marcianos:
+              </span>
+              <button
+                type="button"
+                onClick={() => setSelectedTargetFilter("ALL")}
+                aria-pressed={selectedTargetFilter === "ALL"}
+                className={`shrink-0 rounded-full border px-3 py-1 text-xs font-medium transition-all ${
+                  selectedTargetFilter === "ALL"
+                    ? "border-[#E07A5F] bg-[#E07A5F]/20 text-[#E07A5F] shadow-[0_0_10px_rgba(224,122,95,0.2)]"
+                    : "border-slate-800/90 bg-[#0D1424]/90 text-slate-400 hover:text-slate-200"
+                }`}
+              >
+                Todos los Análogos Marcianos
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setSelectedTargetFilter("jezero-crater")}
+                aria-pressed={selectedTargetFilter === "jezero-crater"}
+                className={`shrink-0 rounded-full border px-3 py-1 text-xs font-medium transition-all ${
+                  selectedTargetFilter === "jezero-crater"
+                    ? "border-[#E07A5F] bg-[#E07A5F]/20 text-[#E07A5F] shadow-[0_0_10px_rgba(224,122,95,0.2)]"
+                    : "border-slate-800/90 bg-[#0D1424]/90 text-slate-300 hover:border-slate-700 hover:text-slate-100"
+                }`}
+              >
+                Cráter Jezero (Delta y Basaltos)
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setSelectedTargetFilter("olympus-mons-flank")}
+                aria-pressed={selectedTargetFilter === "olympus-mons-flank"}
+                className={`shrink-0 rounded-full border px-3 py-1 text-xs font-medium transition-all ${
+                  selectedTargetFilter === "olympus-mons-flank"
+                    ? "border-[#E07A5F] bg-[#E07A5F]/20 text-[#E07A5F] shadow-[0_0_10px_rgba(224,122,95,0.2)]"
+                    : "border-slate-800/90 bg-[#0D1424]/90 text-slate-300 hover:border-slate-700 hover:text-slate-100"
+                }`}
+              >
+                Flanco del Monte Olimpo (Tubos Volcánicos)
+              </button>
+            </>
+          )}
         </div>
         <div className="flex items-center gap-2">
           <button
@@ -268,288 +643,225 @@ export function MissionControlApp({ dataset }: MissionControlAppProps) {
         </div>
       </header>
 
-      <div
-        className="flex shrink-0 gap-2 border-b border-slate-800 bg-[#0D1424] px-3 py-2 lg:hidden"
-        aria-label="Mobile workspace panels"
-      >
-        <button
-          ref={directoryToggle}
-          type="button"
-          aria-expanded={mobilePanel === "directory"}
-          aria-controls="site-directory-panel"
-          onClick={() =>
-            setMobilePanel(mobilePanel === "directory" ? null : "directory")
-          }
-          className="min-h-11 flex-1 rounded border border-slate-600 px-3 text-sm"
+      {/* 3. Floating Slide-over Sheet (Strictly positioned below top header at top-[110px], preventing overlap) */}
+      {selectedSite && !showDirectory && (
+        <section
+          aria-label={`Detalle del sitio ${selectedSite.name}`}
+          className="fixed bottom-3 left-3 right-3 top-[108px] z-30 flex flex-col overflow-hidden rounded-2xl border-2 border-[#D4AF37]/60 bg-[#0D1424]/95 shadow-[0_0_35px_rgba(212,175,55,0.2)] backdrop-blur-md sm:bottom-4 sm:left-4 sm:top-[112px] sm:w-[470px] sm:max-w-[calc(100vw-32px)] animate-in slide-in-from-left duration-300"
         >
-          Directory ({filteredSites.length})
-        </button>
-        <button
-          ref={telemetryToggle}
-          type="button"
-          aria-expanded={mobilePanel === "telemetry"}
-          aria-controls="site-telemetry-panel"
-          onClick={() =>
-            setMobilePanel(mobilePanel === "telemetry" ? null : "telemetry")
-          }
-          className="min-h-11 flex-1 rounded border border-slate-600 px-3 text-sm"
-        >
-          Telemetry
-        </button>
-      </div>
+          <TelemetryDrawer
+            dataset={dataset}
+            site={selectedSite}
+            references={translatedReferences}
+            activeTargetId={activeTargetId}
+            onSelectTarget={setActiveTargetId}
+            onClose={() => setSelectedSiteId(null)}
+          />
+        </section>
+      )}
 
-      {/* Main 3-Pane Workspace */}
-      <main
-        id="main-workspace"
-        tabIndex={-1}
-        onKeyDown={(event) => {
-          if (
-            event.key === "Escape" &&
-            mobilePanel &&
-            window.matchMedia("(max-width: 1023px)").matches
-          ) {
-            event.preventDefault();
-            closePanel();
-          }
-        }}
-        className="relative grid min-h-0 flex-1 grid-cols-1 lg:grid-cols-[310px_1fr_390px]"
-      >
-        <div
-          id="site-directory-panel"
-          className={`absolute inset-x-0 bottom-0 z-20 h-[60%] min-h-0 flex-col overflow-hidden border-t border-slate-600 bg-[#0D1424] lg:static lg:order-1 lg:z-auto lg:flex lg:h-full lg:border-t-0 ${mobilePanel === "directory" ? "flex" : "hidden"}`}
+      {/* 4. Collapsible Site Directory Drawer (Mutually exclusive with site detail, strictly below top header) */}
+      {showDirectory && (
+        <section
+          id="directory-drawer"
+          aria-label="Directorio completo de sitios análogos"
+          className="fixed bottom-3 left-3 right-3 top-[108px] z-30 flex flex-col overflow-hidden rounded-2xl border-2 border-[#D4AF37]/50 bg-[#0D1424]/95 shadow-2xl backdrop-blur-md sm:bottom-4 sm:left-4 sm:top-[112px] sm:w-[380px] animate-in slide-in-from-left duration-300"
         >
-          <button
-            type="button"
-            onClick={closePanel}
-            className="min-h-11 shrink-0 border-b border-slate-700 px-4 text-left text-sm text-cyan-300 lg:hidden"
-          >
-            Close directory · Back to map
-          </button>
-          <div className="min-h-0 flex-1">
+          <div className="flex items-center justify-between border-b border-slate-800/80 bg-[#060913]/80 px-4 py-3">
+            <div className="flex items-center gap-2">
+              <ListFilter className="h-4 w-4 text-[#D4AF37]" aria-hidden="true" />
+              <h2 className="text-sm font-semibold text-slate-100">
+                Directorio ({filteredSites.length} sitios)
+              </h2>
+            </div>
+            <button
+              type="button"
+              onClick={() => setShowDirectory(false)}
+              aria-label="Cerrar directorio de sitios (Escape)"
+              className="rounded-lg p-1 text-slate-400 hover:bg-slate-800 hover:text-slate-100 focus:outline-none focus:ring-2 focus:ring-[#D4AF37]"
+            >
+              <X className="h-4 w-4" aria-hidden="true" />
+            </button>
+          </div>
+
+          <div className="flex-1 overflow-hidden">
             <SiteDirectory
               sites={filteredSites}
-              references={dataset.references}
-              selectedSiteId={selectedSite?.id ?? null}
+              references={translatedReferences}
+              selectedSiteId={selectedSiteId}
               onSelectSite={handleSelectSite}
               searchQuery={searchQuery}
               onSearchChange={setSearchQuery}
             />
           </div>
-        </div>
+        </section>
+      )}
 
-        <div className="relative min-h-0 min-w-0 overflow-hidden lg:order-2">
-          <AnalogMap
-            sites={mapSites}
-            references={dataset.references}
-            selectedSiteId={selectedSite?.id ?? null}
-            onSelectSite={handleSelectSite}
-            probeMode={probeMode}
-            isProbing={isProbing}
-            onToggleProbeMode={() => {
-              setProbeMode((prev) => !prev);
-              setRegionProbeMode(false);
-            }}
-            onProbeCoordinate={handleProbeCoordinate}
-            regionProbeMode={regionProbeMode}
-            isProbingRegion={isProbingRegion}
-            regionGridSize={regionGridSize}
-            onChangeRegionGridSize={setRegionGridSize}
-            onToggleRegionProbeMode={() => {
-              setRegionProbeMode((prev) => !prev);
-              setProbeMode(false);
-            }}
-            onProbeRegion={handleProbeRegion}
-            regionResult={rankedRegionResult}
-          />
+      {/* 5. Floating Region Prospecting Results Card */}
+      {(rankedRegionResult || regionError) && (
+        <section
+          aria-label="Region scan analog results"
+          className="fixed bottom-14 right-3 z-20 w-88 max-w-[calc(100%-1.5rem)] rounded-xl border border-slate-700/80 bg-[#0D1424]/95 p-3 text-xs text-slate-200 shadow-2xl backdrop-blur-md"
+        >
+          <div className="mb-2 flex items-center justify-between gap-2 border-b border-slate-800 pb-1.5">
+            <div>
+              <h2 className="font-mono text-[11px] font-semibold uppercase tracking-wider text-cyan-300">
+                {regionError
+                  ? "Region Scan Error"
+                  : `Prospecting · ${rankedRegionResult?.grid_size ?? 3}×${rankedRegionResult?.grid_size ?? 3} (${rankedRegionResult?.evaluated_count ?? 0} pts)`}
+              </h2>
+              {!regionError && rankedRegionResult && (
+                <p className="mt-0.5 font-mono text-[10px] text-slate-400 tabular-nums">
+                  {rankedRegionResult.bounds.minLat.toFixed(2)}°..
+                  {rankedRegionResult.bounds.maxLat.toFixed(2)}°N,{" "}
+                  {rankedRegionResult.bounds.minLon.toFixed(2)}°..
+                  {rankedRegionResult.bounds.maxLon.toFixed(2)}°E
+                </p>
+              )}
+            </div>
+            <div className="flex items-center gap-1">
+              {!regionError && rankedRegionResult && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    const blob = new Blob(
+                      [JSON.stringify(rankedRegionResult.geojson, null, 2)],
+                      { type: "application/geo+json" }
+                    );
+                    const url = URL.createObjectURL(blob);
+                    const link = document.createElement("a");
+                    link.href = url;
+                    link.download = `region-prospecting-${rankedRegionResult.grid_size}x${rankedRegionResult.grid_size}.geojson`;
+                    link.click();
+                    URL.revokeObjectURL(url);
+                  }}
+                  title="Export region scan GeoJSON"
+                  aria-label="Export region scan GeoJSON"
+                  className="rounded p-1 text-slate-400 hover:bg-slate-800 hover:text-cyan-300"
+                >
+                  <Download className="h-3.5 w-3.5" />
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={() => {
+                  setRegionResult(null);
+                  setRegionError(null);
+                }}
+                aria-label="Clear region scan"
+                className="rounded p-1 text-slate-400 hover:bg-slate-800 hover:text-slate-100"
+              >
+                <X className="h-3.5 w-3.5" />
+              </button>
+            </div>
+          </div>
 
-          {(rankedRegionResult || regionError) && (
-            <section
-              aria-label="Region scan analog results"
-              className="absolute bottom-14 right-3 z-10 w-88 max-w-[calc(100%-1.5rem)] rounded-md border border-slate-700/80 bg-[#0D1424]/95 p-3 text-xs text-slate-200 shadow-lg backdrop-blur-md"
-            >
-              <div className="mb-2 flex items-center justify-between gap-2 border-b border-slate-800 pb-1.5">
-                <div>
-                  <h2 className="font-mono text-[11px] font-semibold uppercase tracking-wider text-cyan-300">
-                    {regionError
-                      ? "Region Scan Error"
-                      : `Prospecting · ${rankedRegionResult?.grid_size ?? 3}×${rankedRegionResult?.grid_size ?? 3} (${rankedRegionResult?.evaluated_count ?? 0} pts)`}
-                  </h2>
-                  {!regionError && rankedRegionResult && (
-                    <p className="mt-0.5 font-mono text-[10px] text-slate-400 tabular-nums">
-                      {rankedRegionResult.bounds.minLat.toFixed(2)}°..
-                      {rankedRegionResult.bounds.maxLat.toFixed(2)}°N,{" "}
-                      {rankedRegionResult.bounds.minLon.toFixed(2)}°..
-                      {rankedRegionResult.bounds.maxLon.toFixed(2)}°E
-                    </p>
-                  )}
-                </div>
-                <div className="flex items-center gap-1">
-                  {!regionError && rankedRegionResult && (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        const blob = new Blob(
-                          [JSON.stringify(rankedRegionResult.geojson, null, 2)],
-                          { type: "application/geo+json" }
-                        );
-                        const url = URL.createObjectURL(blob);
-                        const link = document.createElement("a");
-                        link.href = url;
-                        link.download = `region-prospecting-${rankedRegionResult.grid_size}x${rankedRegionResult.grid_size}.geojson`;
-                        link.click();
-                        URL.revokeObjectURL(url);
-                      }}
-                      title="Export region scan GeoJSON"
-                      aria-label="Export region scan GeoJSON"
-                      className="rounded p-1 text-slate-400 hover:bg-slate-800 hover:text-cyan-300"
-                    >
-                      <Download className="h-3.5 w-3.5" />
-                    </button>
-                  )}
+          {regionError ? (
+            <p className="text-rose-300">{regionError}</p>
+          ) : (
+            <>
+              <div className="mb-2 flex items-center justify-between gap-1.5">
+                <span className="text-[11px] text-slate-400">Rank by:</span>
+                <div
+                  className="flex items-center rounded border border-slate-800 bg-[#060913]/80 p-0.5"
+                  role="group"
+                  aria-label="Region ranking mode"
+                >
                   <button
                     type="button"
-                    onClick={() => {
-                      setRegionResult(null);
-                      setRegionError(null);
-                    }}
-                    aria-label="Clear region scan"
-                    className="rounded p-1 text-slate-400 hover:bg-slate-800 hover:text-slate-100"
+                    onClick={() => setRegionRankByActiveTarget(true)}
+                    aria-pressed={regionRankByActiveTarget}
+                    className={`whitespace-nowrap rounded px-2 py-0.5 text-[11px] font-medium transition-colors ${
+                      regionRankByActiveTarget
+                        ? "bg-cyan-500/20 text-cyan-200"
+                        : "text-slate-400 hover:text-slate-200"
+                    }`}
                   >
-                    <X className="h-3.5 w-3.5" />
+                    {(dataset.references[activeTargetId]?.name ?? "Active Target").split(" / ")[0]}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setRegionRankByActiveTarget(false)}
+                    aria-pressed={!regionRankByActiveTarget}
+                    className={`whitespace-nowrap rounded px-2 py-0.5 text-[11px] font-medium transition-colors ${
+                      !regionRankByActiveTarget
+                        ? "bg-cyan-500/20 text-cyan-200"
+                        : "text-slate-400 hover:text-slate-200"
+                    }`}
+                  >
+                    Best Match
                   </button>
                 </div>
               </div>
 
-              {regionError ? (
-                <p className="text-rose-300">{regionError}</p>
-              ) : (
-                <>
-                  <div className="mb-2 flex items-center justify-between gap-1.5">
-                    <span className="text-[11px] text-slate-400">Rank by:</span>
-                    <div
-                      className="flex items-center rounded border border-slate-800 bg-[#060913]/80 p-0.5"
-                      role="group"
-                      aria-label="Region ranking mode"
-                    >
-                      <button
-                        type="button"
-                        onClick={() => setRegionRankByActiveTarget(true)}
-                        aria-pressed={regionRankByActiveTarget}
-                        className={`whitespace-nowrap rounded px-2 py-0.5 text-[11px] font-medium transition-colors ${
-                          regionRankByActiveTarget
-                            ? "bg-cyan-500/20 text-cyan-200"
-                            : "text-slate-400 hover:text-slate-200"
-                        }`}
-                      >
-                        {(dataset.references[activeTargetId]?.name ?? "Active Target").split(" / ")[0]}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setRegionRankByActiveTarget(false)}
-                        aria-pressed={!regionRankByActiveTarget}
-                        className={`whitespace-nowrap rounded px-2 py-0.5 text-[11px] font-medium transition-colors ${
-                          !regionRankByActiveTarget
-                            ? "bg-cyan-500/20 text-cyan-200"
-                            : "text-slate-400 hover:text-slate-200"
-                        }`}
-                      >
-                        Best Match
-                      </button>
-                    </div>
+              {regionSummary && (
+                <div className="mb-2 rounded border border-slate-800/90 bg-[#060913]/80 p-2 font-mono text-[10px] tabular-nums">
+                  <div className="flex items-center justify-between text-slate-300">
+                    <span>
+                      Top:{" "}
+                      <strong className="text-cyan-300">
+                        {regionSummary.maxAsi.toFixed(1)}%
+                      </strong>{" "}
+                      (avg {regionSummary.meanAsi.toFixed(1)}%)
+                    </span>
+                    <span>
+                      Elev {Math.round(regionSummary.elevMinM)}–
+                      {Math.round(regionSummary.elevMaxM)}m
+                    </span>
                   </div>
+                  <div className="mt-1 flex items-center justify-between text-slate-400">
+                    <span>
+                      Beats {regionSummary.beatenCatalogCount}/
+                      {regionSummary.totalCatalogCount} catalog sites
+                    </span>
+                    <span>Max slope {regionSummary.maxSlopeDeg.toFixed(1)}°</span>
+                  </div>
+                </div>
+              )}
 
-                  {regionSummary && (
-                    <div className="mb-2 rounded border border-slate-800/90 bg-[#060913]/80 p-2 font-mono text-[10px] tabular-nums">
-                      <div className="flex items-center justify-between text-slate-300">
-                        <span>
-                          Top:{" "}
-                          <strong className="text-cyan-300">
-                            {regionSummary.maxAsi.toFixed(1)}%
-                          </strong>{" "}
-                          (avg {regionSummary.meanAsi.toFixed(1)}%)
-                        </span>
-                        <span>
-                          Elev {Math.round(regionSummary.elevMinM)}–
-                          {Math.round(regionSummary.elevMaxM)}m
-                        </span>
-                      </div>
-                      <div className="mt-1 flex items-center justify-between text-slate-400">
-                        <span>
-                          Beats {regionSummary.beatenCatalogCount}/
-                          {regionSummary.totalCatalogCount} catalog sites
-                        </span>
-                        <span>Max slope {regionSummary.maxSlopeDeg.toFixed(1)}°</span>
-                      </div>
-                    </div>
-                  )}
-
-                  <ul className="max-h-48 space-y-1.5 overflow-y-auto pr-1">
-                    {rankedRegionResult?.points.slice(0, 5).map((pt, idx) => {
-                      const isSelected = selectedSite?.id === pt.id;
-                      const activeTarget = regionRankByActiveTarget ? activeTargetId : null;
-                      const scored = getPointTargetScore(pt, activeTarget);
-                      const why = buildSiteRationale(pt, activeTarget);
-                      return (
-                        <li key={pt.id}>
-                          <button
-                            type="button"
-                            onClick={() => handleSelectSite(pt.id)}
-                            className={`w-full rounded border px-2.5 py-1.5 text-left transition-colors ${
-                              isSelected
-                                ? "border-cyan-500/70 bg-cyan-500/15"
-                                : "border-slate-800/90 bg-[#060913]/70 hover:border-slate-600"
+              <ul className="max-h-48 space-y-1.5 overflow-y-auto pr-1">
+                {rankedRegionResult?.points.slice(0, 5).map((pt, idx) => {
+                  const isSelected = selectedSite?.id === pt.id;
+                  const activeTarget = regionRankByActiveTarget ? activeTargetId : null;
+                  const scored = getPointTargetScore(pt, activeTarget);
+                  const why = buildSiteRationale(pt, activeTarget);
+                  return (
+                    <li key={pt.id}>
+                      <button
+                        type="button"
+                        onClick={() => handleSelectSite(pt.id)}
+                        className={`w-full rounded border px-2.5 py-1.5 text-left transition-colors ${
+                          isSelected
+                            ? "border-cyan-500/70 bg-cyan-500/15"
+                            : "border-slate-800/90 bg-[#060913]/70 hover:border-slate-600"
+                        }`}
+                      >
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="font-mono text-[11px] font-medium text-slate-200 tabular-nums">
+                            #{idx + 1} {pt.latitude.toFixed(2)}°, {pt.longitude.toFixed(2)}°
+                          </span>
+                          <span
+                            className={`font-mono text-xs font-semibold tabular-nums ${
+                              scored.body === "Mars"
+                                ? "text-[#E07A5F]"
+                                : "text-[#06B6D4]"
                             }`}
                           >
-                            <div className="flex items-center justify-between gap-2">
-                              <span className="font-mono text-[11px] font-medium text-slate-200 tabular-nums">
-                                #{idx + 1} {pt.latitude.toFixed(2)}°, {pt.longitude.toFixed(2)}°
-                              </span>
-                              <span
-                                className={`font-mono text-xs font-semibold tabular-nums ${
-                                  scored.body === "Mars"
-                                    ? "text-[#E07A5F]"
-                                    : "text-[#06B6D4]"
-                                }`}
-                              >
-                                {scored.asi.toFixed(1)}% · {scored.targetName}
-                              </span>
-                            </div>
-                            <p className="mt-0.5 line-clamp-2 text-[11px] text-slate-400">
-                              {why}
-                            </p>
-                          </button>
-                        </li>
-                      );
-                    })}
-                  </ul>
-                </>
-              )}
-            </section>
+                            {scored.asi.toFixed(1)}% · {scored.targetName}
+                          </span>
+                        </div>
+                        <p className="mt-0.5 line-clamp-2 text-[11px] text-slate-400">
+                          {why}
+                        </p>
+                      </button>
+                    </li>
+                  );
+                })}
+              </ul>
+            </>
           )}
-        </div>
-
-        <div
-          id="site-telemetry-panel"
-          className={`absolute inset-x-0 bottom-0 z-20 h-[60%] min-h-0 flex-col overflow-hidden border-t border-slate-600 bg-[#0D1424] lg:static lg:order-3 lg:z-auto lg:flex lg:h-full lg:border-t-0 ${mobilePanel === "telemetry" ? "flex" : "hidden"}`}
-        >
-          <button
-            type="button"
-            onClick={closePanel}
-            className="min-h-11 shrink-0 border-b border-slate-700 px-4 text-left text-sm text-cyan-300 lg:hidden"
-          >
-            Close telemetry · Back to map
-          </button>
-          <div className="min-h-0 flex-1">
-            <TelemetryDrawer
-              dataset={dataset}
-              site={selectedSite}
-              references={dataset.references}
-              activeTargetId={activeTargetId}
-              onSelectTarget={setActiveTargetId}
-            />
-          </div>
-        </div>
-      </main>
+        </section>
+      )}
     </div>
   );
 }

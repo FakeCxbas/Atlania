@@ -4,9 +4,19 @@ export interface TargetProfile {
   id: string;
   name: string;
   body: PlanetaryBody;
+  terrain?: {
+    slope_deg: number;
+    roughness: number;
+    geology: number[];
+    ice: number;
+    aqueous_history: number;
+    lava_tubes: number;
+    shelter: number;
+  };
   temperature_mean_c: number;
   temperature_range_c: number;
   dryness: number;
+  weights?: number[];
   context: string;
   source_url: string;
   instrument?: string;

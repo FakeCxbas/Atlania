@@ -5,6 +5,19 @@ import * as maplibregl from "maplibre-gl";
 import type { AnalogSite, TargetProfile } from "@/types/analog";
 import type { RegionBounds, RegionEvaluationResult } from "@/lib/evaluateRegion";
 
+if (typeof window !== "undefined") {
+  maplibregl.setWorkerUrl("/maplibre-gl-worker.mjs");
+}
+
+export type CameraTarget =
+  | { type: "site"; siteId: string }
+  | {
+      type: "fitBounds";
+      sites: AnalogSite[];
+      padding?: { left: number; top: number; right: number; bottom: number };
+    }
+  | { type: "world" };
+
 interface AnalogMapProps {
   sites: AnalogSite[];
   references: Record<string, TargetProfile>;
@@ -21,6 +34,7 @@ interface AnalogMapProps {
   onToggleRegionProbeMode?: () => void;
   onProbeRegion?: (bounds: RegionBounds) => void;
   regionResult?: RegionEvaluationResult | null;
+  cameraTarget?: CameraTarget | null;
 }
 
 type BasemapMode = "satellite" | "dark" | "nasa-gibs";
@@ -99,6 +113,7 @@ export function AnalogMap({
   onToggleRegionProbeMode,
   onProbeRegion,
   regionResult = null,
+  cameraTarget,
 }: AnalogMapProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
@@ -564,27 +579,77 @@ export function AnalogMap({
     };
   }, [regionResult, selectedSiteId, onSelectSite]);
 
+  // External camera navigation (country filter, tab switch, directory selection)
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !cameraTarget) return;
+
+    const prefersReducedMotion =
+      typeof window !== "undefined" &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const dur = prefersReducedMotion ? 0 : 1200;
+
+    if (cameraTarget.type === "world") {
+      map.fitBounds(
+        [
+          [-170, -55],
+          [170, 70],
+        ],
+        { padding: 40, duration: dur }
+      );
+      return;
+    }
+
+    if (cameraTarget.type === "fitBounds") {
+      const { sites: targetSites, padding } = cameraTarget;
+      if (!targetSites.length) return;
+
+      const bounds = new maplibregl.LngLatBounds();
+      for (const s of targetSites) {
+        bounds.extend([s.longitude, s.latitude]);
+      }
+
+      map.fitBounds(bounds, {
+        padding: padding ?? { left: 490, top: 130, right: 60, bottom: 60 },
+        maxZoom: 7,
+        duration: dur,
+      });
+      return;
+    }
+
+    if (cameraTarget.type === "site") {
+      const site = sites.find((s) => s.id === cameraTarget.siteId);
+      if (!site) return;
+      map.flyTo({
+        center: [site.longitude, site.latitude],
+        zoom: Math.max(map.getZoom(), 5.2),
+        duration: prefersReducedMotion ? 0 : 900,
+        essential: true,
+      });
+    }
+  }, [cameraTarget, sites]);
+
   return (
     <div className="relative h-full w-full bg-[#060913]">
       <div
         ref={containerRef}
         className="h-full w-full"
         role="region"
-        aria-label="Interactive planetary analog world map"
+        aria-label="Mapa interactivo de sitios análogos planetarios"
       />
 
-      {/* Basemap Layer Switcher & Probe Modes */}
-      <div className="absolute left-3 top-3 flex flex-wrap items-center gap-2">
+      {/* Selector de capa de mapa base y modos de prospección */}
+      <div className="absolute right-14 top-24 z-10 flex flex-col items-end gap-2">
         <div
-          className="flex items-center gap-1 rounded-md border border-slate-800/80 bg-[#060913]/85 p-1 backdrop-blur-md"
+          className="flex items-center gap-1 rounded-lg border border-slate-800/80 bg-[#060913]/90 p-1 shadow-xl backdrop-blur-md"
           role="group"
-          aria-label="Map basemap layer"
+          aria-label="Capa de mapa base"
         >
           {(
             [
-              { id: "satellite", label: "Satellite" },
+              { id: "satellite", label: "Satélite" },
               { id: "nasa-gibs", label: "NASA GIBS" },
-              { id: "dark", label: "Dark Vector" },
+              { id: "dark", label: "Vector Oscuro" },
             ] as const
           ).map(({ id, label }) => {
             const active = basemap === id;
@@ -596,7 +661,7 @@ export function AnalogMap({
                 aria-pressed={active}
                 className={`rounded px-2.5 py-1 text-xs font-medium transition-colors ${
                   active
-                    ? "border border-cyan-500/60 bg-cyan-500/20 text-cyan-300"
+                    ? "border border-[#D4AF37]/60 bg-[#D4AF37]/20 text-[#D4AF37]"
                     : "border border-transparent text-slate-300 hover:text-slate-100"
                 }`}
               >
@@ -606,92 +671,96 @@ export function AnalogMap({
           })}
         </div>
 
-        {onToggleProbeMode && (
-          <button
-            type="button"
-            onClick={onToggleProbeMode}
-            aria-pressed={probeMode}
-            className={`rounded-md border px-3 py-1.5 text-xs font-medium backdrop-blur-md transition-colors ${
-              probeMode
-                ? "border-amber-400/70 bg-amber-500/20 text-amber-200"
-                : "border-slate-800/80 bg-[#060913]/85 text-slate-200 hover:border-cyan-500/50"
-            }`}
-          >
-            {isProbing
-              ? "Probing NASA POWER..."
-              : probeMode
-              ? "Point Probe: Click Map"
-              : "Probe Point"}
-          </button>
-        )}
-
-        {onToggleRegionProbeMode && (
-          <div className="flex items-center gap-1">
-            <button
-              type="button"
-              onClick={onToggleRegionProbeMode}
-              aria-pressed={regionProbeMode}
-              className={`rounded-md border px-3 py-1.5 text-xs font-medium backdrop-blur-md transition-colors ${
-                regionProbeMode
-                  ? "border-cyan-400/70 bg-cyan-500/20 text-cyan-200"
-                  : "border-slate-800/80 bg-[#060913]/85 text-slate-200 hover:border-cyan-500/50"
-              }`}
-            >
-              {isProbingRegion
-                ? `Scanning ${regionGridSize}×${regionGridSize}...`
-                : regionProbeMode
-                ? "Region: Drag Box / Click"
-                : "Probe Region"}
-            </button>
-
-            {regionProbeMode && onChangeRegionGridSize && (
-              <div
-                className="flex items-center rounded-md border border-slate-800/80 bg-[#060913]/90 p-0.5 backdrop-blur-md"
-                role="group"
-                aria-label="Region grid density"
-              >
-                {([3, 4] as const).map((size) => (
-                  <button
-                    key={size}
-                    type="button"
-                    onClick={() => onChangeRegionGridSize(size)}
-                    aria-pressed={regionGridSize === size}
-                    className={`rounded px-2 py-1 font-mono text-[11px] font-medium transition-colors ${
-                      regionGridSize === size
-                        ? "bg-cyan-500/25 text-cyan-200"
-                        : "text-slate-400 hover:text-slate-200"
-                    }`}
-                  >
-                    {size}×{size}
-                  </button>
-                ))}
-              </div>
-            )}
-
-            {regionProbeMode && onProbeRegion && (
+        {(onToggleProbeMode || onToggleRegionProbeMode) && (
+          <div className="flex flex-wrap items-center justify-end gap-1.5">
+            {onToggleProbeMode && (
               <button
                 type="button"
-                disabled={isProbingRegion}
-                onClick={() => {
-                  const map = mapRef.current;
-                  if (!map) return;
-                  const b = map.getBounds();
-                  const latSpan = b.getNorth() - b.getSouth();
-                  const lonSpan = b.getEast() - b.getWest();
-                  const padLat = latSpan * 0.1;
-                  const padLon = lonSpan * 0.1;
-                  const minLat = Math.max(-89.5, Number((b.getSouth() + padLat).toFixed(4)));
-                  const maxLat = Math.min(89.5, Number((b.getNorth() - padLat).toFixed(4)));
-                  const minLon = Math.max(-179.5, Number((b.getWest() + padLon).toFixed(4)));
-                  const maxLon = Math.min(179.5, Number((b.getEast() - padLon).toFixed(4)));
-                  if (minLat < maxLat && minLon < maxLon) {
-                    onProbeRegion({ minLat, maxLat, minLon, maxLon });
-                  }
-                }}
-                className="rounded-md border border-cyan-500/50 bg-[#060913]/90 px-2.5 py-1.5 text-xs font-medium text-cyan-300 backdrop-blur-md transition-colors hover:bg-cyan-500/20 disabled:opacity-50"
+                onClick={onToggleProbeMode}
+                aria-pressed={probeMode}
+                className={`rounded-md border px-3 py-1.5 text-xs font-medium shadow-lg backdrop-blur-md transition-colors ${
+                  probeMode
+                    ? "border-amber-400/70 bg-amber-500/20 text-amber-200"
+                    : "border-slate-800/80 bg-[#060913]/90 text-slate-200 hover:border-cyan-500/50"
+                }`}
               >
-                Scan View
+                {isProbing
+                  ? "Probing NASA POWER..."
+                  : probeMode
+                  ? "Point Probe: Click Map"
+                  : "Probe Point"}
               </button>
+            )}
+
+            {onToggleRegionProbeMode && (
+              <div className="flex items-center gap-1">
+                <button
+                  type="button"
+                  onClick={onToggleRegionProbeMode}
+                  aria-pressed={regionProbeMode}
+                  className={`rounded-md border px-3 py-1.5 text-xs font-medium shadow-lg backdrop-blur-md transition-colors ${
+                    regionProbeMode
+                      ? "border-cyan-400/70 bg-cyan-500/20 text-cyan-200"
+                      : "border-slate-800/80 bg-[#060913]/90 text-slate-200 hover:border-cyan-500/50"
+                  }`}
+                >
+                  {isProbingRegion
+                    ? `Scanning ${regionGridSize}×${regionGridSize}...`
+                    : regionProbeMode
+                    ? "Region: Drag Box / Click"
+                    : "Probe Region"}
+                </button>
+
+                {regionProbeMode && onChangeRegionGridSize && (
+                  <div
+                    className="flex items-center rounded-md border border-slate-800/80 bg-[#060913]/90 p-0.5 backdrop-blur-md"
+                    role="group"
+                    aria-label="Region grid density"
+                  >
+                    {([3, 4] as const).map((size) => (
+                      <button
+                        key={size}
+                        type="button"
+                        onClick={() => onChangeRegionGridSize(size)}
+                        aria-pressed={regionGridSize === size}
+                        className={`rounded px-2 py-1 font-mono text-[11px] font-medium transition-colors ${
+                          regionGridSize === size
+                            ? "bg-cyan-500/25 text-cyan-200"
+                            : "text-slate-400 hover:text-slate-200"
+                        }`}
+                      >
+                        {size}×{size}
+                      </button>
+                    ))}
+                  </div>
+                )}
+
+                {regionProbeMode && onProbeRegion && (
+                  <button
+                    type="button"
+                    disabled={isProbingRegion}
+                    onClick={() => {
+                      const map = mapRef.current;
+                      if (!map) return;
+                      const b = map.getBounds();
+                      const latSpan = b.getNorth() - b.getSouth();
+                      const lonSpan = b.getEast() - b.getWest();
+                      const padLat = latSpan * 0.1;
+                      const padLon = lonSpan * 0.1;
+                      const minLat = Math.max(-89.5, Number((b.getSouth() + padLat).toFixed(4)));
+                      const maxLat = Math.min(89.5, Number((b.getNorth() - padLat).toFixed(4)));
+                      const minLon = Math.max(-179.5, Number((b.getWest() + padLon).toFixed(4)));
+                      const maxLon = Math.min(179.5, Number((b.getEast() - padLon).toFixed(4)));
+                      if (minLat < maxLat && minLon < maxLon) {
+                        onProbeRegion({ minLat, maxLat, minLon, maxLon });
+                      }
+                    }}
+                    className="rounded-md border border-cyan-500/50 bg-[#060913]/90 px-2.5 py-1.5 text-xs font-medium text-cyan-300 backdrop-blur-md transition-colors hover:bg-cyan-500/20 disabled:opacity-50"
+                  >
+                    Scan View
+                  </button>
+                )}
+              </div>
             )}
           </div>
         )}
@@ -710,8 +779,8 @@ export function AnalogMap({
         />
       )}
 
-      {/* HUD Coordinate & Legend Overlay */}
-      <div className="pointer-events-none absolute bottom-3 left-3 flex flex-wrap items-center gap-3 rounded-md border border-slate-800/80 bg-[#060913]/85 px-3 py-1.5 text-xs text-slate-300 backdrop-blur-md">
+      {/* Overlay HUD de Coordenadas y Leyenda */}
+      <div className="pointer-events-none absolute bottom-3 left-3 z-10 flex flex-wrap items-center gap-3 rounded-lg border border-slate-800/80 bg-[#060913]/90 px-3 py-1.5 text-xs text-slate-300 shadow-xl backdrop-blur-md">
         <span className="font-mono tabular-nums text-cyan-400">
           LAT {cursorCoords.lat.toFixed(3)}°
         </span>
@@ -719,7 +788,7 @@ export function AnalogMap({
           LON {cursorCoords.lon.toFixed(3)}°
         </span>
         <span className="font-mono tabular-nums text-slate-400">
-          Z {cursorCoords.zoom.toFixed(1)}
+          ZOOM {cursorCoords.zoom.toFixed(1)}
         </span>
         <span className="h-3 w-px bg-slate-800" aria-hidden="true" />
         <span className="flex items-center gap-1.5">
@@ -727,14 +796,14 @@ export function AnalogMap({
             className="inline-block h-2.5 w-2.5 rounded-full bg-[#06B6D4]"
             aria-hidden="true"
           />
-          Lunar Analog
+          Análogo Lunar
         </span>
         <span className="flex items-center gap-1.5">
           <span
             className="inline-block h-2.5 w-2.5 rounded-full bg-[#E07A5F]"
             aria-hidden="true"
           />
-          Mars Analog
+          Análogo Marciano
         </span>
         {regionResult && (
           <>
