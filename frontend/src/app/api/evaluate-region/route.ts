@@ -9,6 +9,7 @@ export async function GET(request: NextRequest) {
   const maxLon = Number(searchParams.get('maxLon'));
   const gridSizeParam = searchParams.get('gridSize');
   const gridSize = gridSizeParam ? Number(gridSizeParam) : 3;
+  const targetId = searchParams.get('targetId');
 
   try {
     validateRegionBounds({ minLat, maxLat, minLon, maxLon }, gridSize);
@@ -20,7 +21,7 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const result = await evaluateRegion({ minLat, maxLat, minLon, maxLon }, gridSize);
+    const result = await evaluateRegion({ minLat, maxLat, minLon, maxLon }, gridSize, targetId);
     return NextResponse.json(result);
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Failed to evaluate region.';

@@ -17,6 +17,7 @@ export interface RegionBounds {
 
 export interface RegionPointFeatureProperties {
   id: string;
+  rank: number;
   lat: number;
   lon: number;
   best_asi_score: number;
@@ -47,6 +48,19 @@ export interface RegionEvaluationResult {
   failed_count: number;
   points: AnalogSite[];
   geojson: RegionGeoJsonCollection;
+}
+
+export interface RegionScanSummary {
+  maxAsi: number;
+  minAsi: number;
+  meanAsi: number;
+  elevMinM: number;
+  elevMaxM: number;
+  maxSlopeDeg: number;
+  beatenCatalogCount: number;
+  totalCatalogCount: number;
+  topCatalogSiteName: string | null;
+  topCatalogAsi: number;
 }
 
 export function validateRegionBounds(bounds: RegionBounds, gridSize = 3): void {
@@ -89,18 +103,142 @@ export function buildRegionGrid(
   return points;
 }
 
-export function buildSiteRationale(site: AnalogSite): string {
-  if (site.analogy_strengths.length > 0) {
-    return site.analogy_strengths.slice(0, 2).join(' · ');
+export function getPointTargetScore(
+  site: AnalogSite,
+  targetId?: string | null
+): {
+  asi: number;
+  targetId: string;
+  targetName: string;
+  body: 'Moon' | 'Mars';
+  strengths: string[];
+} {
+  const targeted = targetId ? site.scores[targetId] : undefined;
+  if (targeted && targetId) {
+    const ref = TARGET_META[targetId];
+    return {
+      asi: targeted.overall_asi,
+      targetId,
+      targetName: ref?.name ?? targetId,
+      body: ref?.body ?? 'Moon',
+      strengths: targeted.analogy_strengths,
+    };
+  }
+  const ref = TARGET_META[site.best_target];
+  return {
+    asi: site.overall_asi,
+    targetId: site.best_target,
+    targetName: ref?.name ?? site.best_target,
+    body: ref?.body ?? 'Moon',
+    strengths: site.analogy_strengths,
+  };
+}
+
+export function buildSiteRationale(site: AnalogSite, targetId?: string | null): string {
+  const { strengths } = getPointTargetScore(site, targetId);
+  if (strengths.length > 0) {
+    return strengths.slice(0, 2).join(' · ');
   }
   const slope = site.dem_telemetry.dem_slope_deg.toFixed(1);
   const meanTemp = ((site.climatology.tmax_c + site.climatology.tmin_c) / 2).toFixed(1);
   return `Elevation ${Math.round(site.elevation_m)} m, ${slope} deg slope, ${meanTemp} C mean`;
 }
 
+export function buildRegionGeoJson(
+  points: AnalogSite[],
+  targetId?: string | null
+): { sortedPoints: AnalogSite[]; geojson: RegionGeoJsonCollection } {
+  const sortedPoints = [...points].sort(
+    (a, b) => getPointTargetScore(b, targetId).asi - getPointTargetScore(a, targetId).asi
+  );
+
+  const features: RegionGeoJsonFeature[] = sortedPoints.map((site, idx) => {
+    const scored = getPointTargetScore(site, targetId);
+    return {
+      type: 'Feature',
+      geometry: {
+        type: 'Point',
+        coordinates: [site.longitude, site.latitude],
+      },
+      properties: {
+        id: site.id,
+        rank: idx + 1,
+        lat: site.latitude,
+        lon: site.longitude,
+        best_asi_score: scored.asi,
+        best_target: scored.targetId,
+        best_target_name: scored.targetName,
+        body: scored.body,
+        rationale: buildSiteRationale(site, targetId),
+      },
+    };
+  });
+
+  return {
+    sortedPoints,
+    geojson: {
+      type: 'FeatureCollection',
+      features,
+    },
+  };
+}
+
+export function rankRegionResult(
+  result: RegionEvaluationResult,
+  targetId?: string | null
+): RegionEvaluationResult {
+  const { sortedPoints, geojson } = buildRegionGeoJson(result.points, targetId);
+  return {
+    ...result,
+    points: sortedPoints,
+    geojson,
+  };
+}
+
+export function summarizeRegionScan(
+  points: AnalogSite[],
+  catalogSites: AnalogSite[],
+  targetId?: string | null
+): RegionScanSummary | null {
+  if (points.length === 0) return null;
+
+  const scores = points.map((p) => getPointTargetScore(p, targetId).asi);
+  const maxAsi = Math.max(...scores);
+  const minAsi = Math.min(...scores);
+  const meanAsi = scores.reduce((acc, v) => acc + v, 0) / scores.length;
+
+  const elevations = points.map((p) => p.elevation_m);
+  const elevMinM = Math.min(...elevations);
+  const elevMaxM = Math.max(...elevations);
+  const maxSlopeDeg = Math.max(...points.map((p) => p.dem_telemetry.dem_slope_deg));
+
+  const catalogRanked = catalogSites
+    .map((site) => ({
+      name: site.name,
+      asi: getPointTargetScore(site, targetId).asi,
+    }))
+    .sort((a, b) => b.asi - a.asi);
+
+  const beatenCatalogCount = catalogRanked.filter((c) => maxAsi > c.asi).length;
+
+  return {
+    maxAsi,
+    minAsi,
+    meanAsi,
+    elevMinM,
+    elevMaxM,
+    maxSlopeDeg,
+    beatenCatalogCount,
+    totalCatalogCount: catalogRanked.length,
+    topCatalogSiteName: catalogRanked[0]?.name ?? null,
+    topCatalogAsi: catalogRanked[0]?.asi ?? 0,
+  };
+}
+
 export async function evaluateRegion(
   bounds: RegionBounds,
-  gridSize = 3
+  gridSize = 3,
+  targetId?: string | null
 ): Promise<RegionEvaluationResult> {
   const coords = buildRegionGrid(bounds, gridSize);
   const settled = await Promise.allSettled(
@@ -122,38 +260,14 @@ export async function evaluateRegion(
     throw new Error('All region grid evaluations failed against upstream telemetry services.');
   }
 
-  points.sort((a, b) => b.overall_asi - a.overall_asi);
-
-  const features: RegionGeoJsonFeature[] = points.map((site) => {
-    const ref = TARGET_META[site.best_target];
-    return {
-      type: 'Feature',
-      geometry: {
-        type: 'Point',
-        coordinates: [site.longitude, site.latitude],
-      },
-      properties: {
-        id: site.id,
-        lat: site.latitude,
-        lon: site.longitude,
-        best_asi_score: site.overall_asi,
-        best_target: site.best_target,
-        best_target_name: ref?.name ?? site.best_target,
-        body: ref?.body ?? 'Moon',
-        rationale: buildSiteRationale(site),
-      },
-    };
-  });
+  const { sortedPoints, geojson } = buildRegionGeoJson(points, targetId);
 
   return {
     bounds,
     grid_size: gridSize,
-    evaluated_count: points.length,
+    evaluated_count: sortedPoints.length,
     failed_count: failedCount,
-    points,
-    geojson: {
-      type: 'FeatureCollection',
-      features,
-    },
+    points: sortedPoints,
+    geojson,
   };
 }
