@@ -4,11 +4,25 @@ import { useEffect, useRef, useState } from "react";
 import * as maplibregl from "maplibre-gl";
 import type { AnalogSite, TargetProfile } from "@/types/analog";
 
+if (typeof window !== "undefined") {
+  maplibregl.setWorkerUrl("/maplibre-gl-worker.mjs");
+}
+
+export type CameraTarget =
+  | { type: "site"; siteId: string }
+  | {
+      type: "fitBounds";
+      sites: AnalogSite[];
+      padding?: { left: number; top: number; right: number; bottom: number };
+    }
+  | { type: "world" };
+
 interface AnalogMapProps {
   sites: AnalogSite[];
   references: Record<string, TargetProfile>;
   selectedSiteId: string | null;
   onSelectSite: (siteId: string) => void;
+  cameraTarget?: CameraTarget | null;
 }
 
 type BasemapMode = "satellite" | "dark" | "nasa-gibs";
@@ -76,6 +90,7 @@ export function AnalogMap({
   references,
   selectedSiteId,
   onSelectSite,
+  cameraTarget,
 }: AnalogMapProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
@@ -213,26 +228,76 @@ export function AnalogMap({
     });
   }, [selectedSiteId, sites]);
 
+  // External camera navigation (country filter, tab switch, directory selection)
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !cameraTarget) return;
+
+    const prefersReducedMotion =
+      typeof window !== "undefined" &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const dur = prefersReducedMotion ? 0 : 1200;
+
+    if (cameraTarget.type === "world") {
+      map.fitBounds(
+        [
+          [-170, -55],
+          [170, 70],
+        ],
+        { padding: 40, duration: dur }
+      );
+      return;
+    }
+
+    if (cameraTarget.type === "fitBounds") {
+      const { sites: targetSites, padding } = cameraTarget;
+      if (!targetSites.length) return;
+
+      const bounds = new maplibregl.LngLatBounds();
+      for (const s of targetSites) {
+        bounds.extend([s.longitude, s.latitude]);
+      }
+
+      map.fitBounds(bounds, {
+        padding: padding ?? { left: 490, top: 130, right: 60, bottom: 60 },
+        maxZoom: 7,
+        duration: dur,
+      });
+      return;
+    }
+
+    if (cameraTarget.type === "site") {
+      const site = sites.find((s) => s.id === cameraTarget.siteId);
+      if (!site) return;
+      map.flyTo({
+        center: [site.longitude, site.latitude],
+        zoom: Math.max(map.getZoom(), 5.2),
+        duration: prefersReducedMotion ? 0 : 900,
+        essential: true,
+      });
+    }
+  }, [cameraTarget, sites]);
+
   return (
     <div className="relative h-full w-full bg-[#060913]">
       <div
         ref={containerRef}
         className="h-full w-full"
         role="region"
-        aria-label="Interactive planetary analog world map"
+        aria-label="Mapa interactivo de sitios análogos planetarios"
       />
 
-      {/* Basemap Layer Switcher */}
+      {/* Selector de capa de mapa base */}
       <div
-        className="absolute left-3 top-3 flex items-center gap-1 rounded-md border border-slate-800/80 bg-[#060913]/85 p-1 backdrop-blur-md"
+        className="absolute right-3 top-24 flex items-center gap-1 rounded-lg border border-slate-800/80 bg-[#060913]/90 p-1 shadow-xl backdrop-blur-md z-10"
         role="group"
-        aria-label="Map basemap layer"
+        aria-label="Capa de mapa base"
       >
         {(
           [
-            { id: "satellite", label: "Satellite" },
+            { id: "satellite", label: "Satélite" },
             { id: "nasa-gibs", label: "NASA GIBS" },
-            { id: "dark", label: "Dark Vector" },
+            { id: "dark", label: "Vector Oscuro" },
           ] as const
         ).map(({ id, label }) => {
           const active = basemap === id;
@@ -254,8 +319,8 @@ export function AnalogMap({
         })}
       </div>
 
-      {/* HUD Coordinate & Legend Overlay */}
-      <div className="pointer-events-none absolute bottom-3 left-3 flex flex-wrap items-center gap-3 rounded-md border border-slate-800/80 bg-[#060913]/85 px-3 py-1.5 text-xs text-slate-300 backdrop-blur-md">
+      {/* Overlay HUD de Coordenadas y Leyenda */}
+      <div className="pointer-events-none absolute bottom-3 left-3 flex flex-wrap items-center gap-3 rounded-lg border border-slate-800/80 bg-[#060913]/90 px-3 py-1.5 text-xs text-slate-300 shadow-xl backdrop-blur-md z-10">
         <span className="font-mono tabular-nums text-cyan-400">
           LAT {cursorCoords.lat.toFixed(3)}°
         </span>
@@ -263,7 +328,7 @@ export function AnalogMap({
           LON {cursorCoords.lon.toFixed(3)}°
         </span>
         <span className="font-mono tabular-nums text-slate-400">
-          Z {cursorCoords.zoom.toFixed(1)}
+          ZOOM {cursorCoords.zoom.toFixed(1)}
         </span>
         <span className="h-3 w-px bg-slate-800" aria-hidden="true" />
         <span className="flex items-center gap-1.5">
@@ -271,14 +336,14 @@ export function AnalogMap({
             className="inline-block h-2.5 w-2.5 rounded-full bg-[#06B6D4]"
             aria-hidden="true"
           />
-          Lunar Analog
+          Análogo Lunar
         </span>
         <span className="flex items-center gap-1.5">
           <span
             className="inline-block h-2.5 w-2.5 rounded-full bg-[#E07A5F]"
             aria-hidden="true"
           />
-          Mars Analog
+          Análogo Marciano
         </span>
       </div>
     </div>
