@@ -11,32 +11,65 @@ interface AnalogMapProps {
   onSelectSite: (siteId: string) => void;
 }
 
-const DARK_BASEMAP_STYLE: maplibregl.StyleSpecification = {
-  version: 8,
-  name: "Deep Space Telemetry",
-  sources: {
-    "carto-dark": {
-      type: "raster",
-      tiles: [
-        "https://a.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}@2x.png",
-        "https://b.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}@2x.png",
-        "https://c.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}@2x.png",
+type BasemapMode = "satellite" | "dark" | "nasa-gibs";
+
+function getBasemapStyle(mode: BasemapMode): string | maplibregl.StyleSpecification {
+  if (mode === "dark") {
+    return "https://tiles.openfreemap.org/styles/dark";
+  }
+
+  if (mode === "nasa-gibs") {
+    return {
+      version: 8,
+      name: "NASA GIBS VIIRS True Color",
+      sources: {
+        "nasa-gibs": {
+          type: "raster",
+          tiles: [
+            "https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/VIIRS_SNPP_CorrectedReflectance_TrueColor/default/2026-10-01/GoogleMapsCompatible_Level9/{z}/{y}/{x}.jpg",
+          ],
+          tileSize: 256,
+          maxzoom: 9,
+          attribution: "NASA EOSDIS GIBS / Worldview",
+        },
+      },
+      layers: [
+        {
+          id: "nasa-gibs-layer",
+          type: "raster",
+          source: "nasa-gibs",
+          minzoom: 0,
+          maxzoom: 14,
+        },
       ],
-      tileSize: 256,
-      attribution:
-        "&copy; OpenStreetMap contributors &copy; CARTO | NASA POWER &amp; PDS Telemetry",
+    };
+  }
+
+  return {
+    version: 8,
+    name: "Esri World Imagery",
+    sources: {
+      "esri-satellite": {
+        type: "raster",
+        tiles: [
+          "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+        ],
+        tileSize: 256,
+        maxzoom: 18,
+        attribution: "Esri, Maxar, Earthstar Geographics | NASA POWER &amp; PDS",
+      },
     },
-  },
-  layers: [
-    {
-      id: "carto-dark-layer",
-      type: "raster",
-      source: "carto-dark",
-      minzoom: 0,
-      maxzoom: 19,
-    },
-  ],
-};
+    layers: [
+      {
+        id: "esri-satellite-layer",
+        type: "raster",
+        source: "esri-satellite",
+        minzoom: 0,
+        maxzoom: 19,
+      },
+    ],
+  };
+}
 
 export function AnalogMap({
   sites,
@@ -47,6 +80,7 @@ export function AnalogMap({
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
   const markersRef = useRef<Map<string, maplibregl.Marker>>(new Map());
+  const [basemap, setBasemap] = useState<BasemapMode>("satellite");
   const [cursorCoords, setCursorCoords] = useState<{
     lat: number;
     lon: number;
@@ -58,7 +92,7 @@ export function AnalogMap({
 
     const map = new maplibregl.Map({
       container: containerRef.current,
-      style: DARK_BASEMAP_STYLE,
+      style: getBasemapStyle("satellite"),
       center: [-78.6, -0.67],
       zoom: 2.1,
       minZoom: 1.3,
@@ -97,6 +131,12 @@ export function AnalogMap({
       mapRef.current = null;
     };
   }, []);
+
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+    map.setStyle(getBasemapStyle(basemap));
+  }, [basemap]);
 
   useEffect(() => {
     const map = mapRef.current;
@@ -182,6 +222,39 @@ export function AnalogMap({
         aria-label="Interactive planetary analog world map"
       />
 
+      {/* Basemap Layer Switcher */}
+      <div
+        className="absolute left-3 top-3 flex items-center gap-1 rounded-md border border-slate-800/80 bg-[#060913]/85 p-1 backdrop-blur-md"
+        role="group"
+        aria-label="Map basemap layer"
+      >
+        {(
+          [
+            { id: "satellite", label: "Satellite" },
+            { id: "nasa-gibs", label: "NASA GIBS" },
+            { id: "dark", label: "Dark Vector" },
+          ] as const
+        ).map(({ id, label }) => {
+          const active = basemap === id;
+          return (
+            <button
+              key={id}
+              type="button"
+              onClick={() => setBasemap(id)}
+              aria-pressed={active}
+              className={`rounded px-2.5 py-1 text-xs font-medium transition-colors ${
+                active
+                  ? "bg-cyan-500/20 text-cyan-300 border border-cyan-500/60"
+                  : "text-slate-300 hover:text-slate-100 border border-transparent"
+              }`}
+            >
+              {label}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* HUD Coordinate & Legend Overlay */}
       <div className="pointer-events-none absolute bottom-3 left-3 flex flex-wrap items-center gap-3 rounded-md border border-slate-800/80 bg-[#060913]/85 px-3 py-1.5 text-xs text-slate-300 backdrop-blur-md">
         <span className="font-mono tabular-nums text-cyan-400">
           LAT {cursorCoords.lat.toFixed(3)}°
