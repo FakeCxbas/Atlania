@@ -21,9 +21,17 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
-      lang="en"
+      lang="es"
       className={`${spaceGrotesk.variable} ${jetbrainsMono.variable} h-full antialiased dark`}
     >
+      <head>
+        <link rel="preconnect" href="https://services.arcgisonline.com" crossOrigin="anonymous" />
+        <link rel="preconnect" href="https://server.arcgisonline.com" crossOrigin="anonymous" />
+        <link rel="preconnect" href="https://s3.amazonaws.com" crossOrigin="anonymous" />
+        <link rel="dns-prefetch" href="https://gibs.earthdata.nasa.gov" />
+        <link rel="dns-prefetch" href="https://tiles.openfreemap.org" />
+        <link rel="preload" href="/maplibre-gl-worker.mjs" as="script" crossOrigin="anonymous" />
+      </head>
       <body className="min-h-full flex flex-col bg-[#060913] text-slate-100 selection:bg-cyan-500/30 selection:text-cyan-100">
         {children}
       </body>
