@@ -26,8 +26,8 @@ flowchart LR
     A["NASA POWER API<br/>(T2M, Precip, Wind, RH, Solar, Pressure)"] --> C["ASI Engine v0.2<br/>(engine/asi_engine.py)"]
     B["Open-Meteo / Copernicus DEM GLO-90<br/>(5-Point Slope & Relief Sampling)"] --> C
     C --> D["5-Axis Similarity Scoring<br/>(Topo, Geo, Thermal, Hydro/Ice, Subsurface)"]
-    D --> E["analogs.json & analogs.geojson<br/>(16 Live Sites / 4 Targets)"]
-    E --> F["Mission Control HUD<br/>(Next.js 16 + MapLibre GL)"]
+    D --> E["analogs.json & analogs.geojson<br/>(30 Live Sites / 6 Targets)"]
+    E --> F["Mission Briefing (/) & Explorer HUD (/explorer)<br/>(Next.js 16 + MapLibre GL)"]
 ```
 
 ## Extraterrestrial Reference Targets
@@ -36,8 +36,10 @@ flowchart LR
 | :--- | :--- | :--- | :--- |
 | `shackleton-crater` | Shackleton Crater / Lunar South Pole | Moon | Artemis polar cold-trap & volatile ice prospecting |
 | `mare-tranquillitatis` | Mare Tranquillitatis Pits | Moon | Subsurface basaltic lava tube thermal shielding |
+| `mouton-mons` | Mons Mouton / Lunar South Pole Plateau | Moon | Artemis III high-illumination plateau & polar regolith |
 | `jezero-crater` | Jezero Crater | Mars | Fluvio-lacustrine delta, clays, carbonates & basalt |
 | `olympus-mons-flank` | Olympus Mons Flank | Mars | High-elevation volcanic shield & lava tube operations |
+| `valles-marineris` | Valles Marineris | Mars | Deep tectonic canyon stratigraphy, sulfates & talus slopes |
 
 > [!NOTE]
 > Every analog evaluation explicitly reports both **where the analogy holds** and **where it breaks down** (Earth gravity `9.81 m/s²` vs `1.62` / `3.71 m/s²`, vacuum/thin CO2 atmosphere, ionizing radiation, and terrestrial biological weathering).
@@ -52,7 +54,8 @@ cd frontend
 npm install
 npm run dev
 ```
-Open `http://localhost:3000`. Basemap switcher includes **Satellite (Esri)**, **NASA GIBS (VIIRS True Color)**, and **Dark Vector (OpenFreeMap)**.
+- `http://localhost:3000/` — **TERR-ANALOG — Mission Briefing** (interactive scientific presentation, comparative Earth vs. Moon/Mars panels, live ASI breakdown, and planetary destination catalog).
+- `http://localhost:3000/explorer` — **Geospatial Explorer HUD** (interactive 3D terrain map, live coordinate probing `/api/evaluate`, regional grid prospecting `/api/evaluate-region`, side-by-side comparison, and Markdown/JSON/GeoJSON export). Supports deep-linking via `?target=<id>` and `?site=<id>`.
 
 ### 2. Scientific ASI Engine (Python / uv)
 ```bash
