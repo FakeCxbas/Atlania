@@ -435,19 +435,19 @@ export function MissionControlApp({ dataset }: MissionControlAppProps) {
                         type="button"
                         onClick={() => setRegionRankByActiveTarget(true)}
                         aria-pressed={regionRankByActiveTarget}
-                        className={`rounded px-2 py-0.5 text-[11px] font-medium transition-colors ${
+                        className={`whitespace-nowrap rounded px-2 py-0.5 text-[11px] font-medium transition-colors ${
                           regionRankByActiveTarget
                             ? "bg-cyan-500/20 text-cyan-200"
                             : "text-slate-400 hover:text-slate-200"
                         }`}
                       >
-                        {dataset.references[activeTargetId]?.name ?? "Active Target"}
+                        {(dataset.references[activeTargetId]?.name ?? "Active Target").split(" / ")[0]}
                       </button>
                       <button
                         type="button"
                         onClick={() => setRegionRankByActiveTarget(false)}
                         aria-pressed={!regionRankByActiveTarget}
-                        className={`rounded px-2 py-0.5 text-[11px] font-medium transition-colors ${
+                        className={`whitespace-nowrap rounded px-2 py-0.5 text-[11px] font-medium transition-colors ${
                           !regionRankByActiveTarget
                             ? "bg-cyan-500/20 text-cyan-200"
                             : "text-slate-400 hover:text-slate-200"
