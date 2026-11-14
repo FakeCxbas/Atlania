@@ -1,10 +1,11 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import type { AnalogDataset } from "@/types/analog";
 import { AnalogMap } from "@/components/AnalogMap";
 import { SiteDirectory } from "@/components/SiteDirectory";
 import { TelemetryDrawer } from "@/components/TelemetryDrawer";
+import { MethodologyDialog } from "@/components/MethodologyDialog";
 import { Globe2, Moon, Orbit } from "lucide-react";
 
 interface MissionControlAppProps {
@@ -14,15 +15,25 @@ interface MissionControlAppProps {
 type BodyFilter = "ALL" | "Moon" | "Mars" | "ECUADOR";
 
 export function MissionControlApp({ dataset }: MissionControlAppProps) {
+  const [mobilePanel, setMobilePanel] = useState<
+    "directory" | "telemetry" | null
+  >(null);
+  const directoryToggle = useRef<HTMLButtonElement>(null);
+  const telemetryToggle = useRef<HTMLButtonElement>(null);
+  const closePanel = () => {
+    (mobilePanel === "directory"
+      ? directoryToggle
+      : telemetryToggle
+    ).current?.focus();
+    setMobilePanel(null);
+  };
   const [bodyFilter, setBodyFilter] = useState<BodyFilter>("ALL");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedSiteId, setSelectedSiteId] = useState<string | null>(
-    dataset.sites[0]?.id ?? null
+    dataset.sites[0]?.id ?? null,
   );
   const [activeTargetId, setActiveTargetId] = useState<string>(
-    dataset.sites[0]?.best_target ??
-      Object.keys(dataset.references)[0] ??
-      ""
+    dataset.sites[0]?.best_target ?? Object.keys(dataset.references)[0] ?? "",
   );
 
   const filteredSites = useMemo(() => {
@@ -59,11 +70,14 @@ export function MissionControlApp({ dataset }: MissionControlAppProps) {
     const site = dataset.sites.find((s) => s.id === siteId);
     if (site) {
       setActiveTargetId(site.best_target);
+      setMobilePanel("telemetry");
+      if (window.matchMedia("(max-width: 1023px)").matches)
+        telemetryToggle.current?.focus();
     }
   };
 
   return (
-    <div className="flex h-screen flex-col overflow-hidden bg-[#060913] text-slate-100">
+    <div className="flex h-dvh flex-col overflow-hidden bg-[#060913] text-slate-100">
       <a
         href="#main-workspace"
         className="sr-only focus:not-sr-only focus:fixed focus:left-3 focus:top-3 focus:z-50 focus:rounded focus:bg-cyan-500 focus:px-3 focus:py-2 focus:text-sm focus:font-semibold focus:text-slate-950"
@@ -72,7 +86,7 @@ export function MissionControlApp({ dataset }: MissionControlAppProps) {
       </a>
 
       {/* Top Mission Control Header */}
-      <header className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-800/80 bg-[#0D1424]/95 px-4 py-2.5 backdrop-blur-md">
+      <header className="flex shrink-0 flex-wrap items-center justify-between gap-3 border-b border-slate-800/80 bg-[#0D1424]/95 px-4 py-2.5 backdrop-blur-md">
         <div className="flex items-center gap-3">
           <div className="flex h-9 w-9 items-center justify-center rounded border border-cyan-500/40 bg-cyan-500/10 text-cyan-400">
             <Orbit className="h-5 w-5" aria-hidden="true" />
@@ -82,9 +96,9 @@ export function MissionControlApp({ dataset }: MissionControlAppProps) {
               TERR-ANALOG // Planetary Analog Explorer
             </h1>
             <p className="text-xs text-slate-400">
-              NASA Space Apps 2026 · {dataset.methodology.source_counts.nasa_power}{" "}
-              NASA POWER Live + {dataset.methodology.source_counts.fallback}{" "}
-              Fallback
+              NASA Space Apps 2026 ·{" "}
+              {dataset.methodology.source_counts.nasa_power} NASA POWER +{" "}
+              {dataset.methodology.source_counts.fallback} Fallback
             </p>
           </div>
         </div>
@@ -122,26 +136,79 @@ export function MissionControlApp({ dataset }: MissionControlAppProps) {
             );
           })}
         </div>
+        <MethodologyDialog dataset={dataset} />
       </header>
+
+      <div
+        className="flex shrink-0 gap-2 border-b border-slate-800 bg-[#0D1424] px-3 py-2 lg:hidden"
+        aria-label="Mobile workspace panels"
+      >
+        <button
+          ref={directoryToggle}
+          type="button"
+          aria-expanded={mobilePanel === "directory"}
+          aria-controls="site-directory-panel"
+          onClick={() =>
+            setMobilePanel(mobilePanel === "directory" ? null : "directory")
+          }
+          className="min-h-11 flex-1 rounded border border-slate-600 px-3 text-sm"
+        >
+          Directory ({filteredSites.length})
+        </button>
+        <button
+          ref={telemetryToggle}
+          type="button"
+          aria-expanded={mobilePanel === "telemetry"}
+          aria-controls="site-telemetry-panel"
+          onClick={() =>
+            setMobilePanel(mobilePanel === "telemetry" ? null : "telemetry")
+          }
+          className="min-h-11 flex-1 rounded border border-slate-600 px-3 text-sm"
+        >
+          Telemetry
+        </button>
+      </div>
 
       {/* Main 3-Pane Workspace */}
       <main
         id="main-workspace"
         tabIndex={-1}
-        className="grid min-h-0 flex-1 grid-cols-1 lg:grid-cols-[310px_1fr_390px]"
+        onKeyDown={(event) => {
+          if (
+            event.key === "Escape" &&
+            mobilePanel &&
+            window.matchMedia("(max-width: 1023px)").matches
+          ) {
+            event.preventDefault();
+            closePanel();
+          }
+        }}
+        className="relative grid min-h-0 flex-1 grid-cols-1 lg:grid-cols-[310px_1fr_390px]"
       >
-        <div className="order-2 min-h-[260px] overflow-hidden lg:order-1 lg:min-h-0">
-          <SiteDirectory
-            sites={filteredSites}
-            references={dataset.references}
-            selectedSiteId={selectedSite?.id ?? null}
-            onSelectSite={handleSelectSite}
-            searchQuery={searchQuery}
-            onSearchChange={setSearchQuery}
-          />
+        <div
+          id="site-directory-panel"
+          className={`absolute inset-x-0 bottom-0 z-20 h-[60%] min-h-0 flex-col overflow-hidden border-t border-slate-600 bg-[#0D1424] lg:static lg:order-1 lg:z-auto lg:flex lg:h-full lg:border-t-0 ${mobilePanel === "directory" ? "flex" : "hidden"}`}
+        >
+          <button
+            type="button"
+            onClick={closePanel}
+            className="min-h-11 shrink-0 border-b border-slate-700 px-4 text-left text-sm text-cyan-300 lg:hidden"
+          >
+            Close directory · Back to map
+          </button>
+          <div className="min-h-0 flex-1">
+            <SiteDirectory
+              sites={filteredSites}
+              references={dataset.references}
+              selectedSiteId={selectedSite?.id ?? null}
+              onSelectSite={handleSelectSite}
+              searchQuery={searchQuery}
+              onSearchChange={setSearchQuery}
+            />
+          </div>
         </div>
 
-        <div className="order-1 min-h-[320px] overflow-hidden lg:order-2 lg:min-h-0">
+        <div className="min-h-0 min-w-0 overflow-hidden lg:order-2">
           <AnalogMap
             sites={filteredSites}
             references={dataset.references}
@@ -150,13 +217,26 @@ export function MissionControlApp({ dataset }: MissionControlAppProps) {
           />
         </div>
 
-        <div className="order-3 min-h-[320px] overflow-hidden lg:min-h-0">
-          <TelemetryDrawer
-            site={selectedSite}
-            references={dataset.references}
-            activeTargetId={activeTargetId}
-            onSelectTarget={setActiveTargetId}
-          />
+        <div
+          id="site-telemetry-panel"
+          className={`absolute inset-x-0 bottom-0 z-20 h-[60%] min-h-0 flex-col overflow-hidden border-t border-slate-600 bg-[#0D1424] lg:static lg:order-3 lg:z-auto lg:flex lg:h-full lg:border-t-0 ${mobilePanel === "telemetry" ? "flex" : "hidden"}`}
+        >
+          <button
+            type="button"
+            onClick={closePanel}
+            className="min-h-11 shrink-0 border-b border-slate-700 px-4 text-left text-sm text-cyan-300 lg:hidden"
+          >
+            Close telemetry · Back to map
+          </button>
+          <div className="min-h-0 flex-1">
+            <TelemetryDrawer
+              dataset={dataset}
+              site={selectedSite}
+              references={dataset.references}
+              activeTargetId={activeTargetId}
+              onSelectTarget={setActiveTargetId}
+            />
+          </div>
         </div>
       </main>
     </div>
