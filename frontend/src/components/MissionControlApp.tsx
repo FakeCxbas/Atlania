@@ -545,7 +545,10 @@ export function MissionControlApp({ dataset }: MissionControlAppProps) {
 
               <button
                 type="button"
-                onClick={() => setSelectedTargetFilter("shackleton-crater")}
+                onClick={() => {
+                  setSelectedTargetFilter("shackleton-crater");
+                  setActiveTargetId("shackleton-crater");
+                }}
                 aria-pressed={selectedTargetFilter === "shackleton-crater"}
                 className={`shrink-0 rounded-full border px-3 py-1 text-xs font-medium transition-all ${
                   selectedTargetFilter === "shackleton-crater"
@@ -558,7 +561,10 @@ export function MissionControlApp({ dataset }: MissionControlAppProps) {
 
               <button
                 type="button"
-                onClick={() => setSelectedTargetFilter("mare-tranquillitatis")}
+                onClick={() => {
+                  setSelectedTargetFilter("mare-tranquillitatis");
+                  setActiveTargetId("mare-tranquillitatis");
+                }}
                 aria-pressed={selectedTargetFilter === "mare-tranquillitatis"}
                 className={`shrink-0 rounded-full border px-3 py-1 text-xs font-medium transition-all ${
                   selectedTargetFilter === "mare-tranquillitatis"
@@ -592,7 +598,10 @@ export function MissionControlApp({ dataset }: MissionControlAppProps) {
 
               <button
                 type="button"
-                onClick={() => setSelectedTargetFilter("jezero-crater")}
+                onClick={() => {
+                  setSelectedTargetFilter("jezero-crater");
+                  setActiveTargetId("jezero-crater");
+                }}
                 aria-pressed={selectedTargetFilter === "jezero-crater"}
                 className={`shrink-0 rounded-full border px-3 py-1 text-xs font-medium transition-all ${
                   selectedTargetFilter === "jezero-crater"
@@ -605,7 +614,10 @@ export function MissionControlApp({ dataset }: MissionControlAppProps) {
 
               <button
                 type="button"
-                onClick={() => setSelectedTargetFilter("olympus-mons-flank")}
+                onClick={() => {
+                  setSelectedTargetFilter("olympus-mons-flank");
+                  setActiveTargetId("olympus-mons-flank");
+                }}
                 aria-pressed={selectedTargetFilter === "olympus-mons-flank"}
                 className={`shrink-0 rounded-full border px-3 py-1 text-xs font-medium transition-all ${
                   selectedTargetFilter === "olympus-mons-flank"
@@ -617,29 +629,6 @@ export function MissionControlApp({ dataset }: MissionControlAppProps) {
               </button>
             </>
           )}
-        </div>
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={() => {
-              const exportSites = regionResult
-                ? [...mapSites, ...regionResult.points]
-                : mapSites;
-              downloadQgisGeoJson(
-                exportSites,
-                dataset.references,
-                regionResult
-                  ? "planetary-analogs-region-qgis.geojson"
-                  : "planetary-analogs-qgis.geojson",
-              );
-            }}
-            className="inline-flex min-h-[38px] items-center gap-1.5 rounded border border-slate-700 bg-[#060913]/80 px-3 py-1.5 text-xs font-medium text-slate-200 transition-colors hover:border-cyan-500/60 hover:text-cyan-300"
-            title="Download EPSG:4326 GeoJSON layer for QGIS"
-          >
-            <Download className="h-3.5 w-3.5" aria-hidden="true" />
-            Export GeoJSON
-          </button>
-          <MethodologyDialog dataset={dataset} />
         </div>
       </header>
 
@@ -697,18 +686,18 @@ export function MissionControlApp({ dataset }: MissionControlAppProps) {
         </section>
       )}
 
-      {/* 5. Floating Region Prospecting Results Card */}
+      {/* 5. Tarjeta flotante de resultados de prospección regional */}
       {(rankedRegionResult || regionError) && (
         <section
-          aria-label="Region scan analog results"
-          className="fixed bottom-14 right-3 z-20 w-88 max-w-[calc(100%-1.5rem)] rounded-xl border border-slate-700/80 bg-[#0D1424]/95 p-3 text-xs text-slate-200 shadow-2xl backdrop-blur-md"
+          aria-label="Resultados de prospección regional"
+          className="fixed bottom-14 right-3 z-20 w-88 max-w-[calc(100%-1.5rem)] rounded-2xl border border-[#D4AF37]/50 bg-[#0D1424]/95 p-3 text-xs text-slate-200 shadow-[0_0_30px_rgba(212,175,55,0.12)] backdrop-blur-md"
         >
           <div className="mb-2 flex items-center justify-between gap-2 border-b border-slate-800 pb-1.5">
             <div>
-              <h2 className="font-mono text-[11px] font-semibold uppercase tracking-wider text-cyan-300">
+              <h2 className="font-mono text-[11px] font-semibold uppercase tracking-wider text-[#D4AF37]">
                 {regionError
-                  ? "Region Scan Error"
-                  : `Prospecting · ${rankedRegionResult?.grid_size ?? 3}×${rankedRegionResult?.grid_size ?? 3} (${rankedRegionResult?.evaluated_count ?? 0} pts)`}
+                  ? "Error en Sondeo Regional"
+                  : `Prospección · ${rankedRegionResult?.grid_size ?? 3}×${rankedRegionResult?.grid_size ?? 3} (${rankedRegionResult?.evaluated_count ?? 0} pts)`}
               </h2>
               {!regionError && rankedRegionResult && (
                 <p className="mt-0.5 font-mono text-[10px] text-slate-400 tabular-nums">
@@ -731,13 +720,13 @@ export function MissionControlApp({ dataset }: MissionControlAppProps) {
                     const url = URL.createObjectURL(blob);
                     const link = document.createElement("a");
                     link.href = url;
-                    link.download = `region-prospecting-${rankedRegionResult.grid_size}x${rankedRegionResult.grid_size}.geojson`;
+                    link.download = `region-prospeccion-${rankedRegionResult.grid_size}x${rankedRegionResult.grid_size}.geojson`;
                     link.click();
                     URL.revokeObjectURL(url);
                   }}
-                  title="Export region scan GeoJSON"
-                  aria-label="Export region scan GeoJSON"
-                  className="rounded p-1 text-slate-400 hover:bg-slate-800 hover:text-cyan-300"
+                  title="Exportar GeoJSON de prospección regional"
+                  aria-label="Exportar GeoJSON de prospección regional"
+                  className="rounded p-1 text-slate-400 hover:bg-slate-800 hover:text-[#D4AF37]"
                 >
                   <Download className="h-3.5 w-3.5" />
                 </button>
@@ -748,7 +737,7 @@ export function MissionControlApp({ dataset }: MissionControlAppProps) {
                   setRegionResult(null);
                   setRegionError(null);
                 }}
-                aria-label="Clear region scan"
+                aria-label="Cerrar prospección regional"
                 className="rounded p-1 text-slate-400 hover:bg-slate-800 hover:text-slate-100"
               >
                 <X className="h-3.5 w-3.5" />
@@ -761,11 +750,11 @@ export function MissionControlApp({ dataset }: MissionControlAppProps) {
           ) : (
             <>
               <div className="mb-2 flex items-center justify-between gap-1.5">
-                <span className="text-[11px] text-slate-400">Rank by:</span>
+                <span className="text-[11px] text-slate-400">Ordenar por:</span>
                 <div
                   className="flex items-center rounded border border-slate-800 bg-[#060913]/80 p-0.5"
                   role="group"
-                  aria-label="Region ranking mode"
+                  aria-label="Modo de clasificación regional"
                 >
                   <button
                     type="button"
@@ -773,11 +762,11 @@ export function MissionControlApp({ dataset }: MissionControlAppProps) {
                     aria-pressed={regionRankByActiveTarget}
                     className={`whitespace-nowrap rounded px-2 py-0.5 text-[11px] font-medium transition-colors ${
                       regionRankByActiveTarget
-                        ? "bg-cyan-500/20 text-cyan-200"
+                        ? "bg-[#D4AF37]/20 text-[#D4AF37]"
                         : "text-slate-400 hover:text-slate-200"
                     }`}
                   >
-                    {(dataset.references[activeTargetId]?.name ?? "Active Target").split(" / ")[0]}
+                    {(dataset.references[activeTargetId]?.name ?? "Objetivo Activo").split(" / ")[0]}
                   </button>
                   <button
                     type="button"
@@ -785,11 +774,11 @@ export function MissionControlApp({ dataset }: MissionControlAppProps) {
                     aria-pressed={!regionRankByActiveTarget}
                     className={`whitespace-nowrap rounded px-2 py-0.5 text-[11px] font-medium transition-colors ${
                       !regionRankByActiveTarget
-                        ? "bg-cyan-500/20 text-cyan-200"
+                        ? "bg-[#D4AF37]/20 text-[#D4AF37]"
                         : "text-slate-400 hover:text-slate-200"
                     }`}
                   >
-                    Best Match
+                    Mejor coincidencia
                   </button>
                 </div>
               </div>
@@ -798,11 +787,11 @@ export function MissionControlApp({ dataset }: MissionControlAppProps) {
                 <div className="mb-2 rounded border border-slate-800/90 bg-[#060913]/80 p-2 font-mono text-[10px] tabular-nums">
                   <div className="flex items-center justify-between text-slate-300">
                     <span>
-                      Top:{" "}
-                      <strong className="text-cyan-300">
+                      Máx:{" "}
+                      <strong className="text-[#D4AF37]">
                         {regionSummary.maxAsi.toFixed(1)}%
                       </strong>{" "}
-                      (avg {regionSummary.meanAsi.toFixed(1)}%)
+                      (prom {regionSummary.meanAsi.toFixed(1)}%)
                     </span>
                     <span>
                       Elev {Math.round(regionSummary.elevMinM)}–
@@ -811,10 +800,10 @@ export function MissionControlApp({ dataset }: MissionControlAppProps) {
                   </div>
                   <div className="mt-1 flex items-center justify-between text-slate-400">
                     <span>
-                      Beats {regionSummary.beatenCatalogCount}/
-                      {regionSummary.totalCatalogCount} catalog sites
+                      Supera {regionSummary.beatenCatalogCount}/
+                      {regionSummary.totalCatalogCount} sitios del catálogo
                     </span>
-                    <span>Max slope {regionSummary.maxSlopeDeg.toFixed(1)}°</span>
+                    <span>Pend. máx {regionSummary.maxSlopeDeg.toFixed(1)}°</span>
                   </div>
                 </div>
               )}
@@ -830,9 +819,9 @@ export function MissionControlApp({ dataset }: MissionControlAppProps) {
                       <button
                         type="button"
                         onClick={() => handleSelectSite(pt.id)}
-                        className={`w-full rounded border px-2.5 py-1.5 text-left transition-colors ${
+                        className={`w-full rounded-lg border px-2.5 py-1.5 text-left transition-colors ${
                           isSelected
-                            ? "border-cyan-500/70 bg-cyan-500/15"
+                            ? "border-[#D4AF37]/70 bg-[#D4AF37]/15"
                             : "border-slate-800/90 bg-[#060913]/70 hover:border-slate-600"
                         }`}
                       >

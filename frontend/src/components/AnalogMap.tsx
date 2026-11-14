@@ -639,7 +639,7 @@ export function AnalogMap({
       />
 
       {/* Selector de capa de mapa base y modos de prospección */}
-      <div className="absolute right-14 top-24 z-10 flex flex-col items-end gap-2">
+      <div className="absolute right-14 top-[112px] z-10 flex flex-col items-end gap-2">
         <div
           className="flex items-center gap-1 rounded-lg border border-slate-800/80 bg-[#060913]/90 p-1 shadow-xl backdrop-blur-md"
           role="group"
@@ -685,10 +685,10 @@ export function AnalogMap({
                 }`}
               >
                 {isProbing
-                  ? "Probing NASA POWER..."
+                  ? "Sondeando NASA POWER..."
                   : probeMode
-                  ? "Point Probe: Click Map"
-                  : "Probe Point"}
+                  ? "Sondeo: Clic en Mapa"
+                  : "Sondear Punto"}
               </button>
             )}
 
@@ -705,17 +705,17 @@ export function AnalogMap({
                   }`}
                 >
                   {isProbingRegion
-                    ? `Scanning ${regionGridSize}×${regionGridSize}...`
+                    ? `Escaneando ${regionGridSize}×${regionGridSize}...`
                     : regionProbeMode
-                    ? "Region: Drag Box / Click"
-                    : "Probe Region"}
+                    ? "Región: Arrastra o Clic"
+                    : "Sondear Región"}
                 </button>
 
                 {regionProbeMode && onChangeRegionGridSize && (
                   <div
                     className="flex items-center rounded-md border border-slate-800/80 bg-[#060913]/90 p-0.5 backdrop-blur-md"
                     role="group"
-                    aria-label="Region grid density"
+                    aria-label="Densidad de grilla regional"
                   >
                     {([3, 4] as const).map((size) => (
                       <button
@@ -757,7 +757,7 @@ export function AnalogMap({
                     }}
                     className="rounded-md border border-cyan-500/50 bg-[#060913]/90 px-2.5 py-1.5 text-xs font-medium text-cyan-300 backdrop-blur-md transition-colors hover:bg-cyan-500/20 disabled:opacity-50"
                   >
-                    Scan View
+                    Escanear Vista
                   </button>
                 )}
               </div>
@@ -809,9 +809,9 @@ export function AnalogMap({
           <>
             <span className="h-3 w-px bg-slate-800" aria-hidden="true" />
             <span className="font-mono tabular-nums text-slate-300">
-              ASI Grid: Low{" "}
+              Grilla ASI: Bajo{" "}
               <span className="inline-block h-2 w-8 rounded-sm bg-gradient-to-r from-[#475569] via-[#06B6D4] to-[#E07A5F] align-middle" />{" "}
-              High
+              Alto
             </span>
           </>
         )}

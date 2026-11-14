@@ -61,6 +61,11 @@ body {
   }
 }
 
+.maplibregl-ctrl-top-right {
+  top: 108px !important;
+  right: 4px !important;
+}
+
 /* MapLibre dark HUD overrides */
 .maplibregl-ctrl-attrib {
   background: rgba(6, 9, 19, 0.78) !important;
