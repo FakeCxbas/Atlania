@@ -14,9 +14,9 @@ export function MethodologyDialog({ dataset }: { dataset: AnalogDataset }) {
         type="button"
         aria-haspopup="dialog"
         onClick={() => dialogRef.current?.showModal()}
-        className="min-h-11 rounded border border-cyan-500/40 px-3 py-2 text-xs text-cyan-300 hover:bg-cyan-500/10"
+        className="h-8 rounded-lg border border-[#D4AF37]/40 bg-[#D4AF37]/10 px-2.5 py-1.5 text-xs font-medium text-[#D4AF37] transition-colors hover:bg-[#D4AF37]/20"
       >
-        Methodology &amp; Data Sources
+        Metodología
       </button>
       <dialog
         ref={dialogRef}

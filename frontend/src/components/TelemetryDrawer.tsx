@@ -267,6 +267,18 @@ export function TelemetryDrawer({
                     {site.climatology.wind_m_s.toFixed(1)} m/s · {site.climatology.relative_humidity_pct.toFixed(0)}%
                   </span>
                 </div>
+                <div className="rounded-lg border border-slate-800/80 bg-[#0D1424]/70 p-2">
+                  <span className="block text-[11px] text-slate-400">Irradiancia Solar</span>
+                  <span className="font-mono text-xs font-semibold tabular-nums text-slate-100">
+                    {site.climatology.solar_irradiance_kwh_m2_day.toFixed(2)} kWh/m²/d
+                  </span>
+                </div>
+                <div className="rounded-lg border border-slate-800/80 bg-[#0D1424]/70 p-2">
+                  <span className="block text-[11px] text-slate-400">Presión Superficial</span>
+                  <span className="font-mono text-xs font-semibold tabular-nums text-slate-100">
+                    {site.climatology.surface_pressure_kpa.toFixed(1)} kPa
+                  </span>
+                </div>
               </div>
             </div>
 
@@ -290,6 +302,23 @@ export function TelemetryDrawer({
                   </span>
                 </div>
               </div>
+              {site.mission_testbeds.length > 0 && (
+                <div className="mt-3 border-t border-slate-800/80 pt-2.5">
+                  <span className="block text-[11px] font-semibold uppercase tracking-wider text-[#D4AF37]">
+                    Pruebas de Misión
+                  </span>
+                  <div className="mt-1.5 flex flex-wrap gap-1.5">
+                    {site.mission_testbeds.map((testbed) => (
+                      <span
+                        key={testbed}
+                        className="rounded-md border border-[#D4AF37]/30 bg-[#D4AF37]/10 px-2 py-0.5 text-[11px] text-slate-200"
+                      >
+                        {testbed}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Quick 5-Axis summary bars */}
