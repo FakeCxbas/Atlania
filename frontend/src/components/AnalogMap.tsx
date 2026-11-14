@@ -371,59 +371,126 @@ export function AnalogMap({
         features: [],
       };
 
-      const gridLines: number[][][] = [];
+      const sectorFeatures: GeoJSON.Feature<GeoJSON.Polygon>[] = [];
+      let boundsData: GeoJSON.FeatureCollection = emptyFc;
+      let heatData: GeoJSON.FeatureCollection = emptyFc;
+
       if (regionResult) {
         const { minLat, maxLat, minLon, maxLon } = regionResult.bounds;
-        const steps = Math.max(2, regionResult.grid_size) - 1;
-        for (let i = 1; i < steps; i += 1) {
-          const lat = minLat + ((maxLat - minLat) * i) / steps;
-          const lon = minLon + ((maxLon - minLon) * i) / steps;
-          gridLines.push([
-            [minLon, lat],
-            [maxLon, lat],
-          ]);
-          gridLines.push([
-            [lon, minLat],
-            [lon, maxLat],
-          ]);
+        const gridSize = Math.max(2, regionResult.grid_size);
+        const dLat = (maxLat - minLat) / Math.max(1, gridSize - 1);
+        const dLon = (maxLon - minLon) / Math.max(1, gridSize - 1);
+        const halfLat = dLat / 2;
+        const halfLon = dLon / 2;
+        const gapLat = dLat * 0.035;
+        const gapLon = dLon * 0.035;
+
+        const frameMinLon = Math.max(-179.9, minLon - halfLon);
+        const frameMaxLon = Math.min(179.9, maxLon + halfLon);
+        const frameMinLat = Math.max(-89.9, minLat - halfLat);
+        const frameMaxLat = Math.min(89.9, maxLat + halfLat);
+
+        for (const feature of regionResult.geojson.features) {
+          const [lon, lat] = feature.geometry.coordinates;
+          const { id, rank, best_asi_score, body } = feature.properties;
+          const cMinLon = Math.max(-179.9, lon - halfLon + gapLon);
+          const cMaxLon = Math.min(179.9, lon + halfLon - gapLon);
+          const cMinLat = Math.max(-89.9, lat - halfLat + gapLat);
+          const cMaxLat = Math.min(89.9, lat + halfLat - gapLat);
+
+          sectorFeatures.push({
+            type: "Feature",
+            properties: {
+              id,
+              rank,
+              best_asi_score,
+              body,
+              is_top: rank === 1 ? 1 : 0,
+              is_selected: id === selectedSiteId ? 1 : 0,
+            },
+            geometry: {
+              type: "Polygon",
+              coordinates: [
+                [
+                  [cMinLon, cMinLat],
+                  [cMaxLon, cMinLat],
+                  [cMaxLon, cMaxLat],
+                  [cMinLon, cMaxLat],
+                  [cMinLon, cMinLat],
+                ],
+              ],
+            },
+          });
         }
+
+        boundsData = {
+          type: "FeatureCollection",
+          features: [
+            {
+              type: "Feature",
+              properties: { kind: "bounds" },
+              geometry: {
+                type: "Polygon",
+                coordinates: [
+                  [
+                    [frameMinLon, frameMinLat],
+                    [frameMaxLon, frameMinLat],
+                    [frameMaxLon, frameMaxLat],
+                    [frameMinLon, frameMaxLat],
+                    [frameMinLon, frameMinLat],
+                  ],
+                ],
+              },
+            },
+            ...sectorFeatures,
+          ],
+        };
+
+        heatData = regionResult.geojson;
       }
 
-      const boundsData: GeoJSON.FeatureCollection = regionResult
-        ? {
-            type: "FeatureCollection",
-            features: [
-              {
-                type: "Feature",
-                properties: { kind: "bounds" },
-                geometry: {
-                  type: "Polygon",
-                  coordinates: [
-                    [
-                      [regionResult.bounds.minLon, regionResult.bounds.minLat],
-                      [regionResult.bounds.maxLon, regionResult.bounds.minLat],
-                      [regionResult.bounds.maxLon, regionResult.bounds.maxLat],
-                      [regionResult.bounds.minLon, regionResult.bounds.maxLat],
-                      [regionResult.bounds.minLon, regionResult.bounds.minLat],
-                    ],
-                  ],
-                },
-              },
-              ...(gridLines.length > 0
-                ? [
-                    {
-                      type: "Feature" as const,
-                      properties: { kind: "grid" },
-                      geometry: {
-                        type: "MultiLineString" as const,
-                        coordinates: gridLines,
-                      },
-                    },
-                  ]
-                : []),
+      const existingHeat = map.getSource("region-heat") as
+        | maplibregl.GeoJSONSource
+        | undefined;
+      if (existingHeat) {
+        existingHeat.setData(heatData);
+      } else {
+        map.addSource("region-heat", { type: "geojson", data: heatData });
+        map.addLayer({
+          id: "region-sector-heat",
+          type: "heatmap",
+          source: "region-heat",
+          paint: {
+            "heatmap-weight": [
+              "interpolate",
+              ["linear"],
+              ["get", "best_asi_score"],
+              0,
+              0.15,
+              50,
+              0.55,
+              100,
+              1,
             ],
-          }
-        : emptyFc;
+            "heatmap-intensity": 0.9,
+            "heatmap-radius": 52,
+            "heatmap-opacity": 0.38,
+            "heatmap-color": [
+              "interpolate",
+              ["linear"],
+              ["heatmap-density"],
+              0,
+              "rgba(6, 9, 19, 0)",
+              0.25,
+              "rgba(6, 182, 212, 0.35)",
+              0.6,
+              "rgba(212, 175, 55, 0.55)",
+              1,
+              "rgba(224, 122, 95, 0.75)",
+            ],
+          },
+        });
+      }
 
       const existingBounds = map.getSource("region-bounds") as
         | maplibregl.GeoJSONSource
@@ -433,13 +500,57 @@ export function AnalogMap({
       } else {
         map.addSource("region-bounds", { type: "geojson", data: boundsData });
         map.addLayer({
-          id: "region-bounds-fill",
+          id: "region-sector-fill",
           type: "fill",
           source: "region-bounds",
-          filter: ["==", ["get", "kind"], "bounds"],
+          filter: ["has", "best_asi_score"],
           paint: {
-            "fill-color": "#06B6D4",
-            "fill-opacity": 0.06,
+            "fill-color": [
+              "interpolate",
+              ["linear"],
+              ["get", "best_asi_score"],
+              20,
+              "#1E293B",
+              45,
+              "#06B6D4",
+              68,
+              "#D4AF37",
+              85,
+              "#E07A5F",
+            ],
+            "fill-opacity": [
+              "case",
+              ["==", ["get", "is_selected"], 1],
+              0.44,
+              ["==", ["get", "is_top"], 1],
+              0.38,
+              0.24,
+            ],
+          },
+        });
+        map.addLayer({
+          id: "region-sector-outline",
+          type: "line",
+          source: "region-bounds",
+          filter: ["has", "best_asi_score"],
+          paint: {
+            "line-color": [
+              "case",
+              ["==", ["get", "is_selected"], 1],
+              "#F8FAFC",
+              ["==", ["get", "is_top"], 1],
+              "#D4AF37",
+              "rgba(6, 182, 212, 0.55)",
+            ],
+            "line-width": [
+              "case",
+              ["==", ["get", "is_selected"], 1],
+              2.5,
+              ["==", ["get", "is_top"], 1],
+              2,
+              1,
+            ],
+            "line-opacity": 0.9,
           },
         });
         map.addLayer({
@@ -448,22 +559,10 @@ export function AnalogMap({
           source: "region-bounds",
           filter: ["==", ["get", "kind"], "bounds"],
           paint: {
-            "line-color": "#06B6D4",
+            "line-color": "#D4AF37",
             "line-width": 1.5,
-            "line-dasharray": [4, 3],
-            "line-opacity": 0.85,
-          },
-        });
-        map.addLayer({
-          id: "region-grid-lines",
-          type: "line",
-          source: "region-bounds",
-          filter: ["==", ["get", "kind"], "grid"],
-          paint: {
-            "line-color": "#06B6D4",
-            "line-width": 1,
-            "line-dasharray": [2, 3],
-            "line-opacity": 0.35,
+            "line-dasharray": [5, 3],
+            "line-opacity": 0.75,
           },
         });
       }
@@ -482,76 +581,68 @@ export function AnalogMap({
         const [lon, lat] = feature.geometry.coordinates;
         const isTop = rank === 1;
         const isSelected = id === selectedSiteId;
-        const accent = body === "Mars" ? "#E07A5F" : "#06B6D4";
+        const accent = isTop
+          ? "#D4AF37"
+          : body === "Mars"
+          ? "#E07A5F"
+          : "#06B6D4";
 
         const wrapper = document.createElement("button");
         wrapper.type = "button";
         wrapper.setAttribute(
           "aria-label",
-          `Region point #${rank}, ${best_asi_score.toFixed(1)}% ASI`
+          `Sector #${rank}, ${best_asi_score.toFixed(1)}% ASI`
         );
         wrapper.style.cssText = [
           "display: flex",
           "flex-direction: column",
           "align-items: center",
-          "gap: 4px",
+          "justify-content: center",
+          "gap: 3px",
           "background: transparent",
           "border: none",
           "padding: 0",
           "cursor: pointer",
-          "transform: translateY(10px)",
         ].join(";");
 
-        const reticle = document.createElement("span");
-        const ringSize = isTop ? 18 : 12;
-        const coreSize = isTop ? 7 : 5;
-        reticle.style.cssText = [
-          `width: ${ringSize}px`,
-          `height: ${ringSize}px`,
-          "border-radius: 9999px",
-          "display: flex",
-          "align-items: center",
-          "justify-content: center",
-          `border: ${isSelected || isTop ? "2px" : "1.5px"} solid ${
-            isSelected ? "#F8FAFC" : accent
-          }`,
-          `background: ${isTop ? `${accent}33` : "rgba(6, 9, 19, 0.55)"}`,
-          `box-shadow: ${
-            isTop || isSelected
-              ? `0 0 12px ${accent}99`
-              : "0 1px 4px rgba(0, 0, 0, 0.7)"
-          }`,
-        ].join(";");
-
-        const core = document.createElement("span");
-        core.style.cssText = [
-          `width: ${coreSize}px`,
-          `height: ${coreSize}px`,
-          "border-radius: 9999px",
-          `background: ${isTop || isSelected ? "#F8FAFC" : accent}`,
-        ].join(";");
-        reticle.appendChild(core);
+        if (isTop || isSelected) {
+          const reticleSvg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+          reticleSvg.setAttribute("width", "26");
+          reticleSvg.setAttribute("height", "26");
+          reticleSvg.setAttribute("viewBox", "0 0 26 26");
+          reticleSvg.setAttribute("aria-hidden", "true");
+          const stroke = isSelected ? "#F8FAFC" : "#D4AF37";
+          reticleSvg.innerHTML = [
+            `<path d="M2 8V2H8 M18 2H24V8 M24 18V24H18 M8 24H2V18" fill="none" stroke="${stroke}" stroke-width="1.8" stroke-linecap="square"/>`,
+            `<path d="M13 9V17 M9 13H17" fill="none" stroke="${stroke}" stroke-width="1.2" opacity="0.85"/>`,
+          ].join("");
+          wrapper.appendChild(reticleSvg);
+        }
 
         const badge = document.createElement("span");
         badge.style.cssText = [
+          "display: inline-flex",
+          "align-items: center",
+          "gap: 5px",
           "font-family: ui-monospace, SFMono-Regular, Menlo, monospace",
           "font-variant-numeric: tabular-nums",
-          `font-size: ${isTop ? "11px" : "10px"}`,
-          `font-weight: ${isTop ? "700" : "600"}`,
+          `font-size: ${isTop || isSelected ? "11px" : "10px"}`,
+          `font-weight: ${isTop || isSelected ? "700" : "600"}`,
           "line-height: 1",
-          `padding: ${isTop ? "3px 7px" : "2px 6px"}`,
+          `padding: ${isTop || isSelected ? "4px 8px" : "3px 6px"}`,
           "border-radius: 4px",
-          `color: ${isTop || isSelected ? "#F8FAFC" : "#CBD5E1"}`,
-          `background: ${isTop ? "rgba(6, 9, 19, 0.92)" : "rgba(6, 9, 19, 0.78)"}`,
-          `border: 1px solid ${isSelected ? "#F8FAFC" : isTop ? accent : "rgba(148, 163, 184, 0.3)"}`,
+          `color: ${isTop || isSelected ? "#F8FAFC" : "#E2E8F0"}`,
+          `background: ${isTop || isSelected ? "rgba(6, 9, 19, 0.92)" : "rgba(6, 9, 19, 0.78)"}`,
+          `border: 1px solid ${isSelected ? "#F8FAFC" : isTop ? "#D4AF37" : "rgba(148, 163, 184, 0.25)"}`,
+          `border-left: 2.5px solid ${accent}`,
+          "box-shadow: 0 2px 8px rgba(0, 0, 0, 0.55)",
           "backdrop-filter: blur(4px)",
           "white-space: nowrap",
         ].join(";");
         badge.textContent = isTop
-          ? `#1 · ${Math.round(best_asi_score)}%`
-          : `${Math.round(best_asi_score)}%`;
+          ? `#1 · ${best_asi_score.toFixed(1)}%`
+          : `S${rank} · ${Math.round(best_asi_score)}%`;
 
-        wrapper.appendChild(reticle);
         wrapper.appendChild(badge);
 
         wrapper.addEventListener("click", (ev) => {
@@ -566,18 +657,43 @@ export function AnalogMap({
       }
     };
 
+    const handleSectorClick = (e: maplibregl.MapLayerMouseEvent) => {
+      if (regionProbeMode) return;
+      const feat = e.features?.[0];
+      const sectorId = feat?.properties?.id;
+      if (typeof sectorId === "string") {
+        onSelectSite(sectorId);
+      }
+    };
+
+    const handleSectorEnter = () => {
+      if (!regionProbeMode) {
+        map.getCanvas().style.cursor = "pointer";
+      }
+    };
+
+    const handleSectorLeave = () => {
+      map.getCanvas().style.cursor = probeMode || regionProbeMode ? "crosshair" : "";
+    };
+
     syncRegionOverlay();
     syncRegionMarkers();
     map.on("style.load", syncRegionOverlay);
+    map.on("click", "region-sector-fill", handleSectorClick);
+    map.on("mouseenter", "region-sector-fill", handleSectorEnter);
+    map.on("mouseleave", "region-sector-fill", handleSectorLeave);
 
     return () => {
       map.off("style.load", syncRegionOverlay);
+      map.off("click", "region-sector-fill", handleSectorClick);
+      map.off("mouseenter", "region-sector-fill", handleSectorEnter);
+      map.off("mouseleave", "region-sector-fill", handleSectorLeave);
       for (const m of regionMarkersRef.current) {
         m.remove();
       }
       regionMarkersRef.current = [];
     };
-  }, [regionResult, selectedSiteId, onSelectSite]);
+  }, [regionResult, selectedSiteId, onSelectSite, regionProbeMode, probeMode]);
 
   // External camera navigation (country filter, tab switch, directory selection)
   useEffect(() => {
@@ -780,7 +896,11 @@ export function AnalogMap({
       )}
 
       {/* Overlay HUD de Coordenadas y Leyenda */}
-      <div className="pointer-events-none absolute bottom-3 left-3 z-10 flex flex-wrap items-center gap-3 rounded-lg border border-slate-800/80 bg-[#060913]/90 px-3 py-1.5 text-xs text-slate-300 shadow-xl backdrop-blur-md">
+      <div
+        className={`pointer-events-none absolute bottom-3 left-3 z-10 flex flex-wrap items-center gap-3 rounded-lg border border-slate-800/80 bg-[#060913]/90 px-3 py-1.5 text-xs text-slate-300 shadow-xl backdrop-blur-md transition-all duration-300 ${
+          selectedSiteId ? "sm:left-[492px]" : "sm:left-3"
+        }`}
+      >
         <span className="font-mono tabular-nums text-cyan-400">
           LAT {cursorCoords.lat.toFixed(3)}°
         </span>
@@ -809,8 +929,8 @@ export function AnalogMap({
           <>
             <span className="h-3 w-px bg-slate-800" aria-hidden="true" />
             <span className="font-mono tabular-nums text-slate-300">
-              Grilla ASI: Bajo{" "}
-              <span className="inline-block h-2 w-8 rounded-sm bg-gradient-to-r from-[#475569] via-[#06B6D4] to-[#E07A5F] align-middle" />{" "}
+              Sectores ASI: Bajo{" "}
+              <span className="inline-block h-2 w-10 rounded-sm bg-gradient-to-r from-[#1E293B] via-[#06B6D4] via-60% to-[#D4AF37] align-middle" />{" "}
               Alto
             </span>
           </>
