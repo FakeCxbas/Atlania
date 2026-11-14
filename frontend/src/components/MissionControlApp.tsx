@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import type { AnalogDataset, AnalogSite } from "@/types/analog";
 import {
   buildSiteRationale,
@@ -18,6 +19,7 @@ import { MissionPresentation } from "@/components/MissionPresentation";
 import { downloadQgisGeoJson } from "@/lib/dossier";
 import { translateSite, translateTarget } from "@/lib/spanishTranslations";
 import {
+  ArrowLeft,
   ChevronDown,
   ChevronUp,
   Compass,
@@ -300,6 +302,54 @@ export function MissionControlApp({ dataset }: MissionControlAppProps) {
     });
   };
 
+  // Deep-linking from Mission Briefing (/explorer?target=... or /explorer?site=...)
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    const targetParam = params.get("target");
+    const siteParam = params.get("site");
+    if (!targetParam && !siteParam) return;
+
+    queueMicrotask(() => {
+      if (siteParam) {
+        const foundSite = translatedSites.find((s) => s.id === siteParam);
+        if (foundSite) {
+          setMainTab("tierra");
+          setSelectedCountry("TODOS");
+          setSelectedSiteId(foundSite.id);
+          setActiveTargetId(
+            targetParam && dataset.references[targetParam]
+              ? targetParam
+              : foundSite.best_target
+          );
+          return;
+        }
+      }
+
+      if (targetParam && dataset.references[targetParam]) {
+        const ref = dataset.references[targetParam];
+        setMainTab(ref.body === "Moon" ? "luna" : "marte");
+        setSelectedTargetFilter(targetParam);
+        setActiveTargetId(targetParam);
+        const matchingSites = translatedSites.filter(
+          (s) => s.best_target === targetParam
+        );
+        const bestForTarget =
+          [...(matchingSites.length > 0 ? matchingSites : translatedSites)].sort(
+            (a, b) =>
+              (b.scores[targetParam]?.overall_asi ?? b.overall_asi) -
+              (a.scores[targetParam]?.overall_asi ?? a.overall_asi)
+          )[0] ?? null;
+        if (bestForTarget) {
+          setSelectedSiteId(bestForTarget.id);
+        }
+        if (matchingSites.length > 0) {
+          setCameraTarget({ type: "fitBounds", sites: matchingSites });
+        }
+      }
+    });
+  }, [dataset.references, translatedSites]);
+
   // Keyboard accessibility: Escape key closes active panel or directory
   useEffect(() => {
     const handleGlobalKeyDown = (e: KeyboardEvent) => {
@@ -358,20 +408,26 @@ export function MissionControlApp({ dataset }: MissionControlAppProps) {
         className="absolute left-0 right-0 top-0 z-40 border-b border-[#D4AF37]/30 bg-[#060913]/95 px-3 py-2.5 shadow-2xl backdrop-blur-md sm:px-6"
       >
         <div className="flex flex-wrap items-center justify-between gap-3">
-          {/* Logo & Platform Name */}
+          {/* Logo & Platform Name + Return to Mission Briefing */}
           <div className="flex items-center gap-2.5">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg border border-[#D4AF37]/50 bg-[#D4AF37]/15 text-[#D4AF37] shadow-[0_0_12px_rgba(212,175,55,0.25)]">
-              <Compass className="h-4 w-4" aria-hidden="true" />
-            </div>
-            <div>
-              <span className="block text-xs font-bold tracking-wider text-slate-100 uppercase sm:text-sm">
-                TERR-ANALOG
-              </span>
-              <span className="text-[10px] text-slate-400">
-                NASA Space Apps · {dataset.methodology.source_counts.nasa_power} NASA POWER +{" "}
-                {dataset.methodology.source_counts.fallback} Fallback
-              </span>
-            </div>
+            <Link
+              href="/"
+              title="Volver a TERR-ANALOG — Mission Briefing"
+              className="group flex items-center gap-2.5 rounded-lg pr-1 transition-opacity hover:opacity-90"
+            >
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg border border-[#D4AF37]/50 bg-[#D4AF37]/15 text-[#D4AF37] shadow-[0_0_12px_rgba(212,175,55,0.25)]">
+                <Compass className="h-4 w-4" aria-hidden="true" />
+              </div>
+              <div>
+                <span className="block text-xs font-bold tracking-wider text-slate-100 uppercase sm:text-sm">
+                  TERR-ANALOG
+                </span>
+                <span className="text-[10px] text-slate-400">
+                  NASA Space Apps · {dataset.methodology.source_counts.nasa_power} NASA POWER +{" "}
+                  {dataset.methodology.source_counts.fallback} Fallback
+                </span>
+              </div>
+            </Link>
           </div>
 
           {/* 3 Main Clean Navigation Tabs */}
@@ -422,8 +478,16 @@ export function MissionControlApp({ dataset }: MissionControlAppProps) {
             </button>
           </nav>
 
-          {/* Right Tools: Directory Toggle, Search, Export GeoJSON & Methodology */}
+          {/* Right Tools: Return to Briefing, Directory Toggle, Search, Export GeoJSON & Methodology */}
           <div className="flex items-center gap-2">
+            <Link
+              href="/"
+              className="flex items-center gap-1.5 rounded-lg border border-[#00D9F5]/50 bg-[#00D9F5]/12 px-3 py-1.5 text-xs font-semibold text-[#00D9F5] shadow-md transition-all hover:bg-[#00D9F5]/22"
+            >
+              <ArrowLeft className="h-3.5 w-3.5" aria-hidden="true" />
+              <span>Mission Briefing</span>
+            </Link>
+
             <button
               type="button"
               onClick={handleToggleDirectory}
@@ -481,10 +545,11 @@ export function MissionControlApp({ dataset }: MissionControlAppProps) {
             <button
               type="button"
               onClick={() => setShowPresentation(true)}
-              className="flex items-center gap-1.5 rounded-lg border border-cyan-500/50 bg-cyan-500/15 px-3 py-1.5 text-xs font-semibold text-cyan-200 shadow-md transition-all hover:bg-cyan-500/25"
+              title="Resumen ejecutivo rápido"
+              className="hidden md:flex items-center gap-1.5 rounded-lg border border-slate-800 bg-[#0D1424] px-2.5 py-1.5 text-xs font-medium text-slate-300 transition-all hover:border-slate-700 hover:text-slate-100"
             >
               <Presentation className="h-3.5 w-3.5 text-[#D4AF37]" aria-hidden="true" />
-              <span>Presentación</span>
+              <span className="hidden xl:inline">Dossier</span>
             </button>
 
             <MethodologyDialog dataset={dataset} />

@@ -102,10 +102,17 @@ export interface AnalogDataset {
   methodology: {
     name: string;
     version: string;
+    dimensions?: string[];
+    score_equation?: string;
     interpretation: string;
     climate_limitations: string;
+    dem_attribution?: string;
     source_counts: {
       nasa_power: number;
+      fallback: number;
+    };
+    dem_source_counts?: {
+      open_meteo: number;
       fallback: number;
     };
   };
