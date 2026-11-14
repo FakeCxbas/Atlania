@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import calendar
 import math
+import random
 import time
 from dataclasses import asdict, dataclass, replace
 from typing import Any, Mapping
@@ -528,6 +529,78 @@ def score_target(site: Site, climate: Climate, target: Reference, *, humidity_ad
     return {"dimensions": dimensions, "overall_asi": overall,
             "weights": dict(zip(DIMENSIONS, target.weights)),
             "analogy_strengths": strengths, "analogy_breakdowns": breakdowns}
+
+
+def analyze_analog_clusters_and_knn(sites: list[dict], k_clusters: int = 3,
+                                   k_neighbors: int = 3, seed: int = 42) -> dict:
+    """Cluster and compare sites using population z-scores and Euclidean distance.
+
+    Use best-target dimensions, or average all targets when best_target is absent.
+    Slope comes from dem_slope_deg or dem_telemetry.dem_slope_deg. Required
+    features must be finite; IDs must be unique strings. Constant columns become
+    zero. Centroids use feature_names order and standardized units.
+
+    Counts are capped at available sites (neighbors exclude self). Lloyd's
+    K-Means runs at most 300 iterations; empty clusters retain their centroid,
+    so identical vectors may leave some labels unused. ID sorting and a local
+    seeded RNG make results independent of input order and global RNG state.
+    Neighbor distances are symmetric; truncated neighbor lists need not be.
+    """
+    for name, value, minimum in (("k_clusters", k_clusters, 1), ("k_neighbors", k_neighbors, 0)):
+        if isinstance(value, bool) or not isinstance(value, int) or value < minimum:
+            raise ValueError(f"{name} must be an integer >= {minimum}")
+    feature_names = [*DIMENSIONS, "elevation_m", "dem_slope_deg"]
+    result = {"feature_names": feature_names, "clusters": {}, "centroids": [], "knn": {}}
+    ids = [site["id"] for site in sites]
+    if any(not isinstance(site_id, str) for site_id in ids) or len(set(ids)) != len(ids):
+        raise ValueError("Site IDs must be unique strings")
+    if not sites:
+        return result
+    rows = []
+    ordered = sorted(sites, key=lambda site: site["id"])
+    ids = [site["id"] for site in ordered]
+    for site in ordered:
+        scores = site["scores"]
+        targets = [scores[site["best_target"]]] if site.get("best_target") else list(scores.values())
+        if not targets:
+            raise ValueError("At least one target score is required")
+        row = [math.fsum(finite(target["dimensions"][d], d) / len(targets)
+                         for target in targets) for d in DIMENSIONS]
+        slope = site["dem_slope_deg"] if "dem_slope_deg" in site else site["dem_telemetry"]["dem_slope_deg"]
+        rows.append(row + [finite(site["elevation_m"], "elevation_m"), finite(slope, "dem_slope_deg")])
+    n, width = len(rows), len(feature_names)
+    vectors = [[0.0] * width for _ in rows]
+    for j in range(width):
+        # Scale first to avoid overflow for large finite features.
+        scale = max(abs(row[j]) for row in rows) or 1.0
+        column = [row[j] / scale for row in rows]
+        mean = math.fsum(column) / n
+        std = math.sqrt(math.fsum((value - mean) ** 2 for value in column) / n)
+        for i, value in enumerate(column):
+            vectors[i][j] = (value - mean) / std if std else 0.0
+
+    count = min(k_clusters, n)
+    centroids = [vectors[i][:] for i in random.Random(seed).sample(range(n), count)]
+    labels = None
+    for _ in range(300):
+        assigned = [min(range(count), key=lambda c: math.dist(vector, centroids[c]))
+                    for vector in vectors]
+        if assigned == labels:
+            break
+        labels = assigned
+        for c in range(count):
+            members = [vectors[i] for i in range(n) if labels[i] == c]
+            if members:
+                centroids[c] = [math.fsum(row[j] for row in members) / len(members)
+                                for j in range(width)]
+    result["clusters"] = dict(zip(ids, labels))
+    result["centroids"] = centroids
+    for i, site_id in enumerate(ids):
+        neighbors = sorted((math.dist(vectors[i], vectors[j]), ids[j])
+                           for j in range(n) if j != i)
+        result["knn"][site_id] = [{"id": other_id, "distance": distance}
+                                  for distance, other_id in neighbors[:k_neighbors]]
+    return result
 
 
 def score_site(site: Site, climate: Climate, dem_telemetry: dict[str, Any] | None = None, *,

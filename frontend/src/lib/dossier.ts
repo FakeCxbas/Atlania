@@ -125,3 +125,70 @@ export function downloadDossier(
   // Allow the browser to start reading the object URL before releasing it.
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
+
+export function buildQgisGeoJson(
+  sites: AnalogSite[],
+  references: Record<string, { name: string; body: "Moon" | "Mars" }>,
+) {
+  return {
+    type: "FeatureCollection" as const,
+    name: "planetary_analog_sites_epsg4326",
+    crs: {
+      type: "name",
+      properties: { name: "urn:ogc:def:crs:OGC:1.3:CRS84" },
+    },
+    features: sites.map((site) => {
+      const ref = references[site.best_target];
+      const bestScore = site.scores[site.best_target];
+      return {
+        type: "Feature" as const,
+        geometry: {
+          type: "Point" as const,
+          coordinates: [site.longitude, site.latitude] as [number, number],
+        },
+        properties: {
+          id: site.id,
+          name: site.name,
+          country: site.country,
+          discovery_tier: site.discovery_tier,
+          elevation_m: site.elevation_m,
+          dem_slope_deg: site.dem_telemetry.dem_slope_deg,
+          dem_roughness_m: site.dem_telemetry.dem_roughness_m,
+          best_target: site.best_target,
+          best_target_name: ref?.name ?? site.best_target,
+          target_body: ref?.body ?? "Moon",
+          overall_asi: site.overall_asi,
+          topography_score: bestScore?.dimensions.topography ?? null,
+          geology_score: bestScore?.dimensions.geology ?? null,
+          thermal_score: bestScore?.dimensions.thermal ?? null,
+          hydrology_ice_score: bestScore?.dimensions.hydrology_ice ?? null,
+          subsurface_ops_score: bestScore?.dimensions.subsurface_ops ?? null,
+          analogy_strengths: site.analogy_strengths.join(" | "),
+          analogy_limitations: Object.values(site.analogy_breakdowns).join(" | "),
+          mission_testbeds: site.mission_testbeds.join(" | "),
+          climate_source: site.climatology.source,
+          dem_source: site.dem_telemetry.source,
+        },
+      };
+    }),
+  };
+}
+
+export function downloadQgisGeoJson(
+  sites: AnalogSite[],
+  references: Record<string, { name: string; body: "Moon" | "Mars" }>,
+  filename = "planetary-analogs-qgis.geojson",
+) {
+  const fc = buildQgisGeoJson(sites, references);
+  const blob = new Blob([JSON.stringify(fc, null, 2)], {
+    type: "application/geo+json;charset=utf-8",
+  });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename.replace(/[^a-zA-Z0-9._-]/g, "-");
+  document.body.append(link);
+  link.click();
+  link.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}

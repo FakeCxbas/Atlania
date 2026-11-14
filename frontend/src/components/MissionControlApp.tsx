@@ -7,7 +7,8 @@ import { AnalogMap } from "@/components/AnalogMap";
 import { SiteDirectory } from "@/components/SiteDirectory";
 import { TelemetryDrawer } from "@/components/TelemetryDrawer";
 import { MethodologyDialog } from "@/components/MethodologyDialog";
-import { Globe2, Moon, Orbit, X } from "lucide-react";
+import { downloadQgisGeoJson } from "@/lib/dossier";
+import { Download, Globe2, Moon, Orbit, X } from "lucide-react";
 
 interface MissionControlAppProps {
   dataset: AnalogDataset;
@@ -210,7 +211,29 @@ export function MissionControlApp({ dataset }: MissionControlAppProps) {
             );
           })}
         </div>
-        <MethodologyDialog dataset={dataset} />
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => {
+              const exportSites = regionResult
+                ? [...mapSites, ...regionResult.points]
+                : mapSites;
+              downloadQgisGeoJson(
+                exportSites,
+                dataset.references,
+                regionResult
+                  ? "planetary-analogs-region-qgis.geojson"
+                  : "planetary-analogs-qgis.geojson",
+              );
+            }}
+            className="inline-flex min-h-[38px] items-center gap-1.5 rounded border border-slate-700 bg-[#060913]/80 px-3 py-1.5 text-xs font-medium text-slate-200 transition-colors hover:border-cyan-500/60 hover:text-cyan-300"
+            title="Download EPSG:4326 GeoJSON layer for QGIS"
+          >
+            <Download className="h-3.5 w-3.5" aria-hidden="true" />
+            Export GeoJSON
+          </button>
+          <MethodologyDialog dataset={dataset} />
+        </div>
       </header>
 
       <div

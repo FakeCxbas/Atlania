@@ -1,7 +1,11 @@
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
-import { createDossier, dossierMarkdown } from "../src/lib/dossier.ts";
+import {
+  buildQgisGeoJson,
+  createDossier,
+  dossierMarkdown,
+} from "../src/lib/dossier.ts";
 
 const dataset = JSON.parse(
   await readFile(
@@ -82,4 +86,16 @@ test("empty strengths and Markdown-special site names remain readable", () => {
       "# ASI Dossier: Example \\[site\\] \\| \\*name\\* \\# extra heading\n",
     ),
   );
+});
+
+test("buildQgisGeoJson emits EPSG:4326 FeatureCollection with analogy limitations and testbeds", () => {
+  const fc = buildQgisGeoJson(dataset.sites, dataset.references);
+  assert.equal(fc.type, "FeatureCollection");
+  assert.equal(fc.features.length, dataset.sites.length);
+  const first = fc.features[0];
+  assert.equal(first.geometry.type, "Point");
+  assert.equal(first.geometry.coordinates.length, 2);
+  assert.ok(typeof first.properties.overall_asi === "number");
+  assert.ok(typeof first.properties.analogy_limitations === "string");
+  assert.ok(typeof first.properties.mission_testbeds === "string");
 });
