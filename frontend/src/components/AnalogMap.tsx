@@ -173,6 +173,7 @@ interface MarkerVisualRefs {
   btn: HTMLButtonElement;
   outer: HTMLSpanElement;
   core: HTMLSpanElement;
+  label: HTMLSpanElement;
   ringColor: string;
 }
 
@@ -372,11 +373,15 @@ export function AnalogMap({
       const isMars = target?.body === "Mars";
       const ringColor = isMars ? "#E07A5F" : "#06B6D4";
 
+      const shortName = site.name.split(" - ")[0].split(" (")[0];
+      const badgeText = `${shortName} · ${site.overall_asi.toFixed(0)}%`;
+
       const existing = markersRef.current.get(site.id);
       if (existing) {
         existing.marker.setLngLat([site.longitude, site.latitude]);
         existing.btn.style.width = isSelected ? "28px" : "20px";
         existing.btn.style.height = isSelected ? "28px" : "20px";
+        existing.btn.style.zIndex = isSelected ? "30" : "10";
         existing.outer.style.border = `2px solid ${ringColor}`;
         existing.outer.style.backgroundColor = isSelected
           ? `${ringColor}40`
@@ -387,6 +392,9 @@ export function AnalogMap({
         existing.core.style.width = isSelected ? "10px" : "7px";
         existing.core.style.height = isSelected ? "10px" : "7px";
         existing.core.style.backgroundColor = ringColor;
+        existing.label.textContent = badgeText;
+        existing.label.style.opacity = isSelected ? "1" : "";
+        existing.label.style.borderColor = isSelected ? "#D4AF37" : `${ringColor}88`;
         continue;
       }
 
@@ -399,6 +407,7 @@ export function AnalogMap({
       btn.className = "group relative flex items-center justify-center cursor-pointer";
       btn.style.width = isSelected ? "28px" : "20px";
       btn.style.height = isSelected ? "28px" : "20px";
+      btn.style.zIndex = isSelected ? "30" : "10";
 
       const outer = document.createElement("span");
       outer.style.position = "absolute";
@@ -418,8 +427,18 @@ export function AnalogMap({
       core.style.borderRadius = "9999px";
       core.style.backgroundColor = ringColor;
 
+      const label = document.createElement("span");
+      label.textContent = badgeText;
+      label.className =
+        "pointer-events-none absolute left-full ml-1.5 whitespace-nowrap rounded border bg-[#060913]/90 px-1.5 py-0.5 font-mono text-[10px] font-semibold text-slate-100 opacity-0 shadow-md transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100";
+      label.style.borderColor = isSelected ? "#D4AF37" : `${ringColor}88`;
+      if (isSelected) {
+        label.style.opacity = "1";
+      }
+
       btn.appendChild(outer);
       btn.appendChild(core);
+      btn.appendChild(label);
 
       const siteId = site.id;
       btn.addEventListener("click", (ev) => {
@@ -436,6 +455,7 @@ export function AnalogMap({
         btn,
         outer,
         core,
+        label,
         ringColor,
       });
     }

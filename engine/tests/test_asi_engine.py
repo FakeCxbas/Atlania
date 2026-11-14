@@ -24,9 +24,9 @@ def payload():
 
 
 def test_catalog():
-    assert len(EARTH_SITES) == len({s.id for s in EARTH_SITES}) == 16
-    assert set(REFERENCE_PROFILES) == {"shackleton-crater", "mare-tranquillitatis", "jezero-crater", "olympus-mons-flank"}
-    assert sum(s.country == "Ecuador" for s in EARTH_SITES) == 5
+    assert len(EARTH_SITES) == len({s.id for s in EARTH_SITES}) == 30
+    assert set(REFERENCE_PROFILES) == {"shackleton-crater", "mare-tranquillitatis", "jezero-crater", "olympus-mons-flank", "mouton-mons", "valles-marineris"}
+    assert sum(s.country == "Ecuador" for s in EARTH_SITES) == 8
     for target in REFERENCE_PROFILES.values():
         assert sum(target.weights) == pytest.approx(1)
         assert target.source_url.startswith("https://")
@@ -275,13 +275,13 @@ def test_prior_validation():
 
 def test_dataset_roundtrip_geojson_and_reproducibility(tmp_path):
     data = build_dataset(offline=True)
-    assert data["methodology"]["source_counts"] == {"nasa_power": 0, "fallback": 16}
+    assert data["methodology"]["source_counts"] == {"nasa_power": 0, "fallback": 30}
     paths = write_dataset(data, tmp_path)
     serialized_data = json.loads(json.dumps(data))
     assert json.loads(paths[0].read_text()) == serialized_data
     geo = json.loads(paths[1].read_text())
     assert geo["type"] == "FeatureCollection"
-    assert len(geo["features"]) == 16
+    assert len(geo["features"]) == 30
     for feature, site in zip(geo["features"], serialized_data["sites"]):
         assert feature["geometry"]["coordinates"] == [site["longitude"], site["latitude"]]
         assert feature["properties"] == site
@@ -299,7 +299,7 @@ def test_pipeline_mixed_sources():
         return httpx.Response(200, json=payload()) if float(request.url.params["latitude"]) < 0 else httpx.Response(503)
     with httpx.Client(transport=httpx.MockTransport(handler)) as client:
         data = build_dataset(client=client)
-    assert data["methodology"]["source_counts"] == {"nasa_power": 8, "fallback": 8}
+    assert data["methodology"]["source_counts"] == {"nasa_power": 17, "fallback": 13}
 
 
 @pytest.mark.parametrize("parameter,value", [("PRECTOTCORR", -1), ("WS10M", -1),
@@ -518,7 +518,8 @@ def test_reference_metadata_export(key):
         assert exported[field]
     assert "LRO" in reference.instrument if reference.body == "Moon" else "MRO" in reference.instrument
     assert reference.gravity_ms2 == (1.62 if reference.body == "Moon" else 3.71)
-    assert reference.pressure_kpa == (0.0 if reference.body == "Moon" else 0.65)
+    assert reference.pressure_kpa == (0.0 if reference.body == "Moon" else
+                                      0.85 if key == "valles-marineris" else 0.65)
     assert exported["temp_min_c"] == reference.temperature_mean_c - reference.temperature_range_c / 2
     assert exported["temp_max_c"] == reference.temperature_mean_c + reference.temperature_range_c / 2
     assert {"id", "name", "body", "temperature_mean_c", "temperature_range_c",
