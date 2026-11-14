@@ -14,6 +14,7 @@ import { AnalogMap, type CameraTarget } from "@/components/AnalogMap";
 import { SiteDirectory } from "@/components/SiteDirectory";
 import { TelemetryDrawer } from "@/components/TelemetryDrawer";
 import { MethodologyDialog } from "@/components/MethodologyDialog";
+import { MissionPresentation } from "@/components/MissionPresentation";
 import { downloadQgisGeoJson } from "@/lib/dossier";
 import { translateSite, translateTarget } from "@/lib/spanishTranslations";
 import {
@@ -24,6 +25,7 @@ import {
   MapPin,
   Moon,
   Orbit,
+  Presentation,
   Search,
   X,
 } from "lucide-react";
@@ -46,6 +48,7 @@ export function MissionControlApp({ dataset }: MissionControlAppProps) {
     dataset.sites[0]?.best_target ?? Object.keys(dataset.references)[0] ?? "",
   );
   const [showDirectory, setShowDirectory] = useState(false);
+  const [showPresentation, setShowPresentation] = useState(false);
   const [cameraTarget, setCameraTarget] = useState<CameraTarget | null>(null);
 
   const [probeMode, setProbeMode] = useState(false);
@@ -471,6 +474,15 @@ export function MissionControlApp({ dataset }: MissionControlAppProps) {
               <span className="hidden xl:inline">GeoJSON</span>
             </button>
 
+            <button
+              type="button"
+              onClick={() => setShowPresentation(true)}
+              className="flex items-center gap-1.5 rounded-lg border border-cyan-500/50 bg-cyan-500/15 px-3 py-1.5 text-xs font-semibold text-cyan-200 shadow-md transition-all hover:bg-cyan-500/25"
+            >
+              <Presentation className="h-3.5 w-3.5 text-[#D4AF37]" aria-hidden="true" />
+              <span>Presentación</span>
+            </button>
+
             <MethodologyDialog dataset={dataset} />
           </div>
         </div>
@@ -558,6 +570,22 @@ export function MissionControlApp({ dataset }: MissionControlAppProps) {
               <button
                 type="button"
                 onClick={() => {
+                  setSelectedTargetFilter("mouton-mons");
+                  setActiveTargetId("mouton-mons");
+                }}
+                aria-pressed={selectedTargetFilter === "mouton-mons"}
+                className={`shrink-0 rounded-full border px-3 py-1 text-xs font-medium transition-all ${
+                  selectedTargetFilter === "mouton-mons"
+                    ? "border-cyan-400 bg-cyan-400/20 text-cyan-300 shadow-[0_0_10px_rgba(6,182,212,0.2)]"
+                    : "border-slate-800/90 bg-[#0D1424]/90 text-slate-300 hover:border-slate-700 hover:text-slate-100"
+                }`}
+              >
+                Mons Mouton (Meseta Artemis III)
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
                   setSelectedTargetFilter("mare-tranquillitatis");
                   setActiveTargetId("mare-tranquillitatis");
                 }}
@@ -622,6 +650,22 @@ export function MissionControlApp({ dataset }: MissionControlAppProps) {
                 }`}
               >
                 Flanco del Monte Olimpo (Tubos Volcánicos)
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setSelectedTargetFilter("valles-marineris");
+                  setActiveTargetId("valles-marineris");
+                }}
+                aria-pressed={selectedTargetFilter === "valles-marineris"}
+                className={`shrink-0 rounded-full border px-3 py-1 text-xs font-medium transition-all ${
+                  selectedTargetFilter === "valles-marineris"
+                    ? "border-[#E07A5F] bg-[#E07A5F]/20 text-[#E07A5F] shadow-[0_0_10px_rgba(224,122,95,0.2)]"
+                    : "border-slate-800/90 bg-[#0D1424]/90 text-slate-300 hover:border-slate-700 hover:text-slate-100"
+                }`}
+              >
+                Valles Marineris (Cañón y Sulfatos)
               </button>
             </>
           )}
@@ -846,6 +890,19 @@ export function MissionControlApp({ dataset }: MissionControlAppProps) {
             </>
           )}
         </section>
+      )}
+
+      {showPresentation && (
+        <MissionPresentation
+          dataset={dataset}
+          sites={translatedSites}
+          references={translatedReferences}
+          onSelectSiteAndExplore={(siteId) => {
+            setShowPresentation(false);
+            handleSelectSite(siteId);
+          }}
+          onClose={() => setShowPresentation(false)}
+        />
       )}
     </div>
   );

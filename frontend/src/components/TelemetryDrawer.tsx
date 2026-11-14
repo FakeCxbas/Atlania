@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import type { AnalogDataset, AnalogSite, DimensionScores, TargetProfile } from "@/types/analog";
 import { downloadDossier } from "@/lib/dossier";
 import { SideBySideComparison } from "@/components/SideBySideComparison";
+import { AsiRadarChart } from "@/components/AsiRadarChart";
 import {
   Compass,
   X,
@@ -321,7 +322,7 @@ export function TelemetryDrawer({
               )}
             </div>
 
-            {/* Quick 5-Axis summary bars */}
+            {/* Quick 5-Axis Radar + summary bars */}
             <div className="rounded-xl border border-slate-800/90 bg-[#060913]/60 p-3.5">
               <div className="mb-2 flex items-center justify-between text-xs">
                 <span className="flex items-center gap-1.5 font-semibold text-slate-200">
@@ -332,7 +333,16 @@ export function TelemetryDrawer({
                   {activeScore.overall_asi.toFixed(1)}%
                 </span>
               </div>
-              <div className="space-y-2">
+
+              <div className="my-2 rounded-lg border border-slate-800/60 bg-[#0D1424]/50 py-2">
+                <AsiRadarChart
+                  dimensions={activeScore.dimensions}
+                  weights={activeScore.weights}
+                  isMars={isMars}
+                />
+              </div>
+
+              <div className="mt-3 space-y-2">
                 {DIMENSION_LABELS.map(({ key, label }) => {
                   const val = activeScore.dimensions[key];
                   return (
