@@ -39,6 +39,8 @@ interface AnalogMapProps {
 
 type BasemapMode = "satellite" | "dark" | "nasa-gibs";
 
+const TERRAIN_MIN_ZOOM = 5.2;
+
 function getBasemapStyle(mode: BasemapMode): string | maplibregl.StyleSpecification {
   if (mode === "dark") {
     return "https://tiles.openfreemap.org/styles/dark";
@@ -62,9 +64,10 @@ function getBasemapStyle(mode: BasemapMode): string | maplibregl.StyleSpecificat
           type: "raster",
           tiles: [
             "https://services.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}",
+            "https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}",
           ],
           tileSize: 256,
-          maxzoom: 14,
+          maxzoom: 13,
           attribution: "Esri Reference",
         },
       },
@@ -75,6 +78,9 @@ function getBasemapStyle(mode: BasemapMode): string | maplibregl.StyleSpecificat
           source: "nasa-gibs",
           minzoom: 0,
           maxzoom: 18,
+          paint: {
+            "raster-fade-duration": 120,
+          },
         },
         {
           id: "esri-labels-layer",
@@ -83,6 +89,7 @@ function getBasemapStyle(mode: BasemapMode): string | maplibregl.StyleSpecificat
           minzoom: 6,
           maxzoom: 18,
           paint: {
+            "raster-fade-duration": 100,
             "raster-opacity": [
               "interpolate",
               ["linear"],
@@ -107,6 +114,7 @@ function getBasemapStyle(mode: BasemapMode): string | maplibregl.StyleSpecificat
       "esri-satellite": {
         type: "raster",
         tiles: [
+          "https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
           "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
         ],
         tileSize: 256,
@@ -117,9 +125,10 @@ function getBasemapStyle(mode: BasemapMode): string | maplibregl.StyleSpecificat
         type: "raster",
         tiles: [
           "https://services.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}",
+          "https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}",
         ],
         tileSize: 256,
-        maxzoom: 14,
+        maxzoom: 13,
         attribution: "Esri Reference",
       },
     },
@@ -130,6 +139,9 @@ function getBasemapStyle(mode: BasemapMode): string | maplibregl.StyleSpecificat
         source: "esri-satellite",
         minzoom: 0,
         maxzoom: 18,
+        paint: {
+          "raster-fade-duration": 120,
+        },
       },
       {
         id: "esri-labels-layer",
@@ -138,6 +150,7 @@ function getBasemapStyle(mode: BasemapMode): string | maplibregl.StyleSpecificat
         minzoom: 6,
         maxzoom: 18,
         paint: {
+          "raster-fade-duration": 100,
           "raster-opacity": [
             "interpolate",
             ["linear"],
@@ -153,6 +166,14 @@ function getBasemapStyle(mode: BasemapMode): string | maplibregl.StyleSpecificat
       },
     ],
   };
+}
+
+interface MarkerVisualRefs {
+  marker: maplibregl.Marker;
+  btn: HTMLButtonElement;
+  outer: HTMLSpanElement;
+  core: HTMLSpanElement;
+  ringColor: string;
 }
 
 export function AnalogMap({
@@ -175,8 +196,20 @@ export function AnalogMap({
 }: AnalogMapProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
-  const markersRef = useRef<Map<string, maplibregl.Marker>>(new Map());
+  const markersRef = useRef<Map<string, MarkerVisualRefs>>(new Map());
   const regionMarkersRef = useRef<maplibregl.Marker[]>([]);
+  const prevBasemapRef = useRef<BasemapMode>("satellite");
+  const initialSelectedSiteIdRef = useRef<string | null>(selectedSiteId);
+  const hasSkippedInitialFlyRef = useRef(false);
+  const onSelectSiteRef = useRef(onSelectSite);
+  useEffect(() => {
+    onSelectSiteRef.current = onSelectSite;
+  }, [onSelectSite]);
+
+  const latSpanRef = useRef<HTMLSpanElement | null>(null);
+  const lonSpanRef = useRef<HTMLSpanElement | null>(null);
+  const zoomSpanRef = useRef<HTMLSpanElement | null>(null);
+
   const [basemap, setBasemap] = useState<BasemapMode>("satellite");
   const [terrain3d, setTerrain3d] = useState(true);
   const [dragBox, setDragBox] = useState<{
@@ -185,24 +218,36 @@ export function AnalogMap({
     curX: number;
     curY: number;
   } | null>(null);
-  const [cursorCoords, setCursorCoords] = useState<{
-    lat: number;
-    lon: number;
-    zoom: number;
-  }>({ lat: -0.67, lon: -78.6, zoom: 2.1 });
+
+  // Register tile cache Service Worker once on client
+  useEffect(() => {
+    if (typeof window !== "undefined" && "serviceWorker" in navigator) {
+      navigator.serviceWorker.register("/tile-cache-sw.js").catch(() => {});
+    }
+  }, []);
 
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return;
 
+    const initialSite =
+      sites.find((s) => s.id === initialSelectedSiteIdRef.current) ?? sites[0];
+    const startLon = initialSite ? initialSite.longitude : -78.6;
+    const startLat = initialSite ? initialSite.latitude : -0.67;
+    const startZoom = initialSite ? 6.2 : 2.1;
+
     const map = new maplibregl.Map({
       container: containerRef.current,
       style: getBasemapStyle("satellite"),
-      center: [-78.6, -0.67],
-      zoom: 2.1,
+      center: [startLon, startLat],
+      zoom: startZoom,
       minZoom: 1.3,
       maxZoom: 15.5,
       maxPitch: 60,
-      pitch: 24,
+      pitch: initialSite ? 42 : 24,
+      fadeDuration: 100,
+      maxTileCacheSize: 500,
+      refreshExpiredTiles: false,
+      cancelPendingTileRequestsWhileZooming: true,
     });
 
     map.addControl(
@@ -210,21 +255,31 @@ export function AnalogMap({
       "top-right"
     );
 
-    map.on("mousemove", (e) => {
-      setCursorCoords({
-        lat: Number(e.lngLat.lat.toFixed(3)),
-        lon: Number(e.lngLat.lng.toFixed(3)),
-        zoom: Number(map.getZoom().toFixed(2)),
+    let rafId = 0;
+    const updateHudCoords = (lat: number, lon: number, zoom: number) => {
+      if (rafId) cancelAnimationFrame(rafId);
+      rafId = requestAnimationFrame(() => {
+        if (latSpanRef.current) {
+          latSpanRef.current.textContent = `LAT ${lat.toFixed(3)}°`;
+        }
+        if (lonSpanRef.current) {
+          lonSpanRef.current.textContent = `LON ${lon.toFixed(3)}°`;
+        }
+        if (zoomSpanRef.current) {
+          zoomSpanRef.current.textContent = `ZOOM ${zoom.toFixed(1)}`;
+        }
       });
+    };
+
+    updateHudCoords(startLat, startLon, startZoom);
+
+    map.on("mousemove", (e) => {
+      updateHudCoords(e.lngLat.lat, e.lngLat.lng, map.getZoom());
     });
 
-    map.on("zoomend", () => {
+    map.on("zoom", () => {
       const c = map.getCenter();
-      setCursorCoords({
-        lat: Number(c.lat.toFixed(3)),
-        lon: Number(c.lng.toFixed(3)),
-        zoom: Number(map.getZoom().toFixed(2)),
-      });
+      updateHudCoords(c.lat, c.lng, map.getZoom());
     });
 
     mapRef.current = map;
@@ -232,16 +287,20 @@ export function AnalogMap({
     const markers = markersRef.current;
 
     return () => {
-      markers.forEach((m) => m.remove());
+      if (rafId) cancelAnimationFrame(rafId);
+      markers.forEach((m) => m.marker.remove());
       markers.clear();
       map.remove();
       mapRef.current = null;
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
+    if (prevBasemapRef.current === basemap) return;
+    prevBasemapRef.current = basemap;
     map.setStyle(getBasemapStyle(basemap));
   }, [basemap]);
 
@@ -252,6 +311,15 @@ export function AnalogMap({
     const syncTerrain = () => {
       if (!map.getStyle()) return;
 
+      const shouldEnableDem = terrain3d && map.getZoom() >= TERRAIN_MIN_ZOOM;
+
+      if (!shouldEnableDem) {
+        if (map.getTerrain()) {
+          map.setTerrain(null);
+        }
+        return;
+      }
+
       if (!map.getSource("terrain-dem")) {
         map.addSource("terrain-dem", {
           type: "raster-dem",
@@ -259,16 +327,15 @@ export function AnalogMap({
             "https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png",
           ],
           tileSize: 256,
-          maxzoom: 12,
+          minzoom: 0,
+          maxzoom: 11,
           encoding: "terrarium",
         });
       }
 
-      map.setTerrain(
-        terrain3d
-          ? { source: "terrain-dem", exaggeration: 1.25 }
-          : null
-      );
+      if (!map.getTerrain()) {
+        map.setTerrain({ source: "terrain-dem", exaggeration: 1.2 });
+      }
     };
 
     if (map.isStyleLoaded()) {
@@ -276,25 +343,52 @@ export function AnalogMap({
     }
     map.on("style.load", syncTerrain);
     map.on("load", syncTerrain);
+    map.on("zoomend", syncTerrain);
 
     return () => {
       map.off("style.load", syncTerrain);
       map.off("load", syncTerrain);
+      map.off("zoomend", syncTerrain);
     };
   }, [terrain3d]);
 
+  // Synchronize site markers without destroying/recreating unchanged DOM elements
   useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
 
-    markersRef.current.forEach((marker) => marker.remove());
-    markersRef.current.clear();
+    const currentIds = new Set(sites.map((s) => s.id));
+
+    for (const [id, entry] of markersRef.current.entries()) {
+      if (!currentIds.has(id)) {
+        entry.marker.remove();
+        markersRef.current.delete(id);
+      }
+    }
 
     for (const site of sites) {
       const isSelected = site.id === selectedSiteId;
       const target = references[site.best_target];
       const isMars = target?.body === "Mars";
       const ringColor = isMars ? "#E07A5F" : "#06B6D4";
+
+      const existing = markersRef.current.get(site.id);
+      if (existing) {
+        existing.marker.setLngLat([site.longitude, site.latitude]);
+        existing.btn.style.width = isSelected ? "28px" : "20px";
+        existing.btn.style.height = isSelected ? "28px" : "20px";
+        existing.outer.style.border = `2px solid ${ringColor}`;
+        existing.outer.style.backgroundColor = isSelected
+          ? `${ringColor}40`
+          : "rgba(6, 9, 19, 0.8)";
+        existing.outer.style.boxShadow = isSelected
+          ? `0 0 18px ${ringColor}`
+          : `0 0 8px ${ringColor}66`;
+        existing.core.style.width = isSelected ? "10px" : "7px";
+        existing.core.style.height = isSelected ? "10px" : "7px";
+        existing.core.style.backgroundColor = ringColor;
+        continue;
+      }
 
       const btn = document.createElement("button");
       btn.type = "button";
@@ -327,22 +421,43 @@ export function AnalogMap({
       btn.appendChild(outer);
       btn.appendChild(core);
 
+      const siteId = site.id;
       btn.addEventListener("click", (ev) => {
         ev.stopPropagation();
-        onSelectSite(site.id);
+        onSelectSiteRef.current(siteId);
       });
 
       const marker = new maplibregl.Marker({ element: btn })
         .setLngLat([site.longitude, site.latitude])
         .addTo(map);
 
-      markersRef.current.set(site.id, marker);
+      markersRef.current.set(site.id, {
+        marker,
+        btn,
+        outer,
+        core,
+        ringColor,
+      });
     }
-  }, [sites, references, selectedSiteId, onSelectSite]);
+  }, [sites, references, selectedSiteId]);
 
   useEffect(() => {
     const map = mapRef.current;
     if (!map || !selectedSiteId) return;
+
+    // Skip the very first render flyTo because the map already boots directly at initialSelectedSiteId
+    if (!hasSkippedInitialFlyRef.current) {
+      hasSkippedInitialFlyRef.current = true;
+      if (selectedSiteId === initialSelectedSiteIdRef.current) {
+        return;
+      }
+    }
+
+    // Do not interrupt a broader fitBounds/world camera transition
+    if (cameraTarget && (cameraTarget.type === "fitBounds" || cameraTarget.type === "world")) {
+      return;
+    }
+
     const site = sites.find((s) => s.id === selectedSiteId);
     if (!site) return;
 
@@ -353,11 +468,11 @@ export function AnalogMap({
     map.flyTo({
       center: [site.longitude, site.latitude],
       zoom: Math.max(map.getZoom(), 6.2),
-      pitch: terrain3d ? Math.max(map.getPitch(), 45) : map.getPitch(),
-      duration: prefersReducedMotion ? 0 : 900,
+      pitch: terrain3d ? Math.max(map.getPitch(), 42) : map.getPitch(),
+      duration: prefersReducedMotion ? 0 : 650,
       essential: true,
     });
-  }, [selectedSiteId, sites, terrain3d]);
+  }, [selectedSiteId, sites, terrain3d, cameraTarget]);
 
   useEffect(() => {
     const map = mapRef.current;
@@ -802,7 +917,7 @@ export function AnalogMap({
     const prefersReducedMotion =
       typeof window !== "undefined" &&
       window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    const dur = prefersReducedMotion ? 0 : 1200;
+    const dur = prefersReducedMotion ? 0 : 750;
 
     if (cameraTarget.type === "world") {
       map.fitBounds(
@@ -837,12 +952,13 @@ export function AnalogMap({
       if (!site) return;
       map.flyTo({
         center: [site.longitude, site.latitude],
-        zoom: Math.max(map.getZoom(), 5.2),
-        duration: prefersReducedMotion ? 0 : 900,
+        zoom: Math.max(map.getZoom(), 6.2),
+        pitch: terrain3d ? Math.max(map.getPitch(), 42) : map.getPitch(),
+        duration: prefersReducedMotion ? 0 : 650,
         essential: true,
       });
     }
-  }, [cameraTarget, sites]);
+  }, [cameraTarget, sites, terrain3d]);
 
   return (
     <div className="relative h-full w-full bg-[#060913]">
@@ -1014,14 +1130,14 @@ export function AnalogMap({
           selectedSiteId ? "sm:left-[492px]" : "sm:left-3"
         }`}
       >
-        <span className="font-mono tabular-nums text-cyan-400">
-          LAT {cursorCoords.lat.toFixed(3)}°
+        <span ref={latSpanRef} className="font-mono tabular-nums text-cyan-400">
+          LAT -0.670°
         </span>
-        <span className="font-mono tabular-nums text-cyan-400">
-          LON {cursorCoords.lon.toFixed(3)}°
+        <span ref={lonSpanRef} className="font-mono tabular-nums text-cyan-400">
+          LON -78.600°
         </span>
-        <span className="font-mono tabular-nums text-slate-400">
-          ZOOM {cursorCoords.zoom.toFixed(1)}
+        <span ref={zoomSpanRef} className="font-mono tabular-nums text-slate-400">
+          ZOOM 6.2
         </span>
         <span className="h-3 w-px bg-slate-800" aria-hidden="true" />
         <span className="flex items-center gap-1.5">

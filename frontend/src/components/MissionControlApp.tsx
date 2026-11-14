@@ -161,13 +161,9 @@ export function MissionControlApp({ dataset }: MissionControlAppProps) {
     (siteId: string) => {
       setShowDirectory(false);
       setSelectedSiteId(siteId);
+      setCameraTarget(null);
 
       const regionSite = rankedRegionResult?.points.find((p) => p.id === siteId);
-      const isCatalogSite = dataset.sites.some((s) => s.id === siteId);
-      if (isCatalogSite) {
-        setCameraTarget({ type: "site", siteId });
-      }
-
       const site =
         (probeSite && probeSite.id === siteId ? probeSite : null) ??
         regionSite ??
