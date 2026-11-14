@@ -103,6 +103,7 @@ export function AnalogMap({
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
   const markersRef = useRef<Map<string, maplibregl.Marker>>(new Map());
+  const regionMarkersRef = useRef<maplibregl.Marker[]>([]);
   const [basemap, setBasemap] = useState<BasemapMode>("satellite");
   const [dragBox, setDragBox] = useState<{
     startX: number;
@@ -462,27 +463,56 @@ export function AnalogMap({
             ],
           },
         });
-        map.addLayer({
-          id: "region-grid-labels",
-          type: "symbol",
-          source: "region-grid",
-          layout: {
-            "text-field": [
-              "case",
-              ["==", ["get", "rank"], 1],
-              ["concat", "#1 · ", ["to-string", ["round", ["get", "best_asi_score"]]], "%"],
-              ["concat", ["to-string", ["round", ["get", "best_asi_score"]]], "%"],
-            ],
-            "text-size": 11,
-            "text-offset": [0, 1.4],
-            "text-font": ["Open Sans Bold", "Arial Unicode MS Bold"],
-          },
-          paint: {
-            "text-color": "#F8FAFC",
-            "text-halo-color": "#060913",
-            "text-halo-width": 1.5,
-          },
+      }
+    };
+
+    const syncRegionMarkers = () => {
+      for (const m of regionMarkersRef.current) {
+        m.remove();
+      }
+      regionMarkersRef.current = [];
+
+      if (!regionResult) return;
+
+      for (const feature of regionResult.geojson.features) {
+        const { id, rank, best_asi_score, body } = feature.properties;
+        const [lon, lat] = feature.geometry.coordinates;
+        const isTop = rank === 1;
+        const isSelected = id === selectedSiteId;
+        const accent = body === "Mars" ? "#E07A5F" : "#06B6D4";
+
+        const badge = document.createElement("button");
+        badge.type = "button";
+        badge.setAttribute("aria-label", `Region point #${rank}, ${best_asi_score.toFixed(1)}% ASI`);
+        badge.style.cssText = [
+          `font-family: ui-monospace, SFMono-Regular, Menlo, monospace`,
+          `font-variant-numeric: tabular-nums`,
+          `font-size: ${isTop ? "11px" : "10px"}`,
+          `font-weight: 700`,
+          `line-height: 1`,
+          `padding: ${isTop ? "3px 7px" : "2px 5px"}`,
+          `border-radius: 9999px`,
+          `color: #F8FAFC`,
+          `background: ${isTop ? "rgba(6, 9, 19, 0.92)" : "rgba(6, 9, 19, 0.82)"}`,
+          `border: ${isSelected ? "2px" : isTop ? "1.5px" : "1px"} solid ${isSelected ? "#F8FAFC" : accent}`,
+          `box-shadow: ${isTop ? `0 0 10px ${accent}80` : "0 1px 4px rgba(0,0,0,0.6)"}`,
+          `cursor: pointer`,
+          `white-space: nowrap`,
+          `transform: translateY(16px)`,
+        ].join(";");
+        badge.textContent = isTop
+          ? `#1 · ${Math.round(best_asi_score)}%`
+          : `${Math.round(best_asi_score)}%`;
+
+        badge.addEventListener("click", (ev) => {
+          ev.stopPropagation();
+          onSelectSite(id);
         });
+
+        const marker = new maplibregl.Marker({ element: badge, anchor: "top" })
+          .setLngLat([lon, lat])
+          .addTo(map);
+        regionMarkersRef.current.push(marker);
       }
     };
 
@@ -496,14 +526,19 @@ export function AnalogMap({
     };
 
     syncRegionOverlay();
+    syncRegionMarkers();
     map.on("style.load", syncRegionOverlay);
     map.on("click", "region-grid-points", handleGridPointClick);
 
     return () => {
       map.off("style.load", syncRegionOverlay);
       map.off("click", "region-grid-points", handleGridPointClick);
+      for (const m of regionMarkersRef.current) {
+        m.remove();
+      }
+      regionMarkersRef.current = [];
     };
-  }, [regionResult, onSelectSite]);
+  }, [regionResult, selectedSiteId, onSelectSite]);
 
   return (
     <div className="relative h-full w-full bg-[#060913]">

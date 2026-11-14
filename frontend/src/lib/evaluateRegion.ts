@@ -2,10 +2,10 @@ import { evaluateCoordinate } from '@/lib/evaluateCoordinate';
 import type { AnalogSite } from '@/types/analog';
 
 const TARGET_META: Record<string, { name: string; body: 'Moon' | 'Mars' }> = {
-  shackleton: { name: 'Shackleton Crater', body: 'Moon' },
-  mare_tranquillitatis: { name: 'Mare Tranquillitatis', body: 'Moon' },
-  jezero: { name: 'Jezero Crater', body: 'Mars' },
-  olympus_mons: { name: 'Olympus Mons', body: 'Mars' },
+  'shackleton-crater': { name: 'Shackleton Crater', body: 'Moon' },
+  'mare-tranquillitatis': { name: 'Mare Tranquillitatis', body: 'Moon' },
+  'jezero-crater': { name: 'Jezero Crater', body: 'Mars' },
+  'olympus-mons-flank': { name: 'Olympus Mons', body: 'Mars' },
 };
 
 export interface RegionBounds {
