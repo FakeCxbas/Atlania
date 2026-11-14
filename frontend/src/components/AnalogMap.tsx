@@ -58,6 +58,15 @@ function getBasemapStyle(mode: BasemapMode): string | maplibregl.StyleSpecificat
           maxzoom: 9,
           attribution: "NASA EOSDIS GIBS / Worldview",
         },
+        "carto-labels": {
+          type: "raster",
+          tiles: [
+            "https://a.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}.png",
+          ],
+          tileSize: 256,
+          maxzoom: 19,
+          attribution: "CARTO",
+        },
       },
       layers: [
         {
@@ -65,7 +74,27 @@ function getBasemapStyle(mode: BasemapMode): string | maplibregl.StyleSpecificat
           type: "raster",
           source: "nasa-gibs",
           minzoom: 0,
-          maxzoom: 14,
+          maxzoom: 19,
+        },
+        {
+          id: "carto-labels-layer",
+          type: "raster",
+          source: "carto-labels",
+          minzoom: 5,
+          maxzoom: 19,
+          paint: {
+            "raster-opacity": [
+              "interpolate",
+              ["linear"],
+              ["zoom"],
+              5,
+              0.35,
+              9,
+              0.85,
+              14,
+              0.95,
+            ],
+          },
         },
       ],
     };
@@ -84,6 +113,15 @@ function getBasemapStyle(mode: BasemapMode): string | maplibregl.StyleSpecificat
         maxzoom: 18,
         attribution: "Esri, Maxar, Earthstar Geographics | NASA POWER &amp; PDS",
       },
+      "carto-labels": {
+        type: "raster",
+        tiles: [
+          "https://a.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}.png",
+        ],
+        tileSize: 256,
+        maxzoom: 19,
+        attribution: "CARTO",
+      },
     },
     layers: [
       {
@@ -92,6 +130,26 @@ function getBasemapStyle(mode: BasemapMode): string | maplibregl.StyleSpecificat
         source: "esri-satellite",
         minzoom: 0,
         maxzoom: 19,
+      },
+      {
+        id: "carto-labels-layer",
+        type: "raster",
+        source: "carto-labels",
+        minzoom: 5,
+        maxzoom: 19,
+        paint: {
+          "raster-opacity": [
+            "interpolate",
+            ["linear"],
+            ["zoom"],
+            5,
+            0.35,
+            9,
+            0.85,
+            14,
+            0.95,
+          ],
+        },
       },
     ],
   };
@@ -120,6 +178,7 @@ export function AnalogMap({
   const markersRef = useRef<Map<string, maplibregl.Marker>>(new Map());
   const regionMarkersRef = useRef<maplibregl.Marker[]>([]);
   const [basemap, setBasemap] = useState<BasemapMode>("satellite");
+  const [terrain3d, setTerrain3d] = useState(true);
   const [dragBox, setDragBox] = useState<{
     startX: number;
     startY: number;
@@ -141,8 +200,9 @@ export function AnalogMap({
       center: [-78.6, -0.67],
       zoom: 2.1,
       minZoom: 1.3,
-      maxZoom: 14,
-      pitch: 15,
+      maxZoom: 17.5,
+      maxPitch: 75,
+      pitch: 28,
     });
 
     map.addControl(
@@ -184,6 +244,70 @@ export function AnalogMap({
     if (!map) return;
     map.setStyle(getBasemapStyle(basemap));
   }, [basemap]);
+
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+
+    const syncTerrain = () => {
+      if (!map.getStyle()) return;
+
+      if (!map.getSource("terrain-dem")) {
+        map.addSource("terrain-dem", {
+          type: "raster-dem",
+          tiles: [
+            "https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png",
+          ],
+          tileSize: 256,
+          maxzoom: 15,
+          encoding: "terrarium",
+        });
+      }
+
+      if (!map.getLayer("terrain-hillshade")) {
+        const beforeLayer = map.getLayer("carto-labels-layer")
+          ? "carto-labels-layer"
+          : undefined;
+        map.addLayer(
+          {
+            id: "terrain-hillshade",
+            type: "hillshade",
+            source: "terrain-dem",
+            paint: {
+              "hillshade-exaggeration": 0.42,
+              "hillshade-shadow-color": "#060913",
+              "hillshade-highlight-color": "#F8FAFC",
+              "hillshade-accent-color": "#0D1424",
+            },
+          },
+          beforeLayer
+        );
+      }
+
+      map.setLayoutProperty(
+        "terrain-hillshade",
+        "visibility",
+        terrain3d ? "visible" : "none"
+      );
+
+      map.setTerrain(
+        terrain3d
+          ? { source: "terrain-dem", exaggeration: 1.55 }
+          : null
+      );
+    };
+
+    if (map.isStyleLoaded()) {
+      syncTerrain();
+    }
+    map.on("style.load", syncTerrain);
+    map.on("load", syncTerrain);
+
+    return () => {
+      map.off("style.load", syncTerrain);
+      map.off("load", syncTerrain);
+    };
+  }, [terrain3d]);
 
   useEffect(() => {
     const map = mapRef.current;
@@ -254,11 +378,12 @@ export function AnalogMap({
 
     map.flyTo({
       center: [site.longitude, site.latitude],
-      zoom: Math.max(map.getZoom(), 5.2),
+      zoom: Math.max(map.getZoom(), 6.2),
+      pitch: terrain3d ? Math.max(map.getPitch(), 45) : map.getPitch(),
       duration: prefersReducedMotion ? 0 : 900,
       essential: true,
     });
-  }, [selectedSiteId, sites]);
+  }, [selectedSiteId, sites, terrain3d]);
 
   useEffect(() => {
     const map = mapRef.current;
@@ -785,6 +910,20 @@ export function AnalogMap({
               </button>
             );
           })}
+          <span className="mx-0.5 h-4 w-px bg-slate-800" aria-hidden="true" />
+          <button
+            type="button"
+            onClick={() => setTerrain3d((prev) => !prev)}
+            aria-pressed={terrain3d}
+            title="Activar o desactivar relieve topográfico 3D"
+            className={`rounded px-2.5 py-1 text-xs font-medium transition-colors ${
+              terrain3d
+                ? "border border-cyan-500/60 bg-cyan-500/20 text-cyan-200"
+                : "border border-transparent text-slate-400 hover:text-slate-100"
+            }`}
+          >
+            Relieve 3D
+          </button>
         </div>
 
         {(onToggleProbeMode || onToggleRegionProbeMode) && (
