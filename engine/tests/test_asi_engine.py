@@ -24,7 +24,7 @@ def payload():
 
 
 def test_catalog():
-    assert len(EARTH_SITES) == len({s.id for s in EARTH_SITES}) == 30
+    assert len(EARTH_SITES) == len({s.id for s in EARTH_SITES}) == 35
     assert set(REFERENCE_PROFILES) == {"shackleton-crater", "mare-tranquillitatis", "jezero-crater", "olympus-mons-flank", "mouton-mons", "valles-marineris"}
     assert sum(s.country == "Ecuador" for s in EARTH_SITES) == 8
     for target in REFERENCE_PROFILES.values():
@@ -277,13 +277,13 @@ def test_dataset_roundtrip_geojson_and_reproducibility(tmp_path):
     data = build_dataset(offline=True)
     assert data["methodology"]["name"] == "ATLANIA Planetary Analog Similarity Index"
     assert data["methodology"]["version"] == "0.2.0"
-    assert data["methodology"]["source_counts"] == {"nasa_power": 0, "fallback": 30}
+    assert data["methodology"]["source_counts"] == {"nasa_power": 0, "fallback": 35}
     paths = write_dataset(data, tmp_path)
     serialized_data = json.loads(json.dumps(data))
     assert json.loads(paths[0].read_text()) == serialized_data
     geo = json.loads(paths[1].read_text())
     assert geo["type"] == "FeatureCollection"
-    assert len(geo["features"]) == 30
+    assert len(geo["features"]) == 35
     for feature, site in zip(geo["features"], serialized_data["sites"]):
         assert feature["geometry"]["coordinates"] == [site["longitude"], site["latitude"]]
         assert feature["properties"] == site
@@ -320,7 +320,7 @@ def test_pipeline_mixed_sources():
         return httpx.Response(200, json=payload()) if float(request.url.params["latitude"]) < 0 else httpx.Response(503)
     with httpx.Client(transport=httpx.MockTransport(handler)) as client:
         data = build_dataset(client=client)
-    assert data["methodology"]["source_counts"] == {"nasa_power": 17, "fallback": 13}
+    assert data["methodology"]["source_counts"] == {"nasa_power": 19, "fallback": 16}
 
 
 @pytest.mark.parametrize("parameter,value", [("PRECTOTCORR", -1), ("WS10M", -1),

@@ -292,6 +292,43 @@ EARTH_SITES += (
     Site('namib-sossusvlei', 'Namib Desert - Sossusvlei Megadunes', 'Namibia', -24.73, 15.36, 600, Terrain(15, .68, (.1, .9, .85, .3, 0), 0, .2, 0, .05), Climate(30, 13, .06, 5, 28), 'Iron-oxide coated linear megadunes and interdune clay pans analogous to Bagnold Dunes in Gale Crater on Mars.', 'Higher terrestrial air density drives different saltation thresholds than the 0.6 kPa Martian atmosphere.', 'Under-Recognized', ('Megadune slip-face autonomous traction', 'Aeolian dust-devil triboelectric sensing')),
     Site('kamchatka-tolbachik', 'Tolbachik Basaltic Fissure & Scoria', 'Russia', 55.83, 160.33, 1600, Terrain(11, .88, (1, .95, .05, 0, 0), .7, .1, .75, .7), Climate(1, -10, 1.6, 6, 72), 'Extensive loose basaltic scoria plains and collapsing lava tubes historically used to test Lunokhod and Marsokhod chassis.', 'Heavy winter snowpack and subarctic precipitation contrast with dry lunar maria.', 'Under-Recognized', ('Unconsolidated basalt scoria wheel-sinkage', 'Cold-climate lava tube roof stability sonar')),
 )
+# Issue #48: representative regional points; terrain memberships and climate
+# fallbacks are illustrative priors, not site measurements or mineral fractions.
+EARTH_SITES += (
+    Site("lonar-crater", "Lonar Meteorite Crater", "India", 19.975, 76.505, 563,
+         Terrain(18, .78, (1, .75, .3, .2, 1), 0, .85, 0, .2),
+         Climate(32, 20, 2.1, 3, 55),
+         "Impact crater excavated in Deccan flood basalts, supporting comparisons of shocked basalt, ejecta and alteration with lunar maria and Martian craters.",
+         "Monsoon weathering, vegetation and an alkaline lake differ from dry lunar surfaces; aqueous alteration is more relevant to ancient Mars.",
+         "Under-Recognized", ("Shocked-basalt Raman and LIBS screening", "Impact-ejecta rover traverse and sample caching")),
+    Site("pilbara-craton", "Pilbara Archean Terrane", "Australia", -21.15, 119.33, 260,
+         Terrain(8, .65, (.8, .5, .95, .15, 0), 0, 1, 0, .1),
+         Climate(33, 19, .8, 4, 35),
+         "Archean basaltic and iron-rich sedimentary terrains preserve roughly 3.5 Ga biosignature contexts; regional stromatolite studies inform Perseverance sampling at Jezero.",
+         "Regional point does not locate a specific fossil outcrop; terrestrial biology, metamorphism and weathering complicate comparison with Martian biosignature preservation.",
+         "Under-Recognized", ("Stromatolite-context imaging and biosignature discrimination", "Iron-rich sediment coring and contamination-controlled caching")),
+    # NASA describes Arita as a sandstone hill; cone shape is not proof of volcanism.
+    # https://science.nasa.gov/blogs/earth-matters/2014/07/03/june-puzzler-answer-salar-de-arizaro/
+    Site("cono-de-arita", "Cono de Arita & Salar de Arizaro", "Argentina", -25.02, -67.72, 3750,
+         Terrain(12, .65, (.15, .65, .9, 1, 0), .1, .85, 0, .1),
+         Climate(16, -3, .08, 7, 25),
+         "Conical erosional relief beside a high-altitude hyperarid salt flat provides morphological slope analogs and evaporite sampling contexts for Mars.",
+         "Arita is described as a sandstone hill, not a confirmed volcanic cone; morphological similarity alone does not establish a stratovolcanic origin. Elevation represents the salar setting.",
+         "Regional Highlight", ("Cone-to-salar autonomous slope transitions", "Evaporite Raman screening and salt-crust bearing tests")),
+    Site("danakil-erta-ale", "Erta Ale & Danakil Basin", "Ethiopia", 13.60, 40.67, 613,
+         Terrain(7, .9, (1, .75, .2, .3, 0), 0, .4, .35, .15),
+         Climate(38, 26, .2, 4, 30),
+         "Basaltic shield volcanism and long-lived lava-lake activity at Erta Ale complement regional Danakil hydrothermal and evaporite analogs for early Mars.",
+         "Point and elevation represent Erta Ale, not the below-sea-level basin or Dallol hyperacidic springs. Lava-lake exposure varies; active lava and corrosive gases constrain field access.",
+         "Under-Recognized", ("Remote lava-flow thermal mapping", "Basalt alteration spectroscopy and volcanic gas sensor trials")),
+    Site("mojave-pisgah", "Pisgah Crater & Lava Tubes", "United States", 34.75, -116.38, 640,
+         Terrain(10, .85, (1, .9, .1, 0, 0), 0, .1, .95, .8),
+         Climate(28, 12, .25, 5, 28),
+         "Quaternary basalt flows, cinder-cone relief and lava tubes offer lunar shelter and Mars mobility analogs in a Mojave field-testing landscape used by NASA JPL.",
+         "Terrestrial gravity, atmospheric density and weathered lava differ from lunar and Martian conditions; tube geometry and accessibility require ground surveys.",
+         "Under-Recognized", ("Basalt rover traction and autonomous hazard avoidance", "Lava-tube LiDAR and communications relay trials")),
+)
+
 # Observation targets, not confirmed satellite detections or acquired scenes.
 _SATELLITE_TARGETS = {
     "galapagos-lava-tubes": "Santa Cruz basalt flows, vegetation gaps and candidate lava-tube surface expressions",
@@ -324,6 +361,11 @@ _SATELLITE_TARGETS = {
     "svalbard-bockfjord": "volcanic outcrops, seasonal snow and Arctic drainage patterns",
     "namib-sossusvlei": "megadune morphology and interdune clay pans",
     "kamchatka-tolbachik": "basaltic scoria, fissures and lava-tube collapse expressions",
+    "lonar-crater": "basaltic crater walls, ejecta exposures and alkaline lake margins",
+    "pilbara-craton": "Archean basalt contacts, iron-rich sedimentary ridges and exposed stratigraphic patterns",
+    "cono-de-arita": "sandstone cone slopes, salt-crust boundaries and dry salar sediments",
+    "danakil-erta-ale": "Erta Ale basalt flows, summit pit margins and exposed geothermal surfaces",
+    "mojave-pisgah": "basalt flow textures, cinder-cone slopes and candidate lava-tube skylight expressions",
 }
 
 
