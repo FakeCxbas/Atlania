@@ -477,6 +477,18 @@ export function MissionBriefingLanding({
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [selectedSatelliteId]);
 
+  useEffect(() => {
+    const html = document.documentElement;
+    const prevSnapType = html.style.scrollSnapType;
+    const prevScrollPadding = html.style.scrollPaddingTop;
+    html.style.scrollSnapType = "y mandatory";
+    html.style.scrollPaddingTop = "64px";
+    return () => {
+      html.style.scrollSnapType = prevSnapType;
+      html.style.scrollPaddingTop = prevScrollPadding;
+    };
+  }, []);
+
   const translatedSites = useMemo(
     () => dataset.sites.map((site) => translateSite(site)),
     [dataset.sites]
@@ -856,13 +868,13 @@ export function MissionBriefingLanding({
               =============================================================== */}
               <div
                 id="intro-scroll-track"
-                className="relative h-[250vh] w-full"
+                className="relative h-[250vh] w-full snap-start snap-always"
               >
-                {/* Invisible anchor at 55% of the track so clicking "02 · La Tierra" scrolls into Chapter 2 */}
+                {/* Invisible anchor at 55% of the track so clicking "02 · La Tierra" or snapping lands in Chapter 2 */}
                 <div
                   id="el-desafio"
                   aria-hidden="true"
-                  className="pointer-events-none absolute top-[135vh] left-0 h-1 w-full"
+                  className="pointer-events-none absolute top-[135vh] left-0 h-screen w-full snap-start snap-always"
                 />
 
                 <div
@@ -1268,7 +1280,7 @@ export function MissionBriefingLanding({
               <section
                 id="capas-del-terreno"
                 aria-label="Capítulo 03: Capas del Terreno y Arquitectura de Evaluación"
-                className="relative border-t border-white/10"
+                className="relative snap-start snap-always border-t border-white/10"
               >
                 <TerrainLayers
                   layerSeparation={scrollState.layerSeparation}
@@ -1879,7 +1891,7 @@ export function MissionBriefingLanding({
                   SCIENTIFIC CREDITS & BRAND ATTRIBUTION FOOTER
                   Official logos presented cleanly in their dedicated section
               =============================================================== */}
-              <footer className="border-t border-white/10 bg-[#020509] py-20">
+              <footer className="snap-start border-t border-white/10 bg-[#020509] py-20">
                 <div className="mx-auto max-w-[1440px] px-6 sm:px-10 lg:px-16">
                   <div className="grid grid-cols-1 gap-12 lg:grid-cols-12">
                     <div className="lg:col-span-5">

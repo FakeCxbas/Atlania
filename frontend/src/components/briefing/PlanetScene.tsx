@@ -407,8 +407,8 @@ export function PlanetScene({
         terrainDisposables.push(surfaceMat);
 
         const surfaceMesh = new THREE.Mesh(options.geoPair.topGeo, surfaceMat);
-        surfaceMesh.castShadow = !isLowPowerDevice;
-        surfaceMesh.receiveShadow = !isLowPowerDevice;
+        surfaceMesh.castShadow = false;
+        surfaceMesh.receiveShadow = false;
         group.add(surfaceMesh);
 
         let atmoVeilUniforms: { uOpacity: { value: number } } | null = null;
@@ -468,8 +468,8 @@ export function PlanetScene({
         terrainDisposables.push(sideMat);
 
         const skirtMesh = new THREE.Mesh(options.geoPair.skirtGeo, sideMat);
-        skirtMesh.castShadow = !isLowPowerDevice;
-        skirtMesh.receiveShadow = !isLowPowerDevice;
+        skirtMesh.castShadow = false;
+        skirtMesh.receiveShadow = false;
         group.add(skirtMesh);
 
         return { group, surfaceMat, atmoVeilUniforms, sideMat };
@@ -512,9 +512,18 @@ export function PlanetScene({
         sideTextures: textures.layer4,
       });
 
-      const lavaGlowLight = new THREE.PointLight(0xf97316, 0.95, 1.8, 2);
+      const lavaGlowLight = new THREE.PointLight(0xf97316, 1.05, 2.0, 2);
       lavaGlowLight.position.set(-0.22, -0.82, -0.18);
       layer4Subsurface.group.add(lavaGlowLight);
+
+      // Local lighting scoped exclusively to the 3D terrain block (does not alter Earth/Moon/Mars)
+      const terrainKeyLight = new THREE.PointLight(0xfffbeb, 4.2, 8.5, 1.1);
+      terrainKeyLight.position.set(1.8, -1.6, 2.6);
+      const terrainSideFillLight = new THREE.PointLight(0xdbeafe, 2.8, 8.5, 1.1);
+      terrainSideFillLight.position.set(-2.2, -1.8, 1.4);
+      terrainGroup.add(terrainKeyLight);
+      terrainGroup.add(terrainSideFillLight);
+      terrainDisposables.push(terrainKeyLight, terrainSideFillLight, lavaGlowLight);
 
       terrainGroup.add(layer1Surface.group);
       terrainGroup.add(layer2Relief.group);
