@@ -16,10 +16,10 @@ import { ScrollScene } from "@/components/briefing/ScrollScene";
 import { MissionChapter } from "@/components/briefing/MissionChapter";
 import { TerrainLayers } from "@/components/briefing/TerrainLayers";
 import { ExplorerTransition } from "@/components/briefing/ExplorerTransition";
+import { DetailModal } from "@/components/briefing/DetailModal";
 import {
   ArrowDown,
   ArrowUpRight,
-  ChevronDown,
   Compass,
   ExternalLink,
   Menu,
@@ -930,19 +930,18 @@ export function MissionBriefingLanding({
                         </p>
                       </div>
 
-                      {/* Three Expandable Interactive Glassmorphism Cards */}
-                      <div className="mt-8 grid grid-cols-1 items-start gap-5 lg:grid-cols-3 lg:gap-6">
+                      {/* Three Compact Glassmorphism Cards (Open Centered Modal on Click) */}
+                      <div className="mt-8 grid grid-cols-1 gap-5 lg:grid-cols-3 lg:gap-6">
                         {challengeCards.map((item, idx) => {
                           const isSelected = activeChallengeIdx === idx;
                           return (
                             <button
                               key={item.id}
                               type="button"
+                              aria-haspopup="dialog"
                               aria-expanded={isSelected}
-                              onClick={() =>
-                                setActiveChallengeIdx(isSelected ? -1 : idx)
-                              }
-                              className={`group flex w-full cursor-pointer flex-col justify-between overflow-visible rounded-xl border bg-[#060d18]/80 p-6 text-left backdrop-blur-md transition-all duration-300 ${
+                              onClick={() => setActiveChallengeIdx(idx)}
+                              className={`group flex w-full cursor-pointer flex-col justify-between rounded-xl border bg-[#060d18]/80 p-6 text-left backdrop-blur-md transition-all duration-300 ${
                                 isSelected
                                   ? "border-[#00D9F5]/45 shadow-[0_12px_36px_rgba(0,0,0,0.45)]"
                                   : "border-white/10 hover:border-white/25"
@@ -961,34 +960,69 @@ export function MissionBriefingLanding({
                                 <h3 className="mt-3.5 text-lg font-semibold leading-snug text-[#F8FAFC] sm:text-xl">
                                   {item.question}
                                 </h3>
-
-                                {isSelected && (
-                                  <div className="mt-4 space-y-3 overflow-visible transition-all duration-300">
-                                    <p className="text-sm leading-relaxed text-slate-200">
-                                      {item.detail}
-                                    </p>
-                                    <p className="font-mono text-xs text-slate-400 tabular-nums">
-                                      {item.metricValue}
-                                    </p>
-                                  </div>
-                                )}
                               </div>
 
                               <div className="mt-5 flex items-center justify-between border-t border-white/10 pt-3.5 font-mono text-xs text-[#00D9F5]">
-                                <span>
-                                  {isSelected ? "Ocultar detalles" : "Ver detalles"}
-                                </span>
-                                <ChevronDown
+                                <span>Ver detalles</span>
+                                <span
                                   aria-hidden="true"
-                                  className={`h-4 w-4 transition-transform duration-300 ${
-                                    isSelected ? "rotate-180" : "rotate-0"
-                                  }`}
-                                />
+                                  className="text-sm leading-none transition-transform duration-300 group-hover:translate-x-0.5"
+                                >
+                                  +
+                                </span>
                               </div>
                             </button>
                           );
                         })}
                       </div>
+
+                      <DetailModal
+                        isOpen={
+                          activeChallengeIdx >= 0 &&
+                          Boolean(challengeCards[activeChallengeIdx])
+                        }
+                        onClose={() => setActiveChallengeIdx(-1)}
+                        eyebrow={
+                          activeChallengeIdx >= 0 &&
+                          challengeCards[activeChallengeIdx]
+                            ? `0${activeChallengeIdx + 1} · ${challengeCards[activeChallengeIdx].tag}`
+                            : ""
+                        }
+                        title={
+                          activeChallengeIdx >= 0 &&
+                          challengeCards[activeChallengeIdx]
+                            ? challengeCards[activeChallengeIdx].question
+                            : ""
+                        }
+                        icon={
+                          activeChallengeIdx >= 0 &&
+                          challengeCards[activeChallengeIdx] ? (
+                            <ScientificIcon
+                              concept={
+                                challengeCards[activeChallengeIdx].concept
+                              }
+                              className="h-4 w-4 shrink-0 text-[#00D9F5]"
+                            />
+                          ) : null
+                        }
+                      >
+                        {activeChallengeIdx >= 0 &&
+                          challengeCards[activeChallengeIdx] && (
+                            <div className="space-y-4">
+                              <p className="text-sm leading-relaxed text-slate-200 sm:text-base">
+                                {challengeCards[activeChallengeIdx].detail}
+                              </p>
+                              <div className="border-t border-white/10 pt-4 font-mono text-xs text-slate-300 tabular-nums">
+                                <span className="text-slate-400">
+                                  {challengeCards[activeChallengeIdx].metricLabel}:{" "}
+                                </span>
+                                <span className="text-[#F8FAFC]">
+                                  {challengeCards[activeChallengeIdx].metricValue}
+                                </span>
+                              </div>
+                            </div>
+                          )}
+                      </DetailModal>
                     </div>
 
                     <div className="mt-6 flex items-center justify-end pt-3 font-mono text-[11px] text-[#94A3B8]">

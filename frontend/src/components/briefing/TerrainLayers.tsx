@@ -1,9 +1,9 @@
 "use client";
 
 import React from "react";
-import { ChevronDown } from "lucide-react";
 import { ScientificIcon, type ScientificConcept } from "./ScientificIcon";
 import { type BrandId } from "./BrandLogo";
+import { DetailModal } from "./DetailModal";
 
 export interface TerrainLayersProps {
   /** Scroll-driven separation factor [0..1] */
@@ -221,7 +221,7 @@ export function TerrainLayers({
           </div>
 
           <div className="lg:col-span-7">
-            <div className="grid grid-cols-1 items-start gap-4 sm:grid-cols-2">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               {pipelineSteps.map((item, idx) => {
                 const isActive = activePipelineStep === idx;
                 const stageConcepts: ScientificConcept[] = [
@@ -243,9 +243,10 @@ export function TerrainLayers({
                   <button
                     key={item.step}
                     type="button"
+                    aria-haspopup="dialog"
                     aria-expanded={isActive}
-                    onClick={() => onSelectPipelineStep(isActive ? -1 : idx)}
-                    className={`group flex w-full cursor-pointer flex-col justify-between overflow-visible rounded-xl border bg-[#060d18]/85 p-5 text-left backdrop-blur-md transition-all duration-300 ${
+                    onClick={() => onSelectPipelineStep(idx)}
+                    className={`group flex w-full cursor-pointer flex-col justify-between rounded-xl border bg-[#060d18]/85 p-5 text-left backdrop-blur-md transition-all duration-300 ${
                       isActive
                         ? "border-[#00D9F5]/45 shadow-[0_12px_32px_rgba(0,0,0,0.45)]"
                         : "border-white/10 hover:border-white/25"
@@ -265,42 +266,80 @@ export function TerrainLayers({
                       <h4 className="mt-3 text-base font-semibold leading-snug text-[#F8FAFC] sm:text-lg">
                         {item.title}
                       </h4>
-
-                      {isActive && (
-                        <div className="mt-3.5 space-y-3 overflow-visible">
-                          <p className="text-sm leading-relaxed text-slate-300">
-                            {item.description}
-                          </p>
-                          <ul className="space-y-1.5 border-t border-white/10 pt-3 font-mono text-[11px] leading-relaxed text-slate-200/90">
-                            {item.sources.map((src) => (
-                              <li
-                                key={src}
-                                className="flex items-start gap-2"
-                              >
-                                <span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-[#00D9F5]" />
-                                <span>{src}</span>
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-                      )}
                     </div>
 
                     <div className="mt-4 flex items-center justify-between border-t border-white/10 pt-3 font-mono text-xs text-[#00D9F5]">
-                      <span>
-                        {isActive ? "Ocultar detalles" : "Ver detalles"}
-                      </span>
-                      <ChevronDown
+                      <span>Ver detalles</span>
+                      <span
                         aria-hidden="true"
-                        className={`h-4 w-4 transition-transform duration-300 ${
-                          isActive ? "rotate-180" : "rotate-0"
-                        }`}
-                      />
+                        className="text-sm leading-none transition-transform duration-300 group-hover:translate-x-0.5"
+                      >
+                        +
+                      </span>
                     </div>
                   </button>
                 );
               })}
             </div>
+
+            <DetailModal
+              isOpen={
+                activePipelineStep >= 0 &&
+                Boolean(pipelineSteps[activePipelineStep])
+              }
+              onClose={() => onSelectPipelineStep(-1)}
+              eyebrow={
+                activePipelineStep >= 0 && pipelineSteps[activePipelineStep]
+                  ? (
+                      [
+                        "01 · Recopilar",
+                        "02 · Analizar",
+                        "03 · Comparar",
+                        "04 · Explorar",
+                      ][activePipelineStep] ??
+                      pipelineSteps[activePipelineStep].step
+                    )
+                  : ""
+              }
+              title={
+                activePipelineStep >= 0 && pipelineSteps[activePipelineStep]
+                  ? pipelineSteps[activePipelineStep].title
+                  : ""
+              }
+              icon={
+                activePipelineStep >= 0 && pipelineSteps[activePipelineStep] ? (
+                  <ScientificIcon
+                    concept={
+                      (
+                        [
+                          "thermal",
+                          "topography",
+                          "geology",
+                          "subsurface",
+                        ] as ScientificConcept[]
+                      )[activePipelineStep] ?? "thermal"
+                    }
+                    className="h-4 w-4 shrink-0 text-[#00D9F5]"
+                  />
+                ) : null
+              }
+            >
+              {activePipelineStep >= 0 && pipelineSteps[activePipelineStep] && (
+                <div className="space-y-4">
+                  <p className="text-sm leading-relaxed text-slate-200 sm:text-base">
+                    {pipelineSteps[activePipelineStep].description}
+                  </p>
+                  <ul className="space-y-2 border-t border-white/10 pt-4 font-mono text-xs leading-relaxed text-slate-200/90">
+                    {pipelineSteps[activePipelineStep].sources.map((src) => (
+                      <li key={src} className="flex items-start gap-2.5">
+                        <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-[#00D9F5]" />
+                        <span>{src}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </DetailModal>
           </div>
         </div>
       </div>
