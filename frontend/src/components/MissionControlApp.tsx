@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import type { AnalogDataset, AnalogSite } from "@/types/analog";
 import {
@@ -21,6 +21,8 @@ import { translateSite, translateTarget } from "@/lib/spanishTranslations";
 import {
   ArrowLeft,
   ChevronDown,
+  ChevronLeft,
+  ChevronRight,
   ChevronUp,
   Compass,
   Download,
@@ -43,11 +45,18 @@ type MainTab = "tierra" | "luna" | "marte";
 export function MissionControlApp({ dataset }: MissionControlAppProps) {
   const [mainTab, setMainTab] = useState<MainTab>("tierra");
   const [selectedCountry, setSelectedCountry] = useState<string>("TODOS");
+  const [countryDropdown, setCountryDropdown] = useState<{
+    country: string;
+    top: number;
+    left: number;
+  } | null>(null);
+  const dropdownRef = useRef<HTMLDivElement | null>(null);
+  const countryScrollRef = useRef<HTMLDivElement | null>(null);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
   const [selectedTargetFilter, setSelectedTargetFilter] = useState<string>("ALL");
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedSiteId, setSelectedSiteId] = useState<string | null>(
-    dataset.sites[0]?.id ?? null,
-  );
+  const [selectedSiteId, setSelectedSiteId] = useState<string | null>(null);
   const [activeTargetId, setActiveTargetId] = useState<string>(
     dataset.sites[0]?.best_target ?? Object.keys(dataset.references)[0] ?? "",
   );
@@ -83,18 +92,107 @@ export function MissionControlApp({ dataset }: MissionControlAppProps) {
 
   // Distinct countries available for the "Tierra" tab
   const countryList = useMemo(() => {
+    const SOUTH_AMERICA_COUNTRIES = new Set([
+      "Argentina",
+      "Bolivia",
+      "Brasil",
+      "Chile",
+      "Chile / Argentina",
+      "Colombia",
+      "Ecuador",
+      "Guyana",
+      "Paraguay",
+      "Perú",
+      "Surinam",
+      "Uruguay",
+      "Venezuela",
+    ]);
+
+    const getCountryPriority = (country: string): number => {
+      if (country === "Ecuador") return 0;
+      if (SOUTH_AMERICA_COUNTRIES.has(country)) return 1;
+      if (country === "Antártida") return 3;
+      return 2;
+    };
+
     const map = new Map<string, number>();
     for (const site of translatedSites) {
       map.set(site.country, (map.get(site.country) ?? 0) + 1);
     }
-    // Put Ecuador first as key regional analog, then rest alphabetically
+
     const entries = Array.from(map.entries()).sort((a, b) => {
-      if (a[0] === "Ecuador") return -1;
-      if (b[0] === "Ecuador") return 1;
-      return a[0].localeCompare(b[0]);
+      const pa = getCountryPriority(a[0]);
+      const pb = getCountryPriority(b[0]);
+      if (pa !== pb) return pa - pb;
+      return a[0].localeCompare(b[0], "es");
     });
     return entries;
   }, [translatedSites]);
+
+  // Sites belonging to the currently open floating country dropdown
+  const dropdownSites = useMemo(() => {
+    if (mainTab !== "tierra" || !countryDropdown) return [];
+    return translatedSites
+      .filter((s) => s.country === countryDropdown.country)
+      .sort((a, b) => b.overall_asi - a.overall_asi);
+  }, [mainTab, countryDropdown, translatedSites]);
+
+  // Close floating country dropdown on outside click or Escape key
+  useEffect(() => {
+    if (!countryDropdown) return;
+
+    const handlePointerDown = (event: PointerEvent) => {
+      const target = event.target as HTMLElement | null;
+      if (!target) return;
+      if (dropdownRef.current?.contains(target)) return;
+      if (target.closest("[data-country-trigger]")) return;
+      setCountryDropdown(null);
+    };
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setCountryDropdown(null);
+      }
+    };
+
+    document.addEventListener("pointerdown", handlePointerDown);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("pointerdown", handlePointerDown);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [countryDropdown]);
+
+  // Track horizontal scroll bounds for country filter bar arrows
+  const updateCountryScrollBounds = useCallback(() => {
+    const el = countryScrollRef.current;
+    if (!el) {
+      setCanScrollLeft(false);
+      setCanScrollRight(false);
+      return;
+    }
+    setCanScrollLeft(el.scrollLeft > 2);
+    setCanScrollRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 2);
+  }, []);
+
+  useEffect(() => {
+    if (mainTab !== "tierra") return;
+    const rafId = requestAnimationFrame(updateCountryScrollBounds);
+    window.addEventListener("resize", updateCountryScrollBounds);
+    return () => {
+      cancelAnimationFrame(rafId);
+      window.removeEventListener("resize", updateCountryScrollBounds);
+    };
+  }, [mainTab, countryList.length, updateCountryScrollBounds]);
+
+  const scrollCountryBar = useCallback((direction: "left" | "right") => {
+    const el = countryScrollRef.current;
+    if (!el) return;
+    el.scrollBy({
+      left: direction === "left" ? -260 : 260,
+      behavior: "smooth",
+    });
+  }, []);
 
   // Filter sites strictly based on the active main tab
   const filteredSites = useMemo(() => {
@@ -246,6 +344,7 @@ export function MissionControlApp({ dataset }: MissionControlAppProps) {
   const handleTabChange = (tab: MainTab) => {
     setMainTab(tab);
     setSelectedCountry("TODOS");
+    setCountryDropdown(null);
     setSelectedTargetFilter("ALL");
 
     if (tab === "luna") {
@@ -269,27 +368,49 @@ export function MissionControlApp({ dataset }: MissionControlAppProps) {
         setCameraTarget({ type: "fitBounds", sites: marsSites });
       }
     } else {
-      // Tierra: show all sites
+      // Tierra: show all sites in global 2D view without auto-selecting a site
+      setSelectedSiteId(null);
+      setComparisonExpanded(false);
       setCameraTarget({ type: "world" });
     }
   };
 
-  // Country filter selection with auto-camera
-  const handleCountrySelect = (country: string) => {
-    setSelectedCountry(country);
+  // Country filter selection: opens floating vertical dropdown without auto-selecting a site
+  const handleCountrySelect = (country: string, triggerEl?: HTMLButtonElement | null) => {
     if (country === "TODOS") {
+      setSelectedCountry("TODOS");
+      setCountryDropdown(null);
+      setSelectedSiteId(null);
+      setComparisonExpanded(false);
       setCameraTarget({ type: "world" });
-    } else {
-      const countrySites = translatedSites.filter((s) => s.country === country);
-      const best = countrySites.sort((a, b) => b.overall_asi - a.overall_asi)[0];
-      if (best) {
-        setSelectedSiteId(best.id);
-        setActiveTargetId(best.best_target);
-        setShowDirectory(false);
-        setCameraTarget({ type: "fitBounds", sites: countrySites, padding: { left: 490, top: 130, right: 60, bottom: 60 } });
-      }
+      return;
     }
+
+    setSelectedCountry(country);
+    setCountryDropdown((prev) => {
+      if (prev?.country === country) return null;
+      if (!triggerEl || typeof window === "undefined") {
+        return { country, top: 108, left: 16 };
+      }
+      const rect = triggerEl.getBoundingClientRect();
+      const menuWidth = Math.min(360, window.innerWidth - 24);
+      const clampedLeft = Math.max(12, Math.min(rect.left, window.innerWidth - menuWidth - 12));
+      return {
+        country,
+        top: Math.round(rect.bottom + 6),
+        left: Math.round(clampedLeft),
+      };
+    });
   };
+
+  // Fly directly with close-up detail zoom to a site chosen from the country dropdown
+  const handleSelectSubmenuSite = useCallback((site: AnalogSite) => {
+    setCountryDropdown(null);
+    setShowDirectory(false);
+    setSelectedSiteId(site.id);
+    setActiveTargetId(site.best_target);
+    setCameraTarget({ type: "site", siteId: site.id, zoom: 9.8 });
+  }, []);
 
   // Toggle directory: ensure site detail panel is closed to prevent overlap
   const handleToggleDirectory = () => {
@@ -564,40 +685,81 @@ export function MissionControlApp({ dataset }: MissionControlAppProps) {
                 <MapPin className="h-3 w-3" aria-hidden="true" />
                 Filtrar por País:
               </span>
+
               <button
                 type="button"
-                onClick={() => handleCountrySelect("TODOS")}
-                aria-pressed={selectedCountry === "TODOS"}
-                className={`shrink-0 rounded-full border px-3 py-1 text-xs font-medium transition-all ${
-                  selectedCountry === "TODOS"
-                    ? "border-[#D4AF37] bg-[#D4AF37]/20 text-[#D4AF37] shadow-[0_0_10px_rgba(212,175,55,0.2)]"
-                    : "border-slate-800/90 bg-[#0D1424]/90 text-slate-400 hover:text-slate-200"
-                }`}
+                onClick={() => scrollCountryBar("left")}
+                disabled={!canScrollLeft}
+                aria-label="Desplazar países a la izquierda"
+                title="Desplazar países a la izquierda"
+                className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-slate-800/90 bg-[#0D1424]/90 text-slate-300 transition-colors hover:border-[#D4AF37]/60 hover:text-[#D4AF37] disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:border-slate-800/90 disabled:hover:text-slate-300"
               >
-                Todos los Países ({translatedSites.length})
+                <ChevronLeft className="h-3.5 w-3.5" aria-hidden="true" />
               </button>
 
-              {countryList.map(([country, count]) => {
-                const active = selectedCountry === country;
-                return (
-                  <button
-                    key={country}
-                    type="button"
-                    onClick={() => handleCountrySelect(country)}
-                    aria-pressed={active}
-                    className={`shrink-0 rounded-full border px-3 py-1 text-xs font-medium transition-all ${
-                      active
-                        ? "border-[#D4AF37] bg-[#D4AF37]/20 text-[#D4AF37] shadow-[0_0_10px_rgba(212,175,55,0.2)]"
-                        : "border-slate-800/90 bg-[#0D1424]/90 text-slate-300 hover:border-slate-700 hover:text-slate-100"
-                    }`}
-                  >
-                    <span>{country}</span>
-                    <span className="ml-1.5 font-mono text-[10px] text-slate-400">
-                      ({count})
-                    </span>
-                  </button>
-                );
-              })}
+              <div
+                ref={countryScrollRef}
+                onScroll={() => {
+                  updateCountryScrollBounds();
+                  if (countryDropdown) setCountryDropdown(null);
+                }}
+                className="flex min-w-0 flex-1 items-center gap-1.5 overflow-x-auto no-scrollbar"
+              >
+                <button
+                  type="button"
+                  onClick={() => handleCountrySelect("TODOS")}
+                  aria-pressed={selectedCountry === "TODOS"}
+                  className={`shrink-0 rounded-full border px-3 py-1 text-xs font-medium transition-all ${
+                    selectedCountry === "TODOS"
+                      ? "border-[#D4AF37] bg-[#D4AF37]/20 text-[#D4AF37] shadow-[0_0_10px_rgba(212,175,55,0.2)]"
+                      : "border-slate-800/90 bg-[#0D1424]/90 text-slate-400 hover:text-slate-200"
+                  }`}
+                >
+                  Todos los Países ({translatedSites.length})
+                </button>
+
+                {countryList.map(([country, count]) => {
+                  const active = selectedCountry === country;
+                  const expanded = countryDropdown?.country === country;
+                  return (
+                    <button
+                      key={country}
+                      type="button"
+                      data-country-trigger={country}
+                      onClick={(e) => handleCountrySelect(country, e.currentTarget)}
+                      aria-pressed={active}
+                      aria-expanded={expanded}
+                      aria-haspopup="menu"
+                      className={`inline-flex shrink-0 items-center gap-1 rounded-full border px-3 py-1 text-xs font-medium transition-all ${
+                        active
+                          ? "border-[#D4AF37] bg-[#D4AF37]/20 text-[#D4AF37] shadow-[0_0_10px_rgba(212,175,55,0.2)]"
+                          : "border-slate-800/90 bg-[#0D1424]/90 text-slate-300 hover:border-slate-700 hover:text-slate-100"
+                      }`}
+                    >
+                      <span>{country}</span>
+                      <span className="font-mono text-[10px] text-slate-400">
+                        ({count})
+                      </span>
+                      {expanded ? (
+                        <ChevronUp className="h-3 w-3 opacity-80" aria-hidden="true" />
+                      ) : (
+                        <ChevronDown className="h-3 w-3 opacity-60" aria-hidden="true" />
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+
+              <button
+                type="button"
+                onClick={() => scrollCountryBar("right")}
+                disabled={!canScrollRight}
+                aria-label="Desplazar países a la derecha"
+                title="Desplazar países a la derecha"
+                className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-slate-800/90 bg-[#0D1424]/90 text-slate-300 transition-colors hover:border-[#D4AF37]/60 hover:text-[#D4AF37] disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:border-slate-800/90 disabled:hover:text-slate-300"
+              >
+                <ChevronRight className="h-3.5 w-3.5" aria-hidden="true" />
+              </button>
             </>
           )}
 
@@ -740,6 +902,64 @@ export function MissionControlApp({ dataset }: MissionControlAppProps) {
           )}
         </div>
       </header>
+
+      {/* Floating Vertical Country Sites Dropdown (Anchored below country button, overlays map) */}
+      {mainTab === "tierra" && countryDropdown && (
+        <div
+          ref={dropdownRef}
+          role="menu"
+          aria-label={`Ubicaciones analógicas en ${countryDropdown.country}`}
+          style={{ top: countryDropdown.top, left: countryDropdown.left }}
+          className="fixed z-50 w-[320px] sm:w-[360px] max-w-[calc(100vw-24px)] max-h-[60vh] overflow-y-auto rounded-xl border border-slate-700/80 bg-[#060913]/95 p-1.5 shadow-2xl backdrop-blur-md"
+        >
+          <div className="flex items-center justify-between border-b border-slate-800/80 px-2.5 py-1.5 mb-1">
+            <span className="text-[11px] font-semibold tracking-wider text-[#D4AF37] uppercase">
+              {countryDropdown.country} ({dropdownSites.length})
+            </span>
+            <button
+              type="button"
+              onClick={() => setCountryDropdown(null)}
+              aria-label={`Cerrar lista de ${countryDropdown.country}`}
+              className="rounded p-0.5 text-slate-400 transition-colors hover:bg-slate-800/80 hover:text-slate-100"
+            >
+              <X className="h-3.5 w-3.5" aria-hidden="true" />
+            </button>
+          </div>
+
+          <div className="flex flex-col gap-0.5">
+            {dropdownSites.map((site) => {
+              const isSelected = selectedSiteId === site.id;
+              const isMars = dataset.references[site.best_target]?.body === "Mars";
+              return (
+                <button
+                  key={site.id}
+                  type="button"
+                  role="menuitem"
+                  onClick={() => handleSelectSubmenuSite(site)}
+                  className={`flex w-full items-center justify-between gap-3 rounded-lg border px-2.5 py-2 text-left text-xs transition-colors ${
+                    isSelected
+                      ? "border-cyan-400/60 bg-cyan-500/20 text-cyan-100"
+                      : "border-transparent text-slate-200 hover:border-slate-800 hover:bg-[#0D1424]/95 hover:text-white"
+                  }`}
+                >
+                  <span className="flex items-center gap-2 min-w-0 flex-1">
+                    <span
+                      className={`h-2 w-2 shrink-0 rounded-full ${
+                        isMars ? "bg-[#E07A5F]" : "bg-[#06B6D4]"
+                      }`}
+                      aria-hidden="true"
+                    />
+                    <span className="leading-snug font-medium">{site.name}</span>
+                  </span>
+                  <span className="shrink-0 font-mono text-[11px] font-semibold tabular-nums text-cyan-300">
+                    {site.overall_asi.toFixed(1)}%
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       {/* 3. Left Analysis Panel / Expandable 3-Column Comparison Workbench */}
       {selectedSite && !showDirectory && (

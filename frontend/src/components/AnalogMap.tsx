@@ -1,7 +1,15 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import * as maplibregl from "maplibre-gl";
+import {
+  Box,
+  ChevronDown,
+  ChevronUp,
+  RotateCcw,
+  RotateCw,
+  Square,
+} from "lucide-react";
 import type { AnalogSite, TargetProfile } from "@/types/analog";
 import type { RegionBounds, RegionEvaluationResult } from "@/lib/evaluateRegion";
 
@@ -10,7 +18,7 @@ if (typeof window !== "undefined") {
 }
 
 export type CameraTarget =
-  | { type: "site"; siteId: string }
+  | { type: "site"; siteId: string; zoom?: number }
   | {
       type: "fitBounds";
       sites: AnalogSite[];
@@ -213,12 +221,112 @@ export function AnalogMap({
 
   const [basemap, setBasemap] = useState<BasemapMode>("satellite");
   const [terrain3d, setTerrain3d] = useState(true);
+  const [cameraView, setCameraView] = useState<{ pitch: number; bearing: number }>({
+    pitch: selectedSiteId ? 45 : 0,
+    bearing: 0,
+  });
   const [dragBox, setDragBox] = useState<{
     startX: number;
     startY: number;
     curX: number;
     curY: number;
   } | null>(null);
+
+  const getFlyDuration = useCallback((ms: number) => {
+    if (typeof window === "undefined") return ms;
+    return window.matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : ms;
+  }, []);
+
+  const handleSet2D = useCallback(() => {
+    const map = mapRef.current;
+    if (!map) return;
+    map.easeTo({
+      pitch: 0,
+      bearing: 0,
+      duration: getFlyDuration(450),
+    });
+  }, [getFlyDuration]);
+
+  const handleSet3D = useCallback(() => {
+    const map = mapRef.current;
+    if (!map) return;
+    setTerrain3d(true);
+    map.easeTo({
+      pitch: 60,
+      duration: getFlyDuration(500),
+    });
+  }, [getFlyDuration]);
+
+  const handleAdjustBearing = useCallback(
+    (delta: number) => {
+      const map = mapRef.current;
+      if (!map) return;
+      map.easeTo({
+        bearing: map.getBearing() + delta,
+        duration: getFlyDuration(280),
+      });
+    },
+    [getFlyDuration]
+  );
+
+  const handleResetBearing = useCallback(() => {
+    const map = mapRef.current;
+    if (!map) return;
+    map.easeTo({
+      bearing: 0,
+      duration: getFlyDuration(320),
+    });
+  }, [getFlyDuration]);
+
+  const handleAdjustPitch = useCallback(
+    (delta: number) => {
+      const map = mapRef.current;
+      if (!map) return;
+      const nextPitch = Math.max(0, Math.min(60, Math.round(map.getPitch() + delta)));
+      if (nextPitch > 0) {
+        setTerrain3d(true);
+      }
+      map.easeTo({
+        pitch: nextPitch,
+        duration: getFlyDuration(260),
+      });
+    },
+    [getFlyDuration]
+  );
+
+  const flyToSiteCinematographically = useCallback(
+    (site: AnalogSite, requestedZoom?: number) => {
+      const map = mapRef.current;
+      if (!map) return;
+
+      const isPolar = Math.abs(site.latitude) > 60;
+      const targetZoom = isPolar ? 7.5 : (requestedZoom ?? 9.8);
+      const prefersReducedMotion =
+        typeof window !== "undefined" &&
+        window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+      if (prefersReducedMotion) {
+        map.jumpTo({
+          center: [site.longitude, site.latitude],
+          zoom: targetZoom,
+          pitch: terrain3d ? Math.max(map.getPitch(), 45) : map.getPitch(),
+          bearing: 0,
+        });
+        return;
+      }
+
+      map.flyTo({
+        center: [site.longitude, site.latitude],
+        zoom: targetZoom,
+        pitch: terrain3d ? Math.max(map.getPitch(), 45) : map.getPitch(),
+        bearing: 0,
+        speed: 0.85,
+        curve: 1.35,
+        essential: true,
+      });
+    },
+    [terrain3d]
+  );
 
   // Register tile cache Service Worker once on client
   useEffect(() => {
@@ -230,11 +338,13 @@ export function AnalogMap({
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return;
 
-    const initialSite =
-      sites.find((s) => s.id === initialSelectedSiteIdRef.current) ?? sites[0];
-    const startLon = initialSite ? initialSite.longitude : -78.6;
-    const startLat = initialSite ? initialSite.latitude : -0.67;
-    const startZoom = initialSite ? 6.2 : 2.1;
+    const initialSite = initialSelectedSiteIdRef.current
+      ? sites.find((s) => s.id === initialSelectedSiteIdRef.current) ?? null
+      : null;
+    const startLon = initialSite ? initialSite.longitude : 0;
+    const startLat = initialSite ? initialSite.latitude : 15;
+    const startZoom = initialSite ? 9.8 : 1.8;
+    const startPitch = initialSite ? 45 : 0;
 
     const map = new maplibregl.Map({
       container: containerRef.current,
@@ -244,7 +354,8 @@ export function AnalogMap({
       minZoom: 1.3,
       maxZoom: 15.5,
       maxPitch: 60,
-      pitch: initialSite ? 42 : 24,
+      pitch: startPitch,
+      bearing: 0,
       fadeDuration: 100,
       maxTileCacheSize: 500,
       refreshExpiredTiles: false,
@@ -282,6 +393,20 @@ export function AnalogMap({
       const c = map.getCenter();
       updateHudCoords(c.lat, c.lng, map.getZoom());
     });
+
+    const syncCameraView = () => {
+      const nextPitch = Math.round(map.getPitch());
+      const rawBearing = Math.round(map.getBearing());
+      const nextBearing = ((rawBearing % 360) + 360) % 360;
+      setCameraView((prev) =>
+        prev.pitch === nextPitch && prev.bearing === nextBearing
+          ? prev
+          : { pitch: nextPitch, bearing: nextBearing }
+      );
+    };
+
+    map.on("move", syncCameraView);
+    syncCameraView();
 
     mapRef.current = map;
 
@@ -473,26 +598,16 @@ export function AnalogMap({
       }
     }
 
-    // Do not interrupt a broader fitBounds/world camera transition
-    if (cameraTarget && (cameraTarget.type === "fitBounds" || cameraTarget.type === "world")) {
+    // Do not interrupt an explicit cameraTarget transition
+    if (cameraTarget) {
       return;
     }
 
     const site = sites.find((s) => s.id === selectedSiteId);
     if (!site) return;
 
-    const prefersReducedMotion =
-      typeof window !== "undefined" &&
-      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-
-    map.flyTo({
-      center: [site.longitude, site.latitude],
-      zoom: Math.max(map.getZoom(), 6.2),
-      pitch: terrain3d ? Math.max(map.getPitch(), 42) : map.getPitch(),
-      duration: prefersReducedMotion ? 0 : 650,
-      essential: true,
-    });
-  }, [selectedSiteId, sites, terrain3d, cameraTarget]);
+    flyToSiteCinematographically(site);
+  }, [selectedSiteId, sites, cameraTarget, flyToSiteCinematographically]);
 
   useEffect(() => {
     const map = mapRef.current;
@@ -940,13 +1055,14 @@ export function AnalogMap({
     const dur = prefersReducedMotion ? 0 : 750;
 
     if (cameraTarget.type === "world") {
-      map.fitBounds(
-        [
-          [-170, -55],
-          [170, 70],
-        ],
-        { padding: 40, duration: dur }
-      );
+      map.flyTo({
+        center: [0, 15],
+        zoom: 1.8,
+        pitch: 0,
+        bearing: 0,
+        duration: dur,
+        essential: true,
+      });
       return;
     }
 
@@ -970,15 +1086,9 @@ export function AnalogMap({
     if (cameraTarget.type === "site") {
       const site = sites.find((s) => s.id === cameraTarget.siteId);
       if (!site) return;
-      map.flyTo({
-        center: [site.longitude, site.latitude],
-        zoom: Math.max(map.getZoom(), 6.2),
-        pitch: terrain3d ? Math.max(map.getPitch(), 42) : map.getPitch(),
-        duration: prefersReducedMotion ? 0 : 650,
-        essential: true,
-      });
+      flyToSiteCinematographically(site, cameraTarget.zoom);
     }
-  }, [cameraTarget, sites, terrain3d]);
+  }, [cameraTarget, sites, flyToSiteCinematographically]);
 
   return (
     <div className="relative h-full w-full bg-[#060913]">
@@ -1184,6 +1294,107 @@ export function AnalogMap({
             </span>
           </>
         )}
+      </div>
+
+      {/* Control compacto de perspectiva 2D / 3D y ángulos CAD */}
+      <div
+        className="absolute bottom-14 right-3 z-10 flex flex-col gap-1 rounded-lg border border-slate-800/80 bg-[#060913]/90 p-1.5 shadow-xl backdrop-blur-md"
+        role="group"
+        aria-label="Control de perspectiva 2D y 3D"
+      >
+        <div className="flex items-center gap-1">
+          <button
+            type="button"
+            onClick={handleSet2D}
+            aria-pressed={cameraView.pitch < 10}
+            title="Vista Plana 2D (inclinación 0°, norte 0°)"
+            className={`flex flex-1 items-center justify-center gap-1 rounded px-2 py-1 text-[11px] font-semibold transition-colors ${
+              cameraView.pitch < 10
+                ? "border border-[#D4AF37]/60 bg-[#D4AF37]/20 text-[#D4AF37]"
+                : "border border-transparent text-slate-400 hover:bg-slate-800/60 hover:text-slate-100"
+            }`}
+          >
+            <Square className="h-3 w-3" aria-hidden="true" />
+            <span>2D</span>
+          </button>
+          <button
+            type="button"
+            onClick={handleSet3D}
+            aria-pressed={cameraView.pitch >= 10}
+            title="Vista Terreno 3D inclinada (60°)"
+            className={`flex flex-1 items-center justify-center gap-1 rounded px-2 py-1 text-[11px] font-semibold transition-colors ${
+              cameraView.pitch >= 10
+                ? "border border-cyan-500/60 bg-cyan-500/20 text-cyan-200"
+                : "border border-transparent text-slate-400 hover:bg-slate-800/60 hover:text-slate-100"
+            }`}
+          >
+            <Box className="h-3 w-3" aria-hidden="true" />
+            <span>3D</span>
+          </button>
+        </div>
+
+        <div className="flex items-center justify-between gap-1.5 border-t border-slate-800/80 pt-1">
+          <div className="flex items-center gap-0.5" title="Rotación de ángulo (Bearing)">
+            <button
+              type="button"
+              onClick={() => handleAdjustBearing(-45)}
+              aria-label="Rotar vista -45 grados"
+              title="Rotar -45°"
+              className="rounded p-1 text-slate-400 transition-colors hover:bg-slate-800/80 hover:text-cyan-300"
+            >
+              <RotateCcw className="h-3 w-3" aria-hidden="true" />
+            </button>
+            <button
+              type="button"
+              onClick={handleResetBearing}
+              aria-label="Restablecer orientación al norte"
+              title="Restablecer norte (0°)"
+              className="min-w-[30px] rounded px-1 py-0.5 text-center font-mono text-[10px] tabular-nums text-slate-300 transition-colors hover:bg-slate-800/80 hover:text-cyan-300"
+            >
+              {String(cameraView.bearing).padStart(3, "0")}°
+            </button>
+            <button
+              type="button"
+              onClick={() => handleAdjustBearing(45)}
+              aria-label="Rotar vista +45 grados"
+              title="Rotar +45°"
+              className="rounded p-1 text-slate-400 transition-colors hover:bg-slate-800/80 hover:text-cyan-300"
+            >
+              <RotateCw className="h-3 w-3" aria-hidden="true" />
+            </button>
+          </div>
+
+          <span className="h-3 w-px bg-slate-800" aria-hidden="true" />
+
+          <div className="flex items-center gap-0.5" title="Inclinación lateral (Pitch)">
+            <button
+              type="button"
+              onClick={() => handleAdjustPitch(-15)}
+              disabled={cameraView.pitch <= 0}
+              aria-label="Reducir inclinación 15 grados"
+              title="Reducir inclinación (-15°)"
+              className="rounded p-1 text-slate-400 transition-colors hover:bg-slate-800/80 hover:text-cyan-300 disabled:opacity-35 disabled:hover:bg-transparent disabled:hover:text-slate-400"
+            >
+              <ChevronDown className="h-3 w-3" aria-hidden="true" />
+            </button>
+            <span
+              className="min-w-[26px] text-center font-mono text-[10px] tabular-nums text-cyan-300"
+              aria-label={`Inclinación actual ${cameraView.pitch} grados`}
+            >
+              {cameraView.pitch}°
+            </span>
+            <button
+              type="button"
+              onClick={() => handleAdjustPitch(15)}
+              disabled={cameraView.pitch >= 60}
+              aria-label="Aumentar inclinación 15 grados"
+              title="Aumentar inclinación (+15°)"
+              className="rounded p-1 text-slate-400 transition-colors hover:bg-slate-800/80 hover:text-cyan-300 disabled:opacity-35 disabled:hover:bg-transparent disabled:hover:text-slate-400"
+            >
+              <ChevronUp className="h-3 w-3" aria-hidden="true" />
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   );
