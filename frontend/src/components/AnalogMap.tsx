@@ -126,6 +126,16 @@ function getBasemapStyle(mode: BasemapMode): string | maplibregl.StyleSpecificat
     version: 8,
     name: "Esri World Imagery",
     sources: {
+      "esri-satellite-lowres": {
+        type: "raster",
+        tiles: [
+          "https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+          "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+        ],
+        tileSize: 256,
+        maxzoom: 6,
+        attribution: "Esri, Maxar, Earthstar Geographics",
+      },
       "esri-satellite": {
         type: "raster",
         tiles: [
@@ -156,13 +166,23 @@ function getBasemapStyle(mode: BasemapMode): string | maplibregl.StyleSpecificat
         },
       },
       {
+        id: "esri-satellite-lowres-layer",
+        type: "raster",
+        source: "esri-satellite-lowres",
+        minzoom: 0,
+        maxzoom: 18,
+        paint: {
+          "raster-fade-duration": 0,
+        },
+      },
+      {
         id: "esri-satellite-layer",
         type: "raster",
         source: "esri-satellite",
         minzoom: 0,
         maxzoom: 18,
         paint: {
-          "raster-fade-duration": 250,
+          "raster-fade-duration": 300,
           "raster-contrast": 0.05,
           "raster-saturation": 0.05,
         },
@@ -316,7 +336,8 @@ export function AnalogMap({
       if (!map) return;
 
       const isPolar = Math.abs(site.latitude) > 60;
-      const targetZoom = isPolar ? 7.5 : (requestedZoom ?? 9.8);
+      const targetZoom = isPolar ? 7.5 : (requestedZoom ?? 10.0);
+      const targetPitch = terrain3d ? 58 : map.getPitch();
       const prefersReducedMotion =
         typeof window !== "undefined" &&
         window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -325,7 +346,7 @@ export function AnalogMap({
         map.jumpTo({
           center: [site.longitude, site.latitude],
           zoom: targetZoom,
-          pitch: terrain3d ? Math.max(map.getPitch(), 45) : map.getPitch(),
+          pitch: targetPitch,
           bearing: 0,
         });
         return;
@@ -334,10 +355,10 @@ export function AnalogMap({
       map.flyTo({
         center: [site.longitude, site.latitude],
         zoom: targetZoom,
-        pitch: terrain3d ? Math.max(map.getPitch(), 45) : map.getPitch(),
+        pitch: targetPitch,
         bearing: 0,
         speed: 0.75,
-        curve: 1.08,
+        curve: 1.0,
         essential: true,
       });
     },
@@ -373,7 +394,7 @@ export function AnalogMap({
       pitch: startPitch,
       bearing: 0,
       fadeDuration: 100,
-      maxTileCacheSize: 600,
+      maxTileCacheSize: 800,
       refreshExpiredTiles: false,
       cancelPendingTileRequestsWhileZooming: true,
     });
@@ -473,7 +494,7 @@ export function AnalogMap({
           ],
           tileSize: 256,
           minzoom: 0,
-          maxzoom: 11,
+          maxzoom: 14,
           encoding: "terrarium",
         });
       }
@@ -496,7 +517,7 @@ export function AnalogMap({
       }
 
       if (!map.getTerrain()) {
-        map.setTerrain({ source: "terrain-dem", exaggeration: 1.4 });
+        map.setTerrain({ source: "terrain-dem", exaggeration: 1.8 });
       }
     };
 
