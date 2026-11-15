@@ -21,6 +21,8 @@ import { translateSite, translateTarget } from "@/lib/spanishTranslations";
 import {
   ArrowLeft,
   ChevronDown,
+  ChevronLeft,
+  ChevronRight,
   ChevronUp,
   Compass,
   Download,
@@ -49,6 +51,9 @@ export function MissionControlApp({ dataset }: MissionControlAppProps) {
     left: number;
   } | null>(null);
   const dropdownRef = useRef<HTMLDivElement | null>(null);
+  const countryScrollRef = useRef<HTMLDivElement | null>(null);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
   const [selectedTargetFilter, setSelectedTargetFilter] = useState<string>("ALL");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedSiteId, setSelectedSiteId] = useState<string | null>(
@@ -135,6 +140,37 @@ export function MissionControlApp({ dataset }: MissionControlAppProps) {
       document.removeEventListener("keydown", handleKeyDown);
     };
   }, [countryDropdown]);
+
+  // Track horizontal scroll bounds for country filter bar arrows
+  const updateCountryScrollBounds = useCallback(() => {
+    const el = countryScrollRef.current;
+    if (!el) {
+      setCanScrollLeft(false);
+      setCanScrollRight(false);
+      return;
+    }
+    setCanScrollLeft(el.scrollLeft > 2);
+    setCanScrollRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 2);
+  }, []);
+
+  useEffect(() => {
+    if (mainTab !== "tierra") return;
+    const rafId = requestAnimationFrame(updateCountryScrollBounds);
+    window.addEventListener("resize", updateCountryScrollBounds);
+    return () => {
+      cancelAnimationFrame(rafId);
+      window.removeEventListener("resize", updateCountryScrollBounds);
+    };
+  }, [mainTab, countryList.length, updateCountryScrollBounds]);
+
+  const scrollCountryBar = useCallback((direction: "left" | "right") => {
+    const el = countryScrollRef.current;
+    if (!el) return;
+    el.scrollBy({
+      left: direction === "left" ? -260 : 260,
+      behavior: "smooth",
+    });
+  }, []);
 
   // Filter sites strictly based on the active main tab
   const filteredSites = useMemo(() => {
@@ -623,49 +659,81 @@ export function MissionControlApp({ dataset }: MissionControlAppProps) {
                 <MapPin className="h-3 w-3" aria-hidden="true" />
                 Filtrar por País:
               </span>
+
               <button
                 type="button"
-                onClick={() => handleCountrySelect("TODOS")}
-                aria-pressed={selectedCountry === "TODOS"}
-                className={`shrink-0 rounded-full border px-3 py-1 text-xs font-medium transition-all ${
-                  selectedCountry === "TODOS"
-                    ? "border-[#D4AF37] bg-[#D4AF37]/20 text-[#D4AF37] shadow-[0_0_10px_rgba(212,175,55,0.2)]"
-                    : "border-slate-800/90 bg-[#0D1424]/90 text-slate-400 hover:text-slate-200"
-                }`}
+                onClick={() => scrollCountryBar("left")}
+                disabled={!canScrollLeft}
+                aria-label="Desplazar países a la izquierda"
+                title="Desplazar países a la izquierda"
+                className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-slate-800/90 bg-[#0D1424]/90 text-slate-300 transition-colors hover:border-[#D4AF37]/60 hover:text-[#D4AF37] disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:border-slate-800/90 disabled:hover:text-slate-300"
               >
-                Todos los Países ({translatedSites.length})
+                <ChevronLeft className="h-3.5 w-3.5" aria-hidden="true" />
               </button>
 
-              {countryList.map(([country, count]) => {
-                const active = selectedCountry === country;
-                const expanded = countryDropdown?.country === country;
-                return (
-                  <button
-                    key={country}
-                    type="button"
-                    data-country-trigger={country}
-                    onClick={(e) => handleCountrySelect(country, e.currentTarget)}
-                    aria-pressed={active}
-                    aria-expanded={expanded}
-                    aria-haspopup="menu"
-                    className={`inline-flex shrink-0 items-center gap-1 rounded-full border px-3 py-1 text-xs font-medium transition-all ${
-                      active
-                        ? "border-[#D4AF37] bg-[#D4AF37]/20 text-[#D4AF37] shadow-[0_0_10px_rgba(212,175,55,0.2)]"
-                        : "border-slate-800/90 bg-[#0D1424]/90 text-slate-300 hover:border-slate-700 hover:text-slate-100"
-                    }`}
-                  >
-                    <span>{country}</span>
-                    <span className="font-mono text-[10px] text-slate-400">
-                      ({count})
-                    </span>
-                    {expanded ? (
-                      <ChevronUp className="h-3 w-3 opacity-80" aria-hidden="true" />
-                    ) : (
-                      <ChevronDown className="h-3 w-3 opacity-60" aria-hidden="true" />
-                    )}
-                  </button>
-                );
-              })}
+              <div
+                ref={countryScrollRef}
+                onScroll={() => {
+                  updateCountryScrollBounds();
+                  if (countryDropdown) setCountryDropdown(null);
+                }}
+                className="flex min-w-0 flex-1 items-center gap-1.5 overflow-x-auto no-scrollbar"
+              >
+                <button
+                  type="button"
+                  onClick={() => handleCountrySelect("TODOS")}
+                  aria-pressed={selectedCountry === "TODOS"}
+                  className={`shrink-0 rounded-full border px-3 py-1 text-xs font-medium transition-all ${
+                    selectedCountry === "TODOS"
+                      ? "border-[#D4AF37] bg-[#D4AF37]/20 text-[#D4AF37] shadow-[0_0_10px_rgba(212,175,55,0.2)]"
+                      : "border-slate-800/90 bg-[#0D1424]/90 text-slate-400 hover:text-slate-200"
+                  }`}
+                >
+                  Todos los Países ({translatedSites.length})
+                </button>
+
+                {countryList.map(([country, count]) => {
+                  const active = selectedCountry === country;
+                  const expanded = countryDropdown?.country === country;
+                  return (
+                    <button
+                      key={country}
+                      type="button"
+                      data-country-trigger={country}
+                      onClick={(e) => handleCountrySelect(country, e.currentTarget)}
+                      aria-pressed={active}
+                      aria-expanded={expanded}
+                      aria-haspopup="menu"
+                      className={`inline-flex shrink-0 items-center gap-1 rounded-full border px-3 py-1 text-xs font-medium transition-all ${
+                        active
+                          ? "border-[#D4AF37] bg-[#D4AF37]/20 text-[#D4AF37] shadow-[0_0_10px_rgba(212,175,55,0.2)]"
+                          : "border-slate-800/90 bg-[#0D1424]/90 text-slate-300 hover:border-slate-700 hover:text-slate-100"
+                      }`}
+                    >
+                      <span>{country}</span>
+                      <span className="font-mono text-[10px] text-slate-400">
+                        ({count})
+                      </span>
+                      {expanded ? (
+                        <ChevronUp className="h-3 w-3 opacity-80" aria-hidden="true" />
+                      ) : (
+                        <ChevronDown className="h-3 w-3 opacity-60" aria-hidden="true" />
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+
+              <button
+                type="button"
+                onClick={() => scrollCountryBar("right")}
+                disabled={!canScrollRight}
+                aria-label="Desplazar países a la derecha"
+                title="Desplazar países a la derecha"
+                className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-slate-800/90 bg-[#0D1424]/90 text-slate-300 transition-colors hover:border-[#D4AF37]/60 hover:text-[#D4AF37] disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:border-slate-800/90 disabled:hover:text-slate-300"
+              >
+                <ChevronRight className="h-3.5 w-3.5" aria-hidden="true" />
+              </button>
             </>
           )}
 

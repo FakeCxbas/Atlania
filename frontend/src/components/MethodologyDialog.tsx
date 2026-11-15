@@ -3,6 +3,15 @@
 import { useRef } from "react";
 import type { AnalogDataset } from "@/types/analog";
 import { DIMENSIONS } from "@/lib/dossier";
+import { translateTarget } from "@/lib/spanishTranslations";
+
+const DIMENSION_LABELS_ES: Record<string, string> = {
+  topography: "Topografía y Pendiente",
+  geology: "Geología y Mineralogía",
+  thermal: "Régimen Térmico",
+  hydrology_ice: "Potencial de Aridez / Hielo",
+  subsurface_ops: "Subsuelo y Operaciones",
+};
 
 export function MethodologyDialog({ dataset }: { dataset: AnalogDataset }) {
   const dialogRef = useRef<HTMLDialogElement>(null);
@@ -26,82 +35,97 @@ export function MethodologyDialog({ dataset }: { dataset: AnalogDataset }) {
       >
         <div className="flex items-start justify-between gap-4">
           <h2 id="methodology-title" className="text-lg font-semibold">
-            Methodology &amp; Data Sources
+            Metodología y Fuentes de Datos
           </h2>
           <button
             type="button"
             onClick={() => dialogRef.current?.close()}
-            className="min-h-11 rounded border border-slate-600 px-3 text-sm"
+            className="min-h-11 rounded border border-slate-600 px-3 text-sm hover:border-slate-500 hover:bg-slate-800/60"
           >
-            Close
+            Cerrar
           </button>
         </div>
         <div className="mt-4 space-y-5 text-sm leading-relaxed">
           <section>
             <h3 className="font-semibold text-cyan-300">
-              Exploratory 5-axis ASI
+              ASI Exploratorio de 5 Ejes
             </h3>
-            <p>{dataset.methodology.interpretation}</p>
+            <p>
+              El Índice de Similitud Análoga (ASI) compara cada ubicación
+              terrestre frente a escenarios planetarios de referencia combinando
+              datos climatológicos de NASA POWER, telemetría de elevación y
+              prioridades geológicas u operativas de misión.
+            </p>
             <p className="my-2 font-mono tabular-nums">
-              ASI = Σ (target weight × dimension score)
+              ASI = Σ (peso objetivo × puntuación de dimensión)
             </p>
             <p>
-              Each dimension ranges from 0 to 100. Target weights sum to 1 and
-              express mission priorities. Scores use illustrative terrain and
-              geology priors, not measured or calibrated site properties.
+              Cada dimensión varía entre 0 y 100. Los pesos objetivo suman 1 y
+              expresan las prioridades de la misión. Las puntuaciones emplean
+              referencias ilustrativas de terreno y geología, no propiedades de
+              sitio medidas o calibradas en campo.
             </p>
             <p className="mt-2">
-              For numeric comparisons, L(a, b; s) = max(0, 1 − |a − b| / s). The
-              tolerance is 1 for unit-interval priors, 30° for slope and 100°C
-              for thermal comparisons.
+              Para comparaciones numéricas, L(a, b; s) = max(0, 1 − |a − b| / s).
+              La tolerancia es 1 para parámetros normalizados en intervalo
+              unitario, 30° para pendiente y 100°C para comparaciones térmicas.
             </p>
             <ul className="mt-2 list-disc space-y-1 pl-5">
-              <li>Topography: equal parts slope and roughness similarity.</li>
               <li>
-                Geology: fuzzy Jaccard overlap, Σ min / Σ max, across basalt,
-                regolith, sedimentary, evaporite and impact relevance.
+                <strong>Topografía:</strong> similitud en partes iguales entre
+                pendiente y rugosidad del terreno.
               </li>
               <li>
-                Thermal: 60% mean-temperature and 40% temperature-range
-                similarity.
+                <strong>Geología:</strong> solapamiento difuso de Jaccard, Σ min
+                / Σ max, entre basalto, regolito, sedimentario, evaporitas y
+                relevancia de impacto.
               </li>
               <li>
-                Hydrology / ice: 40% dryness, 40% ice relevance and 20% aqueous
-                history. Earth dryness = 1 / (1 + precipitation in mm/day).
+                <strong>Térmico:</strong> 60% de similitud en temperatura media y
+                40% en amplitud térmica.
               </li>
               <li>
-                Subsurface / operations: 70% lava-tube and 30% shelter
-                similarity. Shared absence of caves is a scenario match, not
-                cave utility.
+                <strong>Hidrología / Hielo:</strong> 40% de aridez, 40% de
+                relevancia de hielo y 20% de historial acuoso. Aridez terrestre =
+                1 / (1 + precipitación en mm/día).
+              </li>
+              <li>
+                <strong>Subsuelo / Operaciones:</strong> 70% de similitud en
+                tubos de lava y 30% en refugio natural. La ausencia compartida de
+                cavernas representa coincidencia de escenario, no utilidad de
+                cueva.
               </li>
             </ul>
             <div
               className="mt-3 overflow-x-auto"
               tabIndex={0}
               role="region"
-              aria-label="Target weights"
+              aria-label="Pesos objetivo en el conjunto de datos"
             >
               <table className="w-full text-left text-xs">
-                <caption className="mb-2 text-left">
-                  Target weights (%) in the current dataset
+                <caption className="mb-2 text-left text-slate-300">
+                  Pesos objetivo (%) en el conjunto de datos actual
                 </caption>
                 <thead>
                   <tr>
-                    <th className="p-2">Target</th>
+                    <th className="p-2">Objetivo</th>
                     {DIMENSIONS.map((d) => (
                       <th key={d.key} className="p-2">
-                        {d.label}
+                        {DIMENSION_LABELS_ES[d.key] ?? d.label}
                       </th>
                     ))}
                   </tr>
                 </thead>
                 <tbody>
                   {Object.entries(dataset.references).map(([id, target]) => {
+                    const translatedTarget = translateTarget(target);
                     const score = dataset.sites.find((site) => site.scores[id])
                       ?.scores[id];
                     return (
                       <tr key={id} className="border-t border-slate-700">
-                        <th className="p-2 font-normal">{target.name}</th>
+                        <th className="p-2 font-normal">
+                          {translatedTarget.name}
+                        </th>
                         {DIMENSIONS.map((d) => (
                           <td
                             key={d.key}
@@ -120,51 +144,65 @@ export function MethodologyDialog({ dataset }: { dataset: AnalogDataset }) {
             </div>
             <div className="mt-3 rounded border border-slate-700/80 bg-[#060913]/60 p-3">
               <h4 className="font-semibold text-slate-200">
-                Why these weights? (Mission rationale)
+                ¿Por qué estos pesos? (Justificación de misión)
               </h4>
               <ul className="mt-1.5 list-disc space-y-1 pl-5 text-xs text-slate-300">
                 <li>
-                  <span className="font-medium text-cyan-300">Shackleton Crater</span>{" "}
-                  weights Thermal (30%) and Hydrology / Ice (30%) highest because
-                  Artemis South Pole operations depend on cryogenic cold-trap stability
-                  for water-ice ISRU alongside steep crater-rim traverse slopes (20%).
+                  <span className="font-medium text-cyan-300">
+                    Cráter Shackleton
+                  </span>{" "}
+                  prioriza Régimen Térmico (30%) e Hidrología / Hielo (30%)
+                  porque las operaciones Artemis en el Polo Sur Lunar dependen
+                  de trampas frías criogénicas para ISRU de hielo de agua junto
+                  con pendientes escarpadas en el borde del cráter (20%).
                 </li>
                 <li>
-                  <span className="font-medium text-cyan-300">Mare Tranquillitatis</span>{" "}
-                  weights Subsurface / Ops (35%) and Geology (25%) highest because
-                  collapsed basaltic skylight pits and intact lava tubes are the
-                  primary radiation and micrometeoroid shelter mechanism.
+                  <span className="font-medium text-cyan-300">
+                    Mare Tranquillitatis
+                  </span>{" "}
+                  prioriza Subsuelo y Operaciones (35%) y Geología (25%) porque
+                  los tragaluces basálticos colapsados y tubos de lava intactos
+                  son el principal refugio frente a radiación y micrometeoritos.
                 </li>
                 <li>
-                  <span className="font-medium text-amber-300">Jezero Crater</span>{" "}
-                  weights Geology (30%) and Hydrology / Ice (25%) highest because
-                  astrobiology and rover sampling focus on fluvio-lacustrine clay/carbonate
-                  deltas and arid evaporitic preservation.
+                  <span className="font-medium text-amber-300">
+                    Cráter Jezero
+                  </span>{" "}
+                  prioriza Geología (30%) e Hidrología / Hielo (25%) porque la
+                  astrobiología y el muestreo con rovers se enfocan en deltas
+                  fluvio-lacustres de arcillas/carbonatos y preservación
+                  evaporítica árida.
                 </li>
                 <li>
-                  <span className="font-medium text-amber-300">Olympus Mons / Tharsis</span>{" "}
-                  weights Geology (30%) and Topography (25%) highest to prioritize
-                  shield-volcano basaltic flows, slope trafficability, and lava-tube
-                  shelter (20%) over polar ice.
+                  <span className="font-medium text-amber-300">
+                    Monte Olimpo / Tharsis
+                  </span>{" "}
+                  prioriza Geología (30%) y Topografía (25%) para destacar
+                  coladas basálticas de volcán en escudo, transitabilidad en
+                  pendientes y refugio en tubos de lava (20%) por encima del
+                  hielo polar.
                 </li>
               </ul>
             </div>
           </section>
           <section>
             <h3 className="font-semibold text-cyan-300">
-              NASA POWER climatology
+              Climatología NASA POWER
             </h3>
             <p>
-              Gridded Earth air climatology supplies T2M_MAX, T2M_MIN,
-              PRECTOTCORR, WS10M, RH2M, ALLSKY_SFC_SW_DWN and PS. The engine
-              uses annual values when available, otherwise day-weighted monthly
-              means. Wind, humidity, solar irradiance and surface pressure
-              provide context but are not scored; UV and radiation dose are not
-              measured or scored here.
+              La climatología terrestre en grilla provee T2M_MAX, T2M_MIN,
+              PRECTOTCORR, WS10M, RH2M, ALLSKY_SFC_SW_DWN y PS. El motor utiliza
+              valores anuales cuando están disponibles o promedios mensuales
+              ponderados por días. El viento, la humedad, la irradiancia solar y
+              la presión superficial aportan contexto operativo pero no puntúan;
+              la dosis UV y de radiación no se miden ni puntúan aquí.
             </p>
             <p className="mt-2">
-              {dataset.methodology.climate_limitations} The exported dossier
-              preserves each site’s source URL, aggregation and fallback reason.
+              Los datos climatológicos reflejan condiciones atmosféricas
+              terrestres en superficie y no reproducen el vacío lunar ni la
+              atmósfera tenue de Marte. El dossier exportado conserva la URL de
+              origen, el método de agregación y el motivo de respaldo de cada
+              sitio.
             </p>
             <a
               href="https://power.larc.nasa.gov/"
@@ -172,17 +210,20 @@ export function MethodologyDialog({ dataset }: { dataset: AnalogDataset }) {
               rel="noreferrer noopener"
               className="text-cyan-300 underline"
             >
-              NASA POWER data portal
+              Portal de datos NASA POWER
             </a>
           </section>
           <section>
-            <h3 className="font-semibold text-cyan-300">Terrain telemetry</h3>
+            <h3 className="font-semibold text-cyan-300">
+              Telemetría del Terreno
+            </h3>
             <p>
-              Open-Meteo / Copernicus GLO-90 provides center elevation and
-              neighboring samples for slope and roughness telemetry. These
-              measurements do not replace the illustrative ASI terrain priors.
-              Each dossier preserves the DEM source, attribution and fallback
-              reason so estimates can be distinguished from sampled elevations.
+              Open-Meteo / Copernicus GLO-90 proporciona la elevación central y
+              muestras vecinas para calcular la telemetría de pendiente y
+              rugosidad. Estas mediciones no reemplazan las referencias
+              ilustrativas de terreno del ASI. Cada dossier conserva la fuente
+              DEM, atribución y respaldo para distinguir estimaciones de
+              elevaciones muestreadas.
             </p>
             <a
               href="https://open-meteo.com/en/docs/elevation-api"
@@ -190,45 +231,48 @@ export function MethodologyDialog({ dataset }: { dataset: AnalogDataset }) {
               rel="noreferrer noopener"
               className="text-cyan-300 underline"
             >
-              Open-Meteo elevation data
+              Datos de elevación Open-Meteo
             </a>
           </section>
           <section>
             <h3 className="font-semibold text-cyan-300">
-              Strengths and analogy breakdowns
+              Fortalezas y Desglose de Analogía
             </h3>
             <p>
-              A dimension scoring at least 70/100 is listed as a strength. A
-              high overall score can hide a weak dimension. Gravity, atmosphere
-              or vacuum, radiation, weathering, thermal comparability and
-              site-specific caveats are reported separately; they are not
-              additional score penalties. Earth sites cannot reproduce all Moon
-              or Mars conditions.
+              Toda dimensión con puntuación mínima de 70/100 se lista como
+              fortaleza. Una puntuación global alta puede ocultar una dimensión
+              débil. La gravedad, atmósfera o vacío, radiación, meteorización,
+              comparabilidad térmica y salvedades específicas de cada sitio se
+              reportan por separado; no son penalizaciones adicionales. Ningún
+              sitio terrestre reproduce todas las condiciones de la Luna o Marte.
             </p>
           </section>
           <section>
             <h3 className="font-semibold text-cyan-300">
-              Planetary reference scenarios
+              Escenarios Planetarios de Referencia
             </h3>
             <ul className="space-y-2">
-              {Object.entries(dataset.references).map(([id, target]) => (
-                <li key={id}>
-                  <a
-                    href={target.source_url}
-                    target="_blank"
-                    rel="noreferrer noopener"
-                    className="text-cyan-300 underline"
-                  >
-                    {target.name}
-                  </a>
-                  <p>{target.context}</p>
-                </li>
-              ))}
+              {Object.entries(dataset.references).map(([id, target]) => {
+                const translatedTarget = translateTarget(target);
+                return (
+                  <li key={id}>
+                    <a
+                      href={target.source_url}
+                      target="_blank"
+                      rel="noreferrer noopener"
+                      className="text-cyan-300 underline"
+                    >
+                      {translatedTarget.name}
+                    </a>
+                    <p>{translatedTarget.context}</p>
+                  </li>
+                );
+              })}
             </ul>
           </section>
           <p className="text-xs text-slate-400">
             {dataset.methodology.name} · v{dataset.methodology.version} ·
-            Dataset schema {dataset.schema_version}
+            Esquema del conjunto de datos {dataset.schema_version}
           </p>
         </div>
       </dialog>

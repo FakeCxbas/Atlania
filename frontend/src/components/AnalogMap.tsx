@@ -218,6 +218,8 @@ export function AnalogMap({
   const latSpanRef = useRef<HTMLSpanElement | null>(null);
   const lonSpanRef = useRef<HTMLSpanElement | null>(null);
   const zoomSpanRef = useRef<HTMLSpanElement | null>(null);
+  const flightTokenRef = useRef(0);
+  const activeFlightCleanupRef = useRef<(() => void) | null>(null);
 
   const [basemap, setBasemap] = useState<BasemapMode>("satellite");
   const [terrain3d, setTerrain3d] = useState(true);
@@ -292,6 +294,93 @@ export function AnalogMap({
       });
     },
     [getFlyDuration]
+  );
+
+  const cancelActiveFlight = useCallback(() => {
+    flightTokenRef.current += 1;
+    if (activeFlightCleanupRef.current) {
+      activeFlightCleanupRef.current();
+      activeFlightCleanupRef.current = null;
+    }
+  }, []);
+
+  const flyToSiteCinematographically = useCallback(
+    (site: AnalogSite, requestedZoom?: number) => {
+      const map = mapRef.current;
+      if (!map) return;
+
+      cancelActiveFlight();
+      const token = flightTokenRef.current;
+
+      const isPolar = site.latitude < -60 || site.latitude > 75;
+      if (isPolar) {
+        queueMicrotask(() => {
+          setBasemap((prev) => (prev === "satellite" ? "nasa-gibs" : prev));
+        });
+      }
+
+      const finalZoom = isPolar ? 8.5 : Math.max(map.getZoom(), requestedZoom ?? 12.0);
+      const prefersReducedMotion =
+        typeof window !== "undefined" &&
+        window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+      if (prefersReducedMotion) {
+        map.jumpTo({
+          center: [site.longitude, site.latitude],
+          zoom: finalZoom,
+          pitch: terrain3d ? 52 : map.getPitch(),
+        });
+        return;
+      }
+
+      const startBearing = map.getBearing();
+      const midZoom = isPolar ? 7.0 : Math.min(finalZoom - 2.0, 9.8);
+      const approachPitch = terrain3d ? Math.max(map.getPitch(), 38) : map.getPitch();
+      const finalPitch = terrain3d ? 55 : map.getPitch();
+
+      const onUserInteract = () => {
+        cancelActiveFlight();
+      };
+
+      const onMoveEnd = () => {
+        cleanup();
+        if (flightTokenRef.current !== token) return;
+        map.easeTo({
+          center: [site.longitude, site.latitude],
+          zoom: finalZoom,
+          pitch: finalPitch,
+          bearing: startBearing + 30,
+          duration: 1400,
+          essential: true,
+        });
+      };
+
+      const cleanup = () => {
+        map.off("moveend", onMoveEnd);
+        map.off("mousedown", onUserInteract);
+        map.off("touchstart", onUserInteract);
+        map.off("wheel", onUserInteract);
+        map.off("dragstart", onUserInteract);
+      };
+
+      activeFlightCleanupRef.current = cleanup;
+      map.on("mousedown", onUserInteract);
+      map.on("touchstart", onUserInteract);
+      map.on("wheel", onUserInteract);
+      map.on("dragstart", onUserInteract);
+      map.once("moveend", onMoveEnd);
+
+      map.flyTo({
+        center: [site.longitude, site.latitude],
+        zoom: midZoom,
+        pitch: approachPitch,
+        bearing: startBearing + 22,
+        speed: 0.75,
+        curve: 1.45,
+        essential: true,
+      });
+    },
+    [cancelActiveFlight, terrain3d]
   );
 
   // Register tile cache Service Worker once on client
@@ -561,26 +650,16 @@ export function AnalogMap({
       }
     }
 
-    // Do not interrupt a broader fitBounds/world camera transition
-    if (cameraTarget && (cameraTarget.type === "fitBounds" || cameraTarget.type === "world")) {
+    // Do not interrupt an explicit cameraTarget transition
+    if (cameraTarget) {
       return;
     }
 
     const site = sites.find((s) => s.id === selectedSiteId);
     if (!site) return;
 
-    const prefersReducedMotion =
-      typeof window !== "undefined" &&
-      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-
-    map.flyTo({
-      center: [site.longitude, site.latitude],
-      zoom: Math.max(map.getZoom(), 6.2),
-      pitch: terrain3d ? Math.max(map.getPitch(), 42) : map.getPitch(),
-      duration: prefersReducedMotion ? 0 : 650,
-      essential: true,
-    });
-  }, [selectedSiteId, sites, terrain3d, cameraTarget]);
+    flyToSiteCinematographically(site);
+  }, [selectedSiteId, sites, cameraTarget, flyToSiteCinematographically]);
 
   useEffect(() => {
     const map = mapRef.current;
@@ -1028,6 +1107,7 @@ export function AnalogMap({
     const dur = prefersReducedMotion ? 0 : 750;
 
     if (cameraTarget.type === "world") {
+      cancelActiveFlight();
       map.fitBounds(
         [
           [-170, -55],
@@ -1039,6 +1119,7 @@ export function AnalogMap({
     }
 
     if (cameraTarget.type === "fitBounds") {
+      cancelActiveFlight();
       const { sites: targetSites, padding } = cameraTarget;
       if (!targetSites.length) return;
 
@@ -1058,15 +1139,9 @@ export function AnalogMap({
     if (cameraTarget.type === "site") {
       const site = sites.find((s) => s.id === cameraTarget.siteId);
       if (!site) return;
-      map.flyTo({
-        center: [site.longitude, site.latitude],
-        zoom: Math.max(map.getZoom(), cameraTarget.zoom ?? 6.2),
-        pitch: terrain3d ? Math.max(map.getPitch(), 42) : map.getPitch(),
-        duration: prefersReducedMotion ? 0 : 750,
-        essential: true,
-      });
+      flyToSiteCinematographically(site, cameraTarget.zoom);
     }
-  }, [cameraTarget, sites, terrain3d]);
+  }, [cameraTarget, sites, cancelActiveFlight, flyToSiteCinematographically]);
 
   return (
     <div className="relative h-full w-full bg-[#060913]">
