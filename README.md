@@ -1,22 +1,43 @@
 <p align="center">
-  <img src="docs/assets/hero_banner.jpg" alt="ATLANIA Planetary Observatory Banner" width="100%" />
+  <img src="docs/assets/branding/atlania_banner_horizontal.png" alt="ATLANIA — Planetary Observatory & Earth-Space Analog Atlas" width="100%" />
 </p>
 
 <h1 align="center">ATLANIA // Planetary Observatory &amp; Earth-Space Analog Atlas</h1>
 
 <p align="center">
   <em>&ldquo;Somewhere between Earth and the stars. Discover the extraordinary in the familiar.&rdquo;</em><br />
-  Plataforma de descubrimiento de análogos planetarios e Índice de Similitud Análoga (ASI) para el desafío <strong>Identify Earth Locations that Analog the Permanent Moon Base Locations and Mars</strong> (NASA Space Apps Challenge).
+  <strong>NASA International Space Apps Challenge 2026</strong><br />
+  Desafío: <em>Identify Earth Locations that Analog the Permanent Moon Base Locations and Mars</em>
 </p>
 
 <p align="center">
-  <a href="https://github.com/FakeCxbas/nasa-space-apps-2026/actions/workflows/ci.yml">
-    <img src="https://github.com/FakeCxbas/nasa-space-apps-2026/actions/workflows/ci.yml/badge.svg" alt="CI Status" />
+  <a href="https://github.com/FakeCxbas/Atlania/actions/workflows/ci.yml">
+    <img src="https://github.com/FakeCxbas/Atlania/actions/workflows/ci.yml/badge.svg" alt="CI Status" />
   </a>
   <img src="https://img.shields.io/badge/Python-3.11%2B-C5A36D?style=flat-square&logo=python&logoColor=white" alt="Python 3.11+" />
   <img src="https://img.shields.io/badge/Next.js-16-101321?style=flat-square&logo=nextdotjs&logoColor=white" alt="Next.js 16" />
+  <img src="https://img.shields.io/badge/MapLibre_GL-4.7-06B6D4?style=flat-square&logo=maplibre&logoColor=white" alt="MapLibre GL" />
   <img src="https://img.shields.io/badge/Data-NASA%20POWER%20%2B%20Copernicus%20DEM-38BDF8?style=flat-square" alt="NASA POWER + Copernicus DEM" />
+  <img src="https://img.shields.io/badge/License-MIT-94A3B8?style=flat-square" alt="License MIT" />
 </p>
+
+---
+
+## Identidad Visual y Simbología
+
+<p align="center">
+  <img src="docs/assets/branding/atlania_isotipo_realistic.jpg" alt="Isotipo Oficial ATLANIA" width="220" />
+</p>
+
+El isotipo de **ATLANIA** sintetiza el puente de exploración científica entre nuestro planeta y los destinos extraterrestres:
+- **La estrella superior guía (*Polaris*):** Representa la telemetría, la orientación y el horizonte de navegación espacial.
+- **La estructura piramidal / Letra "A":** Arquitectura de la estación observatorio, enlazando la curvatura de la atmósfera terrestre con las formaciones geológicas de entrenamiento.
+- **Topografía terrestre:** Verde vegetal, estratos de dunas áridas y paleosuelos como laboratorio análogo vivo.
+- **Los mundos objetivo:** La **Luna** (polo sur, trampas frías de regolito) a la izquierda y **Marte** (óxidos ferrosos y volcanismo en escudo) a la derecha.
+
+| Isotipo Realista 3D | Isotipo Vectorial Flat | Isotipo Minimalista | Isotipo Monocromo |
+| :---: | :---: | :---: | :---: |
+| <img src="docs/assets/branding/atlania_isotipo_realistic.jpg" width="130" /> | <img src="docs/assets/branding/atlania_isotipo_flat_full.jpg" width="130" /> | <img src="docs/assets/branding/atlania_isotipo_minimal.jpg" width="130" /> | <img src="docs/assets/branding/atlania_isotipo_monochrome.jpg" width="130" /> |
 
 ---
 
@@ -42,8 +63,20 @@ flowchart LR
 | `olympus-mons-flank` | Olympus Mons Flank | Mars | High-elevation volcanic shield & lava tube operations |
 | `valles-marineris` | Valles Marineris | Mars | Deep tectonic canyon stratigraphy, sulfates & talus slopes |
 
-> [!NOTE]
-> Every analog evaluation explicitly reports both **where the analogy holds** and **where it breaks down** (Earth gravity `9.81 m/s²` vs `1.62` / `3.71 m/s²`, vacuum/thin CO2 atmosphere, ionizing radiation, and terrestrial biological weathering).
+## Scientific Evaluation Methodology (ASI)
+
+El **Índice de Similitud Análoga (ASI)** desarrollado para ATLANIA calcula una correlación cuantitativa multidimensional ($0.00$ a $1.00$) normalizada a través de 5 vectores clave:
+1. **Topografía & Relieve:** Pendiente media y rugosidad local calculada con muestreo en 5 puntos sobre el modelo de elevación global Copernicus DEM GLO-90.
+2. **Geología & Mineralogía:** Sustrato basáltico, regolito fino, arcillas filizadas, sulfatos y análogos de impacto.
+3. **Condiciones Térmicas Extremas:** Amplitud térmica diurna, medias extremas y radiación solar superficial incidente (NASA POWER API).
+4. **Hidrología & Aridez / Hielo:** Tasa de precipitación anual, humedad relativa y persistencia de permafrost / campos glaciares.
+5. **Entorno Subterráneo:** Presencia de tubos de lava basáltica como refugio térmico y blindaje contra radiación ionizante para hábitats Artemis.
+
+### Análogos Regionales Clave de Sudamérica
+
+- **Galápagos Lava Tubes (Ecuador):** Tubos de lava basáltica prístinos con estabilidad térmica constante ($\sim 22^\circ\text{C}$), análogo de primer orden para bases subterráneas en *Mare Tranquillitatis*.
+- **Chimborazo High-Altitude Paramó (Ecuador):** Terreno volcánico peri-glaciar sobre los 4.800 msnm con baja presión atmosférica, alta radiación UV y regolito andesítico.
+- **Desierto de Atacama / Yungay (Chile):** El límite seco de la Tierra para pruebas de instrumentación hiper-árida marciana (*Jezero Crater*).
 
 ---
 
