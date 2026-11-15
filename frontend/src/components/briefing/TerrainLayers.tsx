@@ -7,9 +7,9 @@ import { BrandLogo, type BrandId } from "./BrandLogo";
 export interface TerrainLayersProps {
   /** Scroll-driven separation factor [0..1] */
   layerSeparation: number;
-  /** Currently focused layer (0 = all, 1 = surface, 2 = relief, 3 = geology, 4 = subsurface) */
-  focusedLayer: 0 | 1 | 2 | 3 | 4;
-  onSelectLayer: (layer: 0 | 1 | 2 | 3 | 4) => void;
+  /** Currently focused layer (-1 = all simultaneously, 0 = scroll-synced, 1..4 = manual stratum) */
+  focusedLayer: -1 | 0 | 1 | 2 | 3 | 4;
+  onSelectLayer: (layer: -1 | 0 | 1 | 2 | 3 | 4) => void;
   activePipelineStep: number;
   onSelectPipelineStep: (idx: number) => void;
   pipelineSteps: {
@@ -102,27 +102,39 @@ export function TerrainLayers({
   const scrollActiveStratum: 1 | 2 | 3 | 4 =
     layerSeparation < 0.28
       ? 1
-      : layerSeparation < 0.52
+      : layerSeparation < 0.56
       ? 2
-      : layerSeparation < 0.76
+      : layerSeparation < 0.84
       ? 3
       : 4;
 
   const activeStratumId =
-    focusedLayer === 0 ? scrollActiveStratum : focusedLayer;
+    focusedLayer === 0
+      ? scrollActiveStratum
+      : focusedLayer === -1
+      ? 0
+      : focusedLayer;
 
   // CSS 3D isometric offset for the floating callout markers on the right
   const sepPct = Math.round(Math.max(0, Math.min(1, layerSeparation)) * 100);
 
   return (
     <div>
-      {/* Pinned / Sticky 3D Stratification Track (240vh) */}
-      <div id="terrain-3d-track" className="relative h-[240vh]">
+      {/* Pinned / Sticky 3D Stratification Track (400vh: 4 mandatory 100vh stops) */}
+      <div id="terrain-3d-track" className="relative h-[400vh]">
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute top-[115vh] left-0 h-screen w-full snap-start snap-always"
+          className="pointer-events-none absolute top-[100vh] left-0 h-screen w-full snap-start snap-always"
         />
-        <div className="sticky top-0 flex h-screen w-full items-center overflow-hidden px-6 sm:px-12 lg:px-16">
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute top-[200vh] left-0 h-screen w-full snap-start snap-always"
+        />
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute top-[300vh] left-0 h-screen w-full snap-start snap-always"
+        />
+        <div className="sticky top-0 flex h-screen w-full items-center overflow-hidden px-6 pt-16 sm:px-12 lg:px-16">
           <div className="mx-auto grid w-full max-w-7xl items-center gap-12 lg:grid-cols-12">
             {/* Left 6 Cols: Editorial Typography + Hairline Layer List */}
             <div className="lg:col-span-6">
@@ -222,16 +234,22 @@ export function TerrainLayers({
                 <span className="text-[#00D9F5]">
                   MODELO 3D ESQUEMÁTICO · RELIEVE Y SOMBRAS EN VIVO
                 </span>
-                {focusedLayer !== 0 ? (
+                {focusedLayer !== -1 ? (
                   <button
                     type="button"
-                    onClick={() => onSelectLayer(0)}
+                    onClick={() => onSelectLayer(-1)}
                     className="pointer-events-auto text-[#F1F5F9] underline decoration-[#00D9F5] underline-offset-4 hover:text-[#00D9F5]"
                   >
                     Ver las 4 capas simultáneamente
                   </button>
                 ) : (
-                  <span>4 estratos sincronizados con el scroll</span>
+                  <button
+                    type="button"
+                    onClick={() => onSelectLayer(0)}
+                    className="pointer-events-auto text-[#00D9F5] underline decoration-[#00D9F5] underline-offset-4 hover:text-[#F1F5F9]"
+                  >
+                    Sincronizar foco con scroll
+                  </button>
                 )}
               </div>
             </div>

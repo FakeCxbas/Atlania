@@ -448,7 +448,7 @@ export function MissionBriefingLanding({
   const [activeExampleId, setActiveExampleId] =
     useState<string>("moon-lava-tubes");
   const [activePipelineStep, setActivePipelineStep] = useState<number>(0);
-  const [focusedLayer, setFocusedLayer] = useState<0 | 1 | 2 | 3 | 4>(0);
+  const [focusedLayer, setFocusedLayer] = useState<-1 | 0 | 1 | 2 | 3 | 4>(0);
 
   // Real ASI inspection state (strictly reading precalculated dataset values)
   const [selectedAsiSiteId, setSelectedAsiSiteId] = useState<string>(
@@ -482,7 +482,7 @@ export function MissionBriefingLanding({
     const prevSnapType = html.style.scrollSnapType;
     const prevScrollPadding = html.style.scrollPaddingTop;
     html.style.scrollSnapType = "y mandatory";
-    html.style.scrollPaddingTop = "64px";
+    html.style.scrollPaddingTop = "0px";
     return () => {
       html.style.scrollSnapType = prevSnapType;
       html.style.scrollPaddingTop = prevScrollPadding;
@@ -1514,7 +1514,7 @@ export function MissionBriefingLanding({
                 ============================================================= */}
                 <div
                   id="similitud-asi"
-                  className="mt-28 border-t border-white/15 pt-20"
+                  className="mt-28 snap-start border-t border-white/15 pt-24"
                 >
                   <div className="max-w-3xl">
                     <p className="font-mono text-xs font-semibold tracking-wider text-[#00D9F5] uppercase">
@@ -1744,7 +1744,7 @@ export function MissionBriefingLanding({
                 ============================================================= */}
                 <div
                   id="explora-los-destinos"
-                  className="mt-28 border-t border-white/15 pt-20"
+                  className="mt-28 snap-start border-t border-white/15 pt-24"
                 >
                   <div className="flex flex-col justify-between gap-6 lg:flex-row lg:items-end">
                     <div className="max-w-2xl">
