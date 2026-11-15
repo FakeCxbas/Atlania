@@ -12,7 +12,6 @@ import {
   type RegionEvaluationResult,
 } from "@/lib/evaluateRegion";
 import { AnalogMap, type CameraTarget } from "@/components/AnalogMap";
-import { AtlaniaIsotipo } from "@/components/AtlaniaBrand";
 import { SiteDirectory } from "@/components/SiteDirectory";
 import { TelemetryDrawer } from "@/components/TelemetryDrawer";
 import { MethodologyDialog } from "@/components/MethodologyDialog";
@@ -20,16 +19,14 @@ import { MissionPresentation } from "@/components/MissionPresentation";
 import { downloadQgisGeoJson } from "@/lib/dossier";
 import { translateSite, translateTarget } from "@/lib/spanishTranslations";
 import {
-  ArrowLeft,
   ChevronDown,
   ChevronLeft,
   ChevronRight,
   ChevronUp,
+  Compass,
   Download,
   Globe2,
-  Home,
   ListFilter,
-  MapPin,
   Moon,
   Orbit,
   Presentation,
@@ -59,7 +56,7 @@ export function MissionControlApp({ dataset }: MissionControlAppProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedSiteId, setSelectedSiteId] = useState<string | null>(null);
   const [activeTargetId, setActiveTargetId] = useState<string>(
-    dataset.sites[0]?.best_target ?? Object.keys(dataset.references)[0] ?? "",
+    dataset.sites[0]?.best_target ?? Object.keys(dataset.references)[0] ?? ""
   );
   const [showDirectory, setShowDirectory] = useState(false);
   const [showPresentation, setShowPresentation] = useState(false);
@@ -77,6 +74,27 @@ export function MissionControlApp({ dataset }: MissionControlAppProps) {
   const [regionRankByActiveTarget, setRegionRankByActiveTarget] = useState(true);
   const [regionResult, setRegionResult] = useState<RegionEvaluationResult | null>(null);
   const [regionError, setRegionError] = useState<string | null>(null);
+
+  const [feedbackMessage, setFeedbackMessage] = useState<string | null>(null);
+  const feedbackTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const notifyUser = useCallback((message: string) => {
+    setFeedbackMessage(message);
+    if (feedbackTimerRef.current) {
+      clearTimeout(feedbackTimerRef.current);
+    }
+    feedbackTimerRef.current = setTimeout(() => {
+      setFeedbackMessage(null);
+    }, 3600);
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (feedbackTimerRef.current) {
+        clearTimeout(feedbackTimerRef.current);
+      }
+    };
+  }, []);
 
   // Pre-translate all sites and references into natural Spanish
   const translatedSites = useMemo(() => {
@@ -121,13 +139,12 @@ export function MissionControlApp({ dataset }: MissionControlAppProps) {
       map.set(site.country, (map.get(site.country) ?? 0) + 1);
     }
 
-    const entries = Array.from(map.entries()).sort((a, b) => {
+    return Array.from(map.entries()).sort((a, b) => {
       const pa = getCountryPriority(a[0]);
       const pb = getCountryPriority(b[0]);
       if (pa !== pb) return pa - pb;
       return a[0].localeCompare(b[0], "es");
     });
-    return entries;
   }, [translatedSites]);
 
   // Sites belonging to the currently open floating country dropdown
@@ -200,7 +217,6 @@ export function MissionControlApp({ dataset }: MissionControlAppProps) {
     const q = searchQuery.trim().toLowerCase();
 
     return translatedSites.filter((site) => {
-      // 1. Filter by Main Tab
       if (mainTab === "tierra") {
         if (selectedCountry !== "TODOS" && site.country !== selectedCountry) {
           return false;
@@ -219,7 +235,6 @@ export function MissionControlApp({ dataset }: MissionControlAppProps) {
         }
       }
 
-      // 2. Filter by search query
       if (!q) return true;
       const ref = translatedReferences[site.best_target];
       return (
@@ -283,25 +298,34 @@ export function MissionControlApp({ dataset }: MissionControlAppProps) {
     [probeSite, rankedRegionResult, regionRankByActiveTarget, dataset.sites]
   );
 
-  const handleProbeCoordinate = useCallback(async (lat: number, lon: number) => {
-    setIsProbing(true);
-    try {
-      const res = await fetch(
-        `/api/evaluate?lat=${encodeURIComponent(lat.toFixed(4))}&lon=${encodeURIComponent(lon.toFixed(4))}`
-      );
-      if (!res.ok) return;
-      const payload = (await res.json()) as { site?: AnalogSite };
-      if (payload.site) {
-        setProbeSite(payload.site);
-        setSelectedSiteId(payload.site.id);
-        setActiveTargetId(payload.site.best_target);
-        setProbeMode(false);
-        setShowDirectory(false);
+  const handleProbeCoordinate = useCallback(
+    async (lat: number, lon: number) => {
+      setIsProbing(true);
+      try {
+        const res = await fetch(
+          `/api/evaluate?lat=${encodeURIComponent(lat.toFixed(4))}&lon=${encodeURIComponent(lon.toFixed(4))}`
+        );
+        if (!res.ok) {
+          notifyUser("No se pudo evaluar la coordenada seleccionada.");
+          return;
+        }
+        const payload = (await res.json()) as { site?: AnalogSite };
+        if (payload.site) {
+          setProbeSite(payload.site);
+          setSelectedSiteId(payload.site.id);
+          setActiveTargetId(payload.site.best_target);
+          setProbeMode(false);
+          setShowDirectory(false);
+          notifyUser(
+            `Sondeo completado (${lat.toFixed(2)}°, ${lon.toFixed(2)}°): ${payload.site.overall_asi.toFixed(1)}% ASI`
+          );
+        }
+      } finally {
+        setIsProbing(false);
       }
-    } finally {
-      setIsProbing(false);
-    }
-  }, []);
+    },
+    [notifyUser]
+  );
 
   const handleProbeRegion = useCallback(
     async (bounds: RegionBounds) => {
@@ -321,7 +345,7 @@ export function MissionControlApp({ dataset }: MissionControlAppProps) {
         const res = await fetch(`/api/evaluate-region?${params.toString()}`);
         const payload = (await res.json()) as RegionEvaluationResult & { error?: string };
         if (!res.ok) {
-          setRegionError(payload.error ?? "Region scan failed.");
+          setRegionError(payload.error ?? "Error al evaluar la región.");
           return;
         }
         setRegionResult(payload);
@@ -332,13 +356,16 @@ export function MissionControlApp({ dataset }: MissionControlAppProps) {
             setActiveTargetId(payload.points[0].best_target);
           }
         }
+        notifyUser(
+          `Prospección ${payload.grid_size}×${payload.grid_size} completada (${payload.evaluated_count} sectores)`
+        );
       } catch {
-        setRegionError("Unable to reach region evaluation service.");
+        setRegionError("No se pudo conectar con el servicio de evaluación regional.");
       } finally {
         setIsProbingRegion(false);
       }
     },
-    [regionGridSize, regionRankByActiveTarget, activeTargetId]
+    [regionGridSize, regionRankByActiveTarget, activeTargetId, notifyUser]
   );
 
   // Switch Main Tabs
@@ -358,6 +385,7 @@ export function MissionControlApp({ dataset }: MissionControlAppProps) {
         setSelectedSiteId(best.id);
         setCameraTarget({ type: "fitBounds", sites: moonSites });
       }
+      notifyUser(`Mostrando ${moonSites.length} análogos lunares`);
     } else if (tab === "marte") {
       setActiveTargetId("jezero-crater");
       const marsSites = translatedSites.filter(
@@ -368,15 +396,16 @@ export function MissionControlApp({ dataset }: MissionControlAppProps) {
         setSelectedSiteId(best.id);
         setCameraTarget({ type: "fitBounds", sites: marsSites });
       }
+      notifyUser(`Mostrando ${marsSites.length} análogos marcianos`);
     } else {
-      // Tierra: show all sites in global 2D view without auto-selecting a site
       setSelectedSiteId(null);
       setComparisonExpanded(false);
       setCameraTarget({ type: "world" });
+      notifyUser(`Vista global: ${translatedSites.length} ubicaciones terrestres`);
     }
   };
 
-  // Country filter selection: opens floating vertical dropdown without auto-selecting a site
+  // Country filter selection
   const handleCountrySelect = (country: string, triggerEl?: HTMLButtonElement | null) => {
     if (country === "TODOS") {
       setSelectedCountry("TODOS");
@@ -391,10 +420,10 @@ export function MissionControlApp({ dataset }: MissionControlAppProps) {
     setCountryDropdown((prev) => {
       if (prev?.country === country) return null;
       if (!triggerEl || typeof window === "undefined") {
-        return { country, top: 108, left: 16 };
+        return { country, top: 96, left: 16 };
       }
       const rect = triggerEl.getBoundingClientRect();
-      const menuWidth = Math.min(360, window.innerWidth - 24);
+      const menuWidth = Math.min(340, window.innerWidth - 24);
       const clampedLeft = Math.max(12, Math.min(rect.left, window.innerWidth - menuWidth - 12));
       return {
         country,
@@ -404,21 +433,20 @@ export function MissionControlApp({ dataset }: MissionControlAppProps) {
     });
   };
 
-  // Fly directly with close-up detail zoom to a site chosen from the country dropdown
   const handleSelectSubmenuSite = useCallback((site: AnalogSite) => {
     setCountryDropdown(null);
     setShowDirectory(false);
     setSelectedSiteId(site.id);
     setActiveTargetId(site.best_target);
-    setCameraTarget({ type: "site", siteId: site.id, zoom: 12.2 });
+    setCameraTarget({ type: "site", siteId: site.id, zoom: 9.8 });
   }, []);
 
-  // Toggle directory: ensure site detail panel is closed to prevent overlap
   const handleToggleDirectory = () => {
     setShowDirectory((prev) => {
       const next = !prev;
       if (next) {
         setSelectedSiteId(null);
+        setComparisonExpanded(false);
       }
       return next;
     });
@@ -472,334 +500,205 @@ export function MissionControlApp({ dataset }: MissionControlAppProps) {
     });
   }, [dataset.references, translatedSites]);
 
-  // Keyboard accessibility: Escape key closes active panel or directory
+  // Keyboard accessibility: Escape closes directory or deselects site
   useEffect(() => {
     const handleGlobalKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
-        if (showDirectory) {
+        if (probeMode) {
+          setProbeMode(false);
+        } else if (regionProbeMode) {
+          setRegionProbeMode(false);
+        } else if (showDirectory) {
           setShowDirectory(false);
-        } else if (selectedSiteId) {
+        } else if (selectedSiteId && !comparisonExpanded) {
           setSelectedSiteId(null);
         }
       }
     };
     window.addEventListener("keydown", handleGlobalKeyDown);
     return () => window.removeEventListener("keydown", handleGlobalKeyDown);
-  }, [showDirectory, selectedSiteId]);
+  }, [showDirectory, selectedSiteId, comparisonExpanded, probeMode, regionProbeMode]);
+
+  const hasActiveFilter =
+    selectedCountry !== "TODOS" ||
+    selectedTargetFilter !== "ALL" ||
+    searchQuery.trim().length > 0;
+
+  const showSidePanel = (Boolean(selectedSite) || showDirectory) && !comparisonExpanded;
 
   return (
-    <div className="relative h-screen w-screen overflow-hidden bg-[#060913] text-slate-100 font-sans">
+    <div className="flex h-screen w-screen flex-col overflow-hidden bg-[#101321] font-sans text-[#E4DFD5]">
       <a
         href="#map-region"
-        className="sr-only focus:not-sr-only focus:fixed focus:left-3 focus:top-3 focus:z-50 focus:rounded focus:bg-[#D4AF37] focus:px-3 focus:py-2 focus:text-sm focus:font-semibold focus:text-slate-950"
+        className="sr-only focus:not-sr-only focus:fixed focus:left-3 focus:top-3 focus:z-50 focus:rounded focus:bg-[#C5A36D] focus:px-3 focus:py-2 focus:text-sm focus:font-semibold focus:text-[#101321]"
       >
         Saltar al mapa interactivo
       </a>
 
-      {/* 1. Full-screen Protagonist Map */}
-      <div id="map-region" className="absolute inset-0 z-0">
-        <AnalogMap
-          sites={mapSites}
-          references={translatedReferences}
-          selectedSiteId={selectedSite?.id ?? null}
-          onSelectSite={handleSelectSite}
-          cameraTarget={cameraTarget}
-          probeMode={probeMode}
-          isProbing={isProbing}
-          onToggleProbeMode={() => {
-            setProbeMode((prev) => !prev);
-            setRegionProbeMode(false);
-          }}
-          onProbeCoordinate={handleProbeCoordinate}
-          regionProbeMode={regionProbeMode}
-          isProbingRegion={isProbingRegion}
-          regionGridSize={regionGridSize}
-          onChangeRegionGridSize={setRegionGridSize}
-          onToggleRegionProbeMode={() => {
-            setRegionProbeMode((prev) => !prev);
-            setProbeMode(false);
-          }}
-          onProbeRegion={handleProbeRegion}
-          regionResult={rankedRegionResult}
-        />
-      </div>
-
-      {/* 2. Top Navigation Bar (Fixed z-40, Never Covered by Side Panels) */}
+      {/* 1. Barra superior sencilla y limpia */}
       <header
-        aria-label="Navegación principal de exploración análoga"
-        className="absolute left-0 right-0 top-0 z-40 border-b border-[#D4AF37]/30 bg-[#060913]/95 px-3 py-2.5 shadow-2xl backdrop-blur-md sm:px-6"
+        aria-label="Navegación principal de ATLANIA"
+        className="z-40 flex shrink-0 items-center justify-between gap-3 border-b border-[#55527D]/25 bg-[#101321] px-4 py-2 sm:px-6"
       >
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          {/* Logo & Platform Name + Return to Mission Briefing */}
-          <div className="flex items-center gap-2.5">
-            <Link
-              href="/"
-              title="Volver a ATLANIA — Observatorio Planetario"
-              className="group flex items-center gap-2.5 rounded-lg pr-1 transition-opacity hover:opacity-90"
-            >
-              <AtlaniaIsotipo className="h-9 w-9 shrink-0 drop-shadow-[0_0_12px_rgba(247,238,215,0.22)]" />
-              <div>
-                <span className="block font-serif text-sm font-semibold tracking-widest text-[#E4DFD5] uppercase sm:text-base">
-                  ATLANIA
-                </span>
-                <span className="text-[10px] font-mono text-[#A3A1BD]">
-                  Planetary Observatory · {dataset.sites.length} Análogos
-                </span>
-              </div>
-            </Link>
-          </div>
-
-          {/* 3 Main Clean Navigation Tabs */}
-          <nav
-            aria-label="Pestañas principales de exploración"
-            className="flex items-center rounded-xl border border-slate-800 bg-[#0D1424]/90 p-1 shadow-inner"
-          >
-            <button
-              type="button"
-              onClick={() => handleTabChange("tierra")}
-              aria-pressed={mainTab === "tierra"}
-              className={`flex items-center gap-1.5 rounded-lg px-3.5 py-1.5 text-xs font-semibold transition-all ${
-                mainTab === "tierra"
-                  ? "border border-[#F5B82E] bg-[#F5B82E]/20 text-[#F5B82E]"
-                  : "text-slate-400 hover:text-slate-200"
-              }`}
-            >
-              <Globe2 className="h-3.5 w-3.5 text-[#00D9F5]" aria-hidden="true" />
-              <span>Tierra</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => handleTabChange("luna")}
-              aria-pressed={mainTab === "luna"}
-              className={`flex items-center gap-1.5 rounded-lg px-3.5 py-1.5 text-xs font-semibold transition-all ${
-                mainTab === "luna"
-                  ? "border border-[#F5B82E] bg-[#F5B82E]/20 text-[#F5B82E]"
-                  : "text-slate-400 hover:text-slate-200"
-              }`}
-            >
-              <Moon className="h-3.5 w-3.5 text-slate-300" aria-hidden="true" />
-              <span>Luna</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => handleTabChange("marte")}
-              aria-pressed={mainTab === "marte"}
-              className={`flex items-center gap-1.5 rounded-lg px-3.5 py-1.5 text-xs font-semibold transition-all ${
-                mainTab === "marte"
-                  ? "border border-[#F5B82E] bg-[#F5B82E]/20 text-[#F5B82E]"
-                  : "text-slate-400 hover:text-slate-200"
-              }`}
-            >
-              <Orbit className="h-3.5 w-3.5 text-[#E07A5F]" aria-hidden="true" />
-              <span>Marte</span>
-            </button>
-          </nav>
-
-          {/* Right Tools: Return to Briefing, Directory Toggle, Search, Export GeoJSON & Methodology */}
-          <div className="flex items-center gap-2">
-            <Link
-              href="/"
-              className="flex items-center gap-1.5 rounded-lg border border-[#00D9F5]/50 bg-[#00D9F5]/12 px-3 py-1.5 text-xs font-semibold text-[#00D9F5] shadow-md transition-all hover:bg-[#00D9F5]/22"
-            >
-              <ArrowLeft className="h-3.5 w-3.5" aria-hidden="true" />
-              <span>Mission Briefing</span>
-            </Link>
-
-            <button
-              type="button"
-              onClick={handleToggleDirectory}
-              aria-expanded={showDirectory}
-              aria-controls="directory-drawer"
-              className={`flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-semibold shadow-md transition-all ${
-                showDirectory
-                  ? "border-[#D4AF37] bg-[#D4AF37]/25 text-[#D4AF37] shadow-[0_0_12px_rgba(212,175,55,0.25)]"
-                  : "border-slate-800 bg-[#0D1424] text-slate-300 hover:border-slate-700 hover:text-slate-100"
-              }`}
-            >
-              <ListFilter className="h-3.5 w-3.5" aria-hidden="true" />
-              <span className="hidden sm:inline">Directorio</span>
-              <span className="font-mono tabular-nums text-[11px] text-[#D4AF37]">
-                ({filteredSites.length})
-              </span>
-            </button>
-
-            <div className="relative hidden lg:block">
-              <Search
-                className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400"
-                aria-hidden="true"
-              />
-              <input
-                type="search"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Buscar sitio o país..."
-                aria-label="Buscar sitio o país análogo"
-                className="h-8 w-40 rounded-lg border border-slate-800 bg-[#0D1424] pl-8 pr-2.5 text-xs text-slate-100 placeholder:text-slate-500 focus:w-52 focus:border-[#D4AF37]/60 focus:outline-none transition-all"
-              />
-            </div>
-
-            <button
-              type="button"
-              onClick={() => {
-                const exportSites = rankedRegionResult
-                  ? [...mapSites, ...rankedRegionResult.points]
-                  : mapSites;
-                downloadQgisGeoJson(
-                  exportSites,
-                  dataset.references,
-                  rankedRegionResult
-                    ? `atlania-region-${rankedRegionResult.grid_size}x${rankedRegionResult.grid_size}.geojson`
-                    : "atlania-sites.geojson"
-                );
-              }}
-              title="Exportar GeoJSON compatible con QGIS"
-              className="hidden sm:inline-flex items-center gap-1.5 rounded-lg border border-slate-800 bg-[#0D1424] px-2.5 py-1.5 text-xs font-medium text-slate-300 hover:border-cyan-500/50 hover:text-cyan-300"
-            >
-              <Download className="h-3.5 w-3.5" aria-hidden="true" />
-              <span className="hidden xl:inline">GeoJSON</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setShowPresentation(true)}
-              title="Resumen ejecutivo rápido"
-              className="hidden md:flex items-center gap-1.5 rounded-lg border border-slate-800 bg-[#0D1424] px-2.5 py-1.5 text-xs font-medium text-slate-300 transition-all hover:border-slate-700 hover:text-slate-100"
-            >
-              <Presentation className="h-3.5 w-3.5 text-[#D4AF37]" aria-hidden="true" />
-              <span className="hidden xl:inline">Dossier</span>
-            </button>
-
-            <MethodologyDialog dataset={dataset} />
-          </div>
-        </div>
-
-        {/* Row 1.5: Ruta de Navegación / Breadcrumbs (Interacción Hombre-Máquina) */}
-        <div className="mt-2 flex flex-wrap items-center justify-between gap-2 border-t border-slate-800/60 pt-1.5 text-xs">
-          <nav
-            aria-label="Ruta de navegación interactiva"
-            className="flex flex-wrap items-center gap-1.5 font-mono text-[11px] text-slate-400"
-          >
-            <Link
-              href="/"
-              title="Volver a la portada de ATLANIA (Mission Briefing)"
-              className="inline-flex items-center gap-1 text-slate-300 transition-colors hover:text-[#00D9F5]"
-            >
-              <Home className="h-3.5 w-3.5 text-[#C5A36D]" aria-hidden="true" />
-              <span>Inicio</span>
-            </Link>
-
-            <ChevronRight className="h-3 w-3 shrink-0 text-slate-600" aria-hidden="true" />
-
-            <button
-              type="button"
-              onClick={() => {
-                setSelectedSiteId(null);
-                setShowDirectory(false);
-                setCameraTarget({ type: "world" });
-              }}
-              title="Restablecer vista general del mapa"
-              className={`transition-colors hover:text-[#00D9F5] ${
-                !selectedSiteId && selectedCountry === "TODOS" && selectedTargetFilter === "ALL"
-                  ? "font-semibold text-[#00D9F5]"
-                  : "text-slate-300"
-              }`}
-            >
-              Explorador 3D
-            </button>
-
-            <ChevronRight className="h-3 w-3 shrink-0 text-slate-600" aria-hidden="true" />
-
-            <button
-              type="button"
-              onClick={() => {
-                if (mainTab === "tierra") handleCountrySelect("TODOS");
-                else setSelectedTargetFilter("ALL");
-                setSelectedSiteId(null);
-              }}
-              title={`Filtrar por ${mainTab === "tierra" ? "Tierra" : mainTab === "luna" ? "Luna" : "Marte"}`}
-              className="font-medium capitalize text-[#F5B82E] transition-colors hover:underline"
-            >
-              {mainTab === "tierra" ? "Tierra" : mainTab === "luna" ? "Luna" : "Marte"}
-            </button>
-
-            {mainTab === "tierra" && selectedCountry !== "TODOS" && (
-              <>
-                <ChevronRight className="h-3 w-3 shrink-0 text-slate-600" aria-hidden="true" />
-                <button
-                  type="button"
-                  onClick={() => setSelectedSiteId(null)}
-                  title={`Ver todos los análogos en ${selectedCountry}`}
-                  className="text-slate-200 transition-colors hover:text-[#00D9F5]"
-                >
-                  {selectedCountry}
-                </button>
-              </>
-            )}
-
-            {mainTab !== "tierra" && selectedTargetFilter !== "ALL" && (
-              <>
-                <ChevronRight className="h-3 w-3 shrink-0 text-slate-600" aria-hidden="true" />
-                <button
-                  type="button"
-                  onClick={() => setSelectedSiteId(null)}
-                  title="Ver análogos para este objetivo"
-                  className="max-w-[160px] truncate text-slate-200 transition-colors hover:text-[#00D9F5] sm:max-w-none"
-                >
-                  {translatedReferences[selectedTargetFilter]?.name.split("/")[0] ?? selectedTargetFilter}
-                </button>
-              </>
-            )}
-
-            {selectedSite && (
-              <>
-                <ChevronRight className="h-3 w-3 shrink-0 text-slate-600" aria-hidden="true" />
-                <span className="max-w-[160px] truncate font-semibold text-[#00D9F5] sm:max-w-[240px]">
-                  {selectedSite.name}
-                </span>
-                <button
-                  type="button"
-                  onClick={() => setSelectedSiteId(null)}
-                  title="Cerrar ficha del sitio y volver a la vista de conjunto"
-                  aria-label="Deseleccionar sitio"
-                  className="rounded p-0.5 text-slate-400 transition-colors hover:bg-slate-800 hover:text-slate-100"
-                >
-                  <X className="h-3 w-3" aria-hidden="true" />
-                </button>
-              </>
-            )}
-          </nav>
-
-          {/* Estado de navegación en tiempo real */}
-          <div className="hidden items-center gap-2 font-mono text-[11px] text-slate-400 sm:flex">
-            <span className="h-1.5 w-1.5 rounded-full bg-[#00D9F5] animate-pulse" aria-hidden="true" />
-            <span>
-              {selectedSite
-                ? `Sitio activo: ${selectedSite.name} (${selectedSite.overall_asi.toFixed(1)}% ASI)`
-                : selectedCountry !== "TODOS"
-                  ? `${filteredSites.length} análogos en ${selectedCountry}`
-                  : `${filteredSites.length} análogos en catálogo activo`}
+        <Link
+          href="/"
+          title="Volver a la portada de ATLANIA"
+          className="flex items-center gap-2.5 rounded-lg pr-1 transition-opacity hover:opacity-85 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C5A36D]"
+        >
+          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-[#C5A36D]/45 bg-[#181B2C] text-[#C5A36D]">
+            <Compass className="h-4 w-4" aria-hidden="true" />
+          </span>
+          <div className="leading-tight">
+            <span className="block font-serif text-base font-semibold tracking-[0.18em] text-[#E4DFD5] uppercase">
+              ATLANIA
+            </span>
+            <span className="hidden text-[11px] text-[#A3A1BD] sm:block">
+              Observatorio Planetario
             </span>
           </div>
-        </div>
+        </Link>
 
-        {/* Row 2: Contextual Sub-Filter Bar (Country for Tierra, Targets for Luna/Marte) */}
-        <div className="mt-2 flex items-center gap-1.5 overflow-x-auto pt-1 no-scrollbar border-t border-slate-800/60">
+        {/* Selector de enfoque planetario */}
+        <nav
+          aria-label="Enfoque planetario"
+          className="flex items-center gap-1 rounded-lg bg-[#181B2C] p-1 ring-1 ring-[#55527D]/25"
+        >
+          <button
+            type="button"
+            onClick={() => handleTabChange("tierra")}
+            aria-pressed={mainTab === "tierra"}
+            className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C5A36D] ${
+              mainTab === "tierra"
+                ? "bg-[#27233E] text-[#E4DFD5] ring-1 ring-[#C5A36D]/45"
+                : "text-[#A3A1BD] hover:text-[#E4DFD5]"
+            }`}
+          >
+            <Globe2 className="h-3.5 w-3.5 text-[#7CA5B8]" aria-hidden="true" />
+            <span>Tierra</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => handleTabChange("luna")}
+            aria-pressed={mainTab === "luna"}
+            className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C5A36D] ${
+              mainTab === "luna"
+                ? "bg-[#27233E] text-[#E4DFD5] ring-1 ring-[#C5A36D]/45"
+                : "text-[#A3A1BD] hover:text-[#E4DFD5]"
+            }`}
+          >
+            <Moon className="h-3.5 w-3.5 text-[#A3A1BD]" aria-hidden="true" />
+            <span>Luna</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => handleTabChange("marte")}
+            aria-pressed={mainTab === "marte"}
+            className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C5A36D] ${
+              mainTab === "marte"
+                ? "bg-[#27233E] text-[#E4DFD5] ring-1 ring-[#C5A36D]/45"
+                : "text-[#A3A1BD] hover:text-[#E4DFD5]"
+            }`}
+          >
+            <Orbit className="h-3.5 w-3.5 text-[#D47A61]" aria-hidden="true" />
+            <span>Marte</span>
+          </button>
+        </nav>
+
+        {/* Herramientas esenciales */}
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={handleToggleDirectory}
+            aria-expanded={showDirectory}
+            aria-controls="directory-drawer"
+            className={`flex min-h-9 items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C5A36D] ${
+              showDirectory
+                ? "bg-[#C5A36D]/20 text-[#E4DFD5] ring-1 ring-[#C5A36D]/50"
+                : "bg-[#181B2C] text-[#E4DFD5] ring-1 ring-[#55527D]/30 hover:ring-[#C5A36D]/40"
+            }`}
+          >
+            <ListFilter className="h-3.5 w-3.5 text-[#C5A36D]" aria-hidden="true" />
+            <span className="hidden sm:inline">Directorio</span>
+            <span className="font-mono text-[11px] tabular-nums text-[#C5A36D]">
+              ({filteredSites.length})
+            </span>
+          </button>
+
+          <div className="relative hidden lg:block">
+            <Search
+              className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[#A3A1BD]"
+              aria-hidden="true"
+            />
+            <input
+              type="search"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Buscar sitio o país..."
+              aria-label="Buscar sitio o país análogo"
+              className="h-9 w-44 rounded-lg border border-[#55527D]/30 bg-[#181B2C] pl-8 pr-2.5 text-xs text-[#E4DFD5] placeholder:text-[#A3A1BD]/70 transition-all focus:w-56 focus:border-[#C5A36D]/60 focus:outline-none"
+            />
+          </div>
+
+          <button
+            type="button"
+            onClick={() => {
+              const exportSites = rankedRegionResult
+                ? [...mapSites, ...rankedRegionResult.points]
+                : mapSites;
+              downloadQgisGeoJson(
+                exportSites,
+                dataset.references,
+                rankedRegionResult
+                  ? `atlania-region-${rankedRegionResult.grid_size}x${rankedRegionResult.grid_size}.geojson`
+                  : "atlania-sites.geojson"
+              );
+              notifyUser(`GeoJSON exportado (${exportSites.length} sitios)`);
+            }}
+            title="Exportar capa GeoJSON compatible con QGIS"
+            className="hidden min-h-9 items-center gap-1.5 rounded-lg bg-[#181B2C] px-2.5 py-1.5 text-xs font-medium text-[#A3A1BD] ring-1 ring-[#55527D]/30 transition-colors hover:text-[#E4DFD5] hover:ring-[#C5A36D]/40 sm:inline-flex focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C5A36D]"
+          >
+            <Download className="h-3.5 w-3.5" aria-hidden="true" />
+            <span className="hidden xl:inline">GeoJSON</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setShowPresentation(true)}
+            title="Abrir dossier ejecutivo del proyecto"
+            className="hidden min-h-9 items-center gap-1.5 rounded-lg bg-[#181B2C] px-2.5 py-1.5 text-xs font-medium text-[#A3A1BD] ring-1 ring-[#55527D]/30 transition-colors hover:text-[#E4DFD5] hover:ring-[#C5A36D]/40 md:inline-flex focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C5A36D]"
+          >
+            <Presentation className="h-3.5 w-3.5 text-[#C5A36D]" aria-hidden="true" />
+            <span className="hidden xl:inline">Dossier</span>
+          </button>
+
+          <MethodologyDialog dataset={dataset} />
+        </div>
+      </header>
+
+      {/* 2. Barra de filtros geográficos accesibles */}
+      <div
+        aria-label="Filtros geográficos y objetivos"
+        className="z-30 flex shrink-0 items-center justify-between gap-3 border-b border-[#55527D]/25 bg-[#121626] px-4 py-2 sm:px-6"
+      >
+        <div className="flex min-w-0 flex-1 items-center gap-2">
+          <span className="hidden shrink-0 text-xs font-medium text-[#A3A1BD] sm:inline">
+            {mainTab === "tierra"
+              ? "Explorar territorios:"
+              : mainTab === "luna"
+              ? "Objetivos lunares:"
+              : "Objetivos marcianos:"}
+          </span>
+
           {mainTab === "tierra" && (
             <>
-              <span className="flex shrink-0 items-center gap-1 text-[11px] font-semibold tracking-wider text-[#D4AF37] uppercase mr-1">
-                <MapPin className="h-3 w-3" aria-hidden="true" />
-                Filtrar por País:
-              </span>
-
               <button
                 type="button"
                 onClick={() => scrollCountryBar("left")}
                 disabled={!canScrollLeft}
                 aria-label="Desplazar países a la izquierda"
-                title="Desplazar países a la izquierda"
-                className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-slate-800/90 bg-[#0D1424]/90 text-slate-300 transition-colors hover:border-[#D4AF37]/60 hover:text-[#D4AF37] disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:border-slate-800/90 disabled:hover:text-slate-300"
+                className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#181B2C] text-[#A3A1BD] ring-1 ring-[#55527D]/30 transition-colors hover:text-[#E4DFD5] disabled:opacity-30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C5A36D]"
               >
                 <ChevronLeft className="h-3.5 w-3.5" aria-hidden="true" />
               </button>
@@ -810,19 +709,19 @@ export function MissionControlApp({ dataset }: MissionControlAppProps) {
                   updateCountryScrollBounds();
                   if (countryDropdown) setCountryDropdown(null);
                 }}
-                className="flex min-w-0 flex-1 items-center gap-1.5 overflow-x-auto no-scrollbar"
+                className="no-scrollbar flex min-w-0 flex-1 items-center gap-1.5 overflow-x-auto"
               >
                 <button
                   type="button"
                   onClick={() => handleCountrySelect("TODOS")}
                   aria-pressed={selectedCountry === "TODOS"}
-                  className={`shrink-0 rounded-full border px-3 py-1 text-xs font-medium transition-all ${
+                  className={`shrink-0 rounded-full px-3 py-1 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C5A36D] ${
                     selectedCountry === "TODOS"
-                      ? "border-[#D4AF37] bg-[#D4AF37]/20 text-[#D4AF37] shadow-[0_0_10px_rgba(212,175,55,0.2)]"
-                      : "border-slate-800/90 bg-[#0D1424]/90 text-slate-400 hover:text-slate-200"
+                      ? "bg-[#C5A36D]/20 text-[#E4DFD5] ring-1 ring-[#C5A36D]/60"
+                      : "bg-[#181B2C] text-[#A3A1BD] ring-1 ring-[#55527D]/25 hover:text-[#E4DFD5]"
                   }`}
                 >
-                  Todos los Países ({translatedSites.length})
+                  Todos ({translatedSites.length})
                 </button>
 
                 {countryList.map(([country, count]) => {
@@ -837,20 +736,18 @@ export function MissionControlApp({ dataset }: MissionControlAppProps) {
                       aria-pressed={active}
                       aria-expanded={expanded}
                       aria-haspopup="menu"
-                      className={`inline-flex shrink-0 items-center gap-1 rounded-full border px-3 py-1 text-xs font-medium transition-all ${
+                      className={`inline-flex shrink-0 items-center gap-1 rounded-full px-3 py-1 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C5A36D] ${
                         active
-                          ? "border-[#D4AF37] bg-[#D4AF37]/20 text-[#D4AF37] shadow-[0_0_10px_rgba(212,175,55,0.2)]"
-                          : "border-slate-800/90 bg-[#0D1424]/90 text-slate-300 hover:border-slate-700 hover:text-slate-100"
+                          ? "bg-[#C5A36D]/20 text-[#E4DFD5] ring-1 ring-[#C5A36D]/60"
+                          : "bg-[#181B2C] text-[#A3A1BD] ring-1 ring-[#55527D]/25 hover:text-[#E4DFD5]"
                       }`}
                     >
                       <span>{country}</span>
-                      <span className="font-mono text-[10px] text-slate-400">
-                        ({count})
-                      </span>
+                      <span className="font-mono text-[10px] opacity-75">({count})</span>
                       {expanded ? (
-                        <ChevronUp className="h-3 w-3 opacity-80" aria-hidden="true" />
+                        <ChevronUp className="h-3 w-3 opacity-75" aria-hidden="true" />
                       ) : (
-                        <ChevronDown className="h-3 w-3 opacity-60" aria-hidden="true" />
+                        <ChevronDown className="h-3 w-3 opacity-55" aria-hidden="true" />
                       )}
                     </button>
                   );
@@ -862,8 +759,7 @@ export function MissionControlApp({ dataset }: MissionControlAppProps) {
                 onClick={() => scrollCountryBar("right")}
                 disabled={!canScrollRight}
                 aria-label="Desplazar países a la derecha"
-                title="Desplazar países a la derecha"
-                className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-slate-800/90 bg-[#0D1424]/90 text-slate-300 transition-colors hover:border-[#D4AF37]/60 hover:text-[#D4AF37] disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:border-slate-800/90 disabled:hover:text-slate-300"
+                className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#181B2C] text-[#A3A1BD] ring-1 ring-[#55527D]/30 transition-colors hover:text-[#E4DFD5] disabled:opacity-30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C5A36D]"
               >
                 <ChevronRight className="h-3.5 w-3.5" aria-hidden="true" />
               </button>
@@ -871,163 +767,109 @@ export function MissionControlApp({ dataset }: MissionControlAppProps) {
           )}
 
           {mainTab === "luna" && (
-            <>
-              <span className="flex shrink-0 items-center gap-1 text-[11px] font-semibold tracking-wider text-cyan-400 uppercase mr-1">
-                <Moon className="h-3 w-3" aria-hidden="true" />
-                Objetivos Lunares (Artemis):
-              </span>
-              <button
-                type="button"
-                onClick={() => setSelectedTargetFilter("ALL")}
-                aria-pressed={selectedTargetFilter === "ALL"}
-                className={`shrink-0 rounded-full border px-3 py-1 text-xs font-medium transition-all ${
-                  selectedTargetFilter === "ALL"
-                    ? "border-cyan-400 bg-cyan-400/20 text-cyan-300 shadow-[0_0_10px_rgba(6,182,212,0.2)]"
-                    : "border-slate-800/90 bg-[#0D1424]/90 text-slate-400 hover:text-slate-200"
-                }`}
-              >
-                Todos los Análogos Lunares
-              </button>
-
-              <button
-                type="button"
-                onClick={() => {
-                  setSelectedTargetFilter("shackleton-crater");
-                  setActiveTargetId("shackleton-crater");
-                }}
-                aria-pressed={selectedTargetFilter === "shackleton-crater"}
-                className={`shrink-0 rounded-full border px-3 py-1 text-xs font-medium transition-all ${
-                  selectedTargetFilter === "shackleton-crater"
-                    ? "border-cyan-400 bg-cyan-400/20 text-cyan-300 shadow-[0_0_10px_rgba(6,182,212,0.2)]"
-                    : "border-slate-800/90 bg-[#0D1424]/90 text-slate-300 hover:border-slate-700 hover:text-slate-100"
-                }`}
-              >
-                Cráter Shackleton (Polo Sur Lunar)
-              </button>
-
-              <button
-                type="button"
-                onClick={() => {
-                  setSelectedTargetFilter("mouton-mons");
-                  setActiveTargetId("mouton-mons");
-                }}
-                aria-pressed={selectedTargetFilter === "mouton-mons"}
-                className={`shrink-0 rounded-full border px-3 py-1 text-xs font-medium transition-all ${
-                  selectedTargetFilter === "mouton-mons"
-                    ? "border-cyan-400 bg-cyan-400/20 text-cyan-300 shadow-[0_0_10px_rgba(6,182,212,0.2)]"
-                    : "border-slate-800/90 bg-[#0D1424]/90 text-slate-300 hover:border-slate-700 hover:text-slate-100"
-                }`}
-              >
-                Mons Mouton (Meseta Artemis III)
-              </button>
-
-              <button
-                type="button"
-                onClick={() => {
-                  setSelectedTargetFilter("mare-tranquillitatis");
-                  setActiveTargetId("mare-tranquillitatis");
-                }}
-                aria-pressed={selectedTargetFilter === "mare-tranquillitatis"}
-                className={`shrink-0 rounded-full border px-3 py-1 text-xs font-medium transition-all ${
-                  selectedTargetFilter === "mare-tranquillitatis"
-                    ? "border-cyan-400 bg-cyan-400/20 text-cyan-300 shadow-[0_0_10px_rgba(6,182,212,0.2)]"
-                    : "border-slate-800/90 bg-[#0D1424]/90 text-slate-300 hover:border-slate-700 hover:text-slate-100"
-                }`}
-              >
-                Mare Tranquillitatis (Tubos de Lava)
-              </button>
-            </>
+            <div className="no-scrollbar flex min-w-0 flex-1 items-center gap-1.5 overflow-x-auto">
+              {[
+                { id: "ALL", label: "Todos" },
+                { id: "shackleton-crater", label: "Cráter Shackleton" },
+                { id: "mouton-mons", label: "Mons Mouton (Artemis III)" },
+                { id: "mare-tranquillitatis", label: "Mare Tranquillitatis" },
+              ].map((item) => {
+                const active = selectedTargetFilter === item.id;
+                return (
+                  <button
+                    key={item.id}
+                    type="button"
+                    onClick={() => {
+                      setSelectedTargetFilter(item.id);
+                      if (item.id !== "ALL") setActiveTargetId(item.id);
+                    }}
+                    aria-pressed={active}
+                    className={`shrink-0 rounded-full px-3 py-1 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C5A36D] ${
+                      active
+                        ? "bg-[#7CA5B8]/20 text-[#E4DFD5] ring-1 ring-[#7CA5B8]/60"
+                        : "bg-[#181B2C] text-[#A3A1BD] ring-1 ring-[#55527D]/25 hover:text-[#E4DFD5]"
+                    }`}
+                  >
+                    {item.label}
+                  </button>
+                );
+              })}
+            </div>
           )}
 
           {mainTab === "marte" && (
-            <>
-              <span className="flex shrink-0 items-center gap-1 text-[11px] font-semibold tracking-wider text-[#E07A5F] uppercase mr-1">
-                <Orbit className="h-3 w-3" aria-hidden="true" />
-                Objetivos Marcianos:
-              </span>
-              <button
-                type="button"
-                onClick={() => setSelectedTargetFilter("ALL")}
-                aria-pressed={selectedTargetFilter === "ALL"}
-                className={`shrink-0 rounded-full border px-3 py-1 text-xs font-medium transition-all ${
-                  selectedTargetFilter === "ALL"
-                    ? "border-[#E07A5F] bg-[#E07A5F]/20 text-[#E07A5F] shadow-[0_0_10px_rgba(224,122,95,0.2)]"
-                    : "border-slate-800/90 bg-[#0D1424]/90 text-slate-400 hover:text-slate-200"
-                }`}
-              >
-                Todos los Análogos Marcianos
-              </button>
-
-              <button
-                type="button"
-                onClick={() => {
-                  setSelectedTargetFilter("jezero-crater");
-                  setActiveTargetId("jezero-crater");
-                }}
-                aria-pressed={selectedTargetFilter === "jezero-crater"}
-                className={`shrink-0 rounded-full border px-3 py-1 text-xs font-medium transition-all ${
-                  selectedTargetFilter === "jezero-crater"
-                    ? "border-[#E07A5F] bg-[#E07A5F]/20 text-[#E07A5F] shadow-[0_0_10px_rgba(224,122,95,0.2)]"
-                    : "border-slate-800/90 bg-[#0D1424]/90 text-slate-300 hover:border-slate-700 hover:text-slate-100"
-                }`}
-              >
-                Cráter Jezero (Delta y Basaltos)
-              </button>
-
-              <button
-                type="button"
-                onClick={() => {
-                  setSelectedTargetFilter("olympus-mons-flank");
-                  setActiveTargetId("olympus-mons-flank");
-                }}
-                aria-pressed={selectedTargetFilter === "olympus-mons-flank"}
-                className={`shrink-0 rounded-full border px-3 py-1 text-xs font-medium transition-all ${
-                  selectedTargetFilter === "olympus-mons-flank"
-                    ? "border-[#E07A5F] bg-[#E07A5F]/20 text-[#E07A5F] shadow-[0_0_10px_rgba(224,122,95,0.2)]"
-                    : "border-slate-800/90 bg-[#0D1424]/90 text-slate-300 hover:border-slate-700 hover:text-slate-100"
-                }`}
-              >
-                Flanco del Monte Olimpo (Tubos Volcánicos)
-              </button>
-
-              <button
-                type="button"
-                onClick={() => {
-                  setSelectedTargetFilter("valles-marineris");
-                  setActiveTargetId("valles-marineris");
-                }}
-                aria-pressed={selectedTargetFilter === "valles-marineris"}
-                className={`shrink-0 rounded-full border px-3 py-1 text-xs font-medium transition-all ${
-                  selectedTargetFilter === "valles-marineris"
-                    ? "border-[#E07A5F] bg-[#E07A5F]/20 text-[#E07A5F] shadow-[0_0_10px_rgba(224,122,95,0.2)]"
-                    : "border-slate-800/90 bg-[#0D1424]/90 text-slate-300 hover:border-slate-700 hover:text-slate-100"
-                }`}
-              >
-                Valles Marineris (Cañón y Sulfatos)
-              </button>
-            </>
+            <div className="no-scrollbar flex min-w-0 flex-1 items-center gap-1.5 overflow-x-auto">
+              {[
+                { id: "ALL", label: "Todos" },
+                { id: "jezero-crater", label: "Cráter Jezero" },
+                { id: "olympus-mons-flank", label: "Monte Olimpo" },
+                { id: "valles-marineris", label: "Valles Marineris" },
+              ].map((item) => {
+                const active = selectedTargetFilter === item.id;
+                return (
+                  <button
+                    key={item.id}
+                    type="button"
+                    onClick={() => {
+                      setSelectedTargetFilter(item.id);
+                      if (item.id !== "ALL") setActiveTargetId(item.id);
+                    }}
+                    aria-pressed={active}
+                    className={`shrink-0 rounded-full px-3 py-1 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C5A36D] ${
+                      active
+                        ? "bg-[#D47A61]/20 text-[#E4DFD5] ring-1 ring-[#D47A61]/60"
+                        : "bg-[#181B2C] text-[#A3A1BD] ring-1 ring-[#55527D]/25 hover:text-[#E4DFD5]"
+                    }`}
+                  >
+                    {item.label}
+                  </button>
+                );
+              })}
+            </div>
           )}
         </div>
-      </header>
 
-      {/* Floating Vertical Country Sites Dropdown (Anchored below country button, overlays map) */}
+        <div className="flex shrink-0 items-center gap-2 text-xs text-[#A3A1BD]">
+          <span className="font-mono tabular-nums">
+            {filteredSites.length}{" "}
+            {filteredSites.length === 1 ? "ubicación" : "ubicaciones"}
+          </span>
+          {hasActiveFilter && (
+            <button
+              type="button"
+              onClick={() => {
+                setSelectedCountry("TODOS");
+                setSelectedTargetFilter("ALL");
+                setSearchQuery("");
+                setCountryDropdown(null);
+                notifyUser("Filtros restablecidos");
+              }}
+              className="rounded px-2 py-0.5 text-[11px] font-medium text-[#C5A36D] transition-colors hover:bg-[#1F243B] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C5A36D]"
+            >
+              Limpiar
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* Menú desplegable de sitios por país */}
       {mainTab === "tierra" && countryDropdown && (
         <div
           ref={dropdownRef}
           role="menu"
-          aria-label={`Ubicaciones analógicas en ${countryDropdown.country}`}
+          aria-label={`Ubicaciones en ${countryDropdown.country}`}
           style={{ top: countryDropdown.top, left: countryDropdown.left }}
-          className="fixed z-50 w-[320px] sm:w-[360px] max-w-[calc(100vw-24px)] max-h-[60vh] overflow-y-auto rounded-xl border border-slate-700/80 bg-[#060913]/95 p-1.5 shadow-2xl backdrop-blur-md"
+          className="fixed z-50 max-h-[60vh] w-[320px] max-w-[calc(100vw-24px)] overflow-y-auto rounded-xl border border-[#55527D]/35 bg-[#121626]/95 p-1.5 shadow-2xl backdrop-blur-md sm:w-[340px]"
         >
-          <div className="flex items-center justify-between border-b border-slate-800/80 px-2.5 py-1.5 mb-1">
-            <span className="text-[11px] font-semibold tracking-wider text-[#D4AF37] uppercase">
+          <div className="mb-1 flex items-center justify-between border-b border-[#55527D]/25 px-2.5 py-1.5">
+            <span className="text-[11px] font-semibold tracking-wider text-[#C5A36D] uppercase">
               {countryDropdown.country} ({dropdownSites.length})
             </span>
             <button
               type="button"
               onClick={() => setCountryDropdown(null)}
               aria-label={`Cerrar lista de ${countryDropdown.country}`}
-              className="rounded p-0.5 text-slate-400 transition-colors hover:bg-slate-800/80 hover:text-slate-100"
+              className="rounded p-0.5 text-[#A3A1BD] transition-colors hover:bg-[#1F243B] hover:text-[#E4DFD5]"
             >
               <X className="h-3.5 w-3.5" aria-hidden="true" />
             </button>
@@ -1043,22 +885,22 @@ export function MissionControlApp({ dataset }: MissionControlAppProps) {
                   type="button"
                   role="menuitem"
                   onClick={() => handleSelectSubmenuSite(site)}
-                  className={`flex w-full items-center justify-between gap-3 rounded-lg border px-2.5 py-2 text-left text-xs transition-colors ${
+                  className={`flex w-full items-center justify-between gap-3 rounded-lg px-2.5 py-2 text-left text-xs transition-colors ${
                     isSelected
-                      ? "border-cyan-400/60 bg-cyan-500/20 text-cyan-100"
-                      : "border-transparent text-slate-200 hover:border-slate-800 hover:bg-[#0D1424]/95 hover:text-white"
+                      ? "bg-[#C5A36D]/20 text-[#E4DFD5]"
+                      : "text-[#E4DFD5]/90 hover:bg-[#1F243B]"
                   }`}
                 >
-                  <span className="flex items-center gap-2 min-w-0 flex-1">
+                  <span className="flex min-w-0 flex-1 items-center gap-2">
                     <span
                       className={`h-2 w-2 shrink-0 rounded-full ${
-                        isMars ? "bg-[#E07A5F]" : "bg-[#06B6D4]"
+                        isMars ? "bg-[#D47A61]" : "bg-[#7CA5B8]"
                       }`}
                       aria-hidden="true"
                     />
-                    <span className="leading-snug font-medium">{site.name}</span>
+                    <span className="font-medium leading-snug">{site.name}</span>
                   </span>
-                  <span className="shrink-0 font-mono text-[11px] font-semibold tabular-nums text-cyan-300">
+                  <span className="shrink-0 font-mono text-[11px] font-semibold tabular-nums text-[#C5A36D]">
                     {site.overall_asi.toFixed(1)}%
                   </span>
                 </button>
@@ -1068,272 +910,371 @@ export function MissionControlApp({ dataset }: MissionControlAppProps) {
         </div>
       )}
 
-      {/* 3. Left Analysis Panel / Expandable 3-Column Comparison Workbench */}
-      {selectedSite && !showDirectory && (
-        <section
-          aria-label={`Detalle del sitio ${selectedSite.name}`}
-          className={`fixed z-30 flex flex-col overflow-hidden rounded-2xl border border-[rgba(100,180,210,0.28)] bg-[#0D1925]/95 shadow-2xl backdrop-blur-md transition-all duration-200 ${
-            comparisonExpanded
-              ? "bottom-3 left-3 right-3 top-[108px] sm:bottom-4 sm:left-4 sm:right-4 sm:top-[112px]"
-              : "bottom-3 left-3 right-3 max-h-[62dvh] sm:bottom-4 sm:left-4 sm:right-auto sm:top-[112px] sm:max-h-none sm:w-[400px] lg:w-[420px]"
-          }`}
-        >
-          <TelemetryDrawer
-            dataset={dataset}
-            site={selectedSite}
-            references={translatedReferences}
-            activeTargetId={activeTargetId}
-            onSelectTarget={setActiveTargetId}
-            onClose={() => {
-              setSelectedSiteId(null);
-              setComparisonExpanded(false);
-            }}
-            expanded={comparisonExpanded}
-            onToggleExpand={() => setComparisonExpanded((prev) => !prev)}
-          />
-        </section>
-      )}
-
-      {/* 4. Collapsible Site Directory Drawer (Mutually exclusive with site detail, strictly below top header) */}
-      {showDirectory && (
-        <section
-          id="directory-drawer"
-          aria-label="Directorio completo de sitios análogos"
-          className="fixed bottom-3 left-3 right-3 top-[108px] z-30 flex flex-col overflow-hidden rounded-2xl border border-[rgba(100,180,210,0.28)] bg-[#0D1925]/95 shadow-2xl backdrop-blur-md sm:bottom-4 sm:left-4 sm:top-[112px] sm:w-[380px]"
-        >
-          <div className="flex items-center justify-between border-b border-[rgba(100,180,210,0.2)] bg-[#071018]/80 px-4 py-3">
-            <div className="flex items-center gap-2">
-              <ListFilter className="h-4 w-4 text-[#F5B82E]" aria-hidden="true" />
-              <h2 className="text-sm font-semibold text-[#F1F5F9]">
-                Directorio ({filteredSites.length} sitios)
-              </h2>
-            </div>
-            <button
-              type="button"
-              onClick={() => setShowDirectory(false)}
-              aria-label="Cerrar directorio de sitios (Escape)"
-              className="rounded-lg p-1 text-[#94A3B8] hover:bg-[#132434] hover:text-[#F1F5F9]"
-            >
-              <X className="h-4 w-4" aria-hidden="true" />
-            </button>
-          </div>
-
-          <div className="flex-1 overflow-hidden">
-            <SiteDirectory
-              sites={filteredSites}
-              references={translatedReferences}
-              selectedSiteId={selectedSiteId}
-              onSelectSite={handleSelectSite}
-              searchQuery={searchQuery}
-              onSearchChange={setSearchQuery}
-            />
-          </div>
-        </section>
-      )}
-
-      {/* 5. Módulo flotante compacto de Prospección Regional 3x3 / 4x4 (Fase 2) */}
-      {(rankedRegionResult || regionError || isProbingRegion) && !comparisonExpanded && (
-        <section
-          aria-label="Módulo de prospección regional"
-          className="fixed bottom-14 right-3 z-20 w-[345px] max-w-[calc(100%-1.5rem)] rounded-2xl border border-[rgba(100,180,210,0.28)] bg-[#0D1925]/95 p-3 text-xs text-[#F1F5F9] shadow-2xl backdrop-blur-md"
-        >
-          <div className="flex items-center justify-between gap-2 border-b border-[rgba(100,180,210,0.18)] pb-2">
-            <div>
-              <h2 className="font-mono text-[11px] font-bold uppercase tracking-wider text-[#F5B82E]">
-                {isProbingRegion
-                  ? `Escaneando Grilla ${regionGridSize}×${regionGridSize}...`
-                  : regionError
-                  ? "Error en Sondeo Regional"
-                  : `Prospección ${rankedRegionResult?.grid_size ?? 3}×${rankedRegionResult?.grid_size ?? 3} · ${rankedRegionResult?.evaluated_count ?? 0} pts`}
-              </h2>
-              {!regionError && rankedRegionResult && (
-                <p className="mt-0.5 font-mono text-[10px] text-[#94A3B8] tabular-nums">
-                  Rango: {rankedRegionResult.bounds.minLat.toFixed(2)}°..
-                  {rankedRegionResult.bounds.maxLat.toFixed(2)}°N,{" "}
-                  {rankedRegionResult.bounds.minLon.toFixed(2)}°..
-                  {rankedRegionResult.bounds.maxLon.toFixed(2)}°E
-                </p>
-              )}
-            </div>
-            <div className="flex items-center gap-1">
-              {!regionError && rankedRegionResult && (
-                <>
+      {/* 3. Área principal: Panel lateral acoplado + Mapa protagonista */}
+      <main className="relative flex min-h-0 flex-1 overflow-hidden">
+        {/* Panel lateral izquierdo (Ubicación o Directorio) */}
+        {showSidePanel && (
+          <div className="absolute inset-0 z-30 flex flex-col border-r border-[#55527D]/25 bg-[#121626] md:relative md:inset-auto md:w-[390px] md:shrink-0 lg:w-[410px]">
+            {showDirectory ? (
+              <section
+                id="directory-drawer"
+                aria-label="Directorio de sitios análogos"
+                className="flex h-full flex-col overflow-hidden"
+              >
+                <div className="flex items-center justify-between border-b border-[#55527D]/25 px-4 py-3">
+                  <div className="flex items-center gap-2">
+                    <ListFilter className="h-4 w-4 text-[#C5A36D]" aria-hidden="true" />
+                    <h2 className="font-serif text-base font-semibold text-[#E4DFD5]">
+                      Directorio ({filteredSites.length})
+                    </h2>
+                  </div>
                   <button
                     type="button"
-                    onClick={() => setRegionCollapsed((prev) => !prev)}
-                    aria-expanded={!regionCollapsed}
-                    title={regionCollapsed ? "Expandir resultados" : "Contraer resultados"}
-                    aria-label={regionCollapsed ? "Expandir prospección regional" : "Contraer prospección regional"}
-                    className="rounded p-1 text-[#94A3B8] hover:bg-[#132434] hover:text-[#00D9F5]"
+                    onClick={() => setShowDirectory(false)}
+                    aria-label="Cerrar directorio de sitios"
+                    className="flex h-8 w-8 items-center justify-center rounded-lg text-[#A3A1BD] transition-colors hover:bg-[#1F243B] hover:text-[#E4DFD5] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C5A36D]"
                   >
-                    {regionCollapsed ? (
-                      <ChevronUp className="h-3.5 w-3.5" aria-hidden="true" />
-                    ) : (
-                      <ChevronDown className="h-3.5 w-3.5" aria-hidden="true" />
-                    )}
+                    <X className="h-4 w-4" aria-hidden="true" />
                   </button>
+                </div>
+                <div className="flex-1 overflow-hidden">
+                  <SiteDirectory
+                    sites={filteredSites}
+                    references={translatedReferences}
+                    selectedSiteId={selectedSiteId}
+                    onSelectSite={handleSelectSite}
+                    searchQuery={searchQuery}
+                    onSearchChange={setSearchQuery}
+                  />
+                </div>
+              </section>
+            ) : (
+              <TelemetryDrawer
+                dataset={dataset}
+                site={selectedSite}
+                references={translatedReferences}
+                activeTargetId={activeTargetId}
+                onSelectTarget={setActiveTargetId}
+                onClose={() => {
+                  setSelectedSiteId(null);
+                  setComparisonExpanded(false);
+                }}
+                expanded={comparisonExpanded}
+                onToggleExpand={() => setComparisonExpanded((prev) => !prev)}
+                onFeedback={notifyUser}
+              />
+            )}
+          </div>
+        )}
+
+        {/* Vista expandida de comparación planetaria (3 columnas) */}
+        {selectedSite && comparisonExpanded && (
+          <div className="absolute inset-0 z-40 flex flex-col bg-[#101321]">
+            <TelemetryDrawer
+              dataset={dataset}
+              site={selectedSite}
+              references={translatedReferences}
+              activeTargetId={activeTargetId}
+              onSelectTarget={setActiveTargetId}
+              onClose={() => {
+                setSelectedSiteId(null);
+                setComparisonExpanded(false);
+              }}
+              expanded={comparisonExpanded}
+              onToggleExpand={() => setComparisonExpanded((prev) => !prev)}
+              onFeedback={notifyUser}
+            />
+          </div>
+        )}
+
+        {/* Área central de visualización cartográfica */}
+        <div id="map-region" className="relative isolate z-0 h-full min-w-0 flex-1">
+          <AnalogMap
+            sites={mapSites}
+            references={translatedReferences}
+            selectedSiteId={selectedSite?.id ?? null}
+            onSelectSite={handleSelectSite}
+            cameraTarget={cameraTarget}
+            probeMode={probeMode}
+            isProbing={isProbing}
+            onToggleProbeMode={() => {
+              setProbeMode((prev) => !prev);
+              setRegionProbeMode(false);
+            }}
+            onProbeCoordinate={handleProbeCoordinate}
+            regionProbeMode={regionProbeMode}
+            isProbingRegion={isProbingRegion}
+            regionGridSize={regionGridSize}
+            onChangeRegionGridSize={setRegionGridSize}
+            onToggleRegionProbeMode={() => {
+              setRegionProbeMode((prev) => !prev);
+              setProbeMode(false);
+            }}
+            onProbeRegion={handleProbeRegion}
+            regionResult={rankedRegionResult}
+          />
+
+          {/* Retroalimentación contextual de modo activo */}
+          {(probeMode || regionProbeMode || (!showSidePanel && !feedbackMessage)) && (
+            <div className="pointer-events-none absolute left-3 top-3 z-10 max-w-md">
+              {probeMode ? (
+                <div className="pointer-events-auto flex items-center gap-3 rounded-lg border border-[#C5A36D]/50 bg-[#101321]/92 px-3 py-2 text-xs text-[#E4DFD5] shadow-lg backdrop-blur-md">
+                  <span>
+                    Haz clic en cualquier punto del mapa para evaluar su similitud con la Luna y Marte.
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setProbeMode(false)}
+                    className="shrink-0 font-medium text-[#C5A36D] hover:underline"
+                  >
+                    Cancelar
+                  </button>
+                </div>
+              ) : regionProbeMode ? (
+                <div className="pointer-events-auto flex items-center gap-3 rounded-lg border border-[#7CA5B8]/50 bg-[#101321]/92 px-3 py-2 text-xs text-[#E4DFD5] shadow-lg backdrop-blur-md">
+                  <span>
+                    Arrastra un rectángulo en el mapa o pulsa Escanear vista para analizar una grilla {regionGridSize}×{regionGridSize}.
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setRegionProbeMode(false)}
+                    className="shrink-0 font-medium text-[#7CA5B8] hover:underline"
+                  >
+                    Cancelar
+                  </button>
+                </div>
+              ) : (
+                <div className="rounded-lg border border-[#55527D]/30 bg-[#101321]/85 px-3 py-1.5 text-xs text-[#A3A1BD] backdrop-blur-md">
+                  Selecciona un marcador en el mapa para ver su ficha científica o sondea cualquier coordenada.
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Notificación de retroalimentación inmediata */}
+          {feedbackMessage && (
+            <div
+              role="status"
+              aria-live="polite"
+              className="pointer-events-none absolute bottom-14 left-1/2 z-20 -translate-x-1/2 rounded-full border border-[#C5A36D]/45 bg-[#101321]/95 px-4 py-1.5 text-xs font-medium text-[#E4DFD5] shadow-xl backdrop-blur-md"
+            >
+              {feedbackMessage}
+            </div>
+          )}
+
+          {/* Módulo flotante compacto de Prospección Regional */}
+          {(rankedRegionResult || regionError || isProbingRegion) && !comparisonExpanded && (
+            <section
+              aria-label="Resultados de prospección regional"
+              className="absolute bottom-24 right-3 z-20 w-[335px] max-w-[calc(100%-1.5rem)] rounded-xl border border-[#55527D]/35 bg-[#121626]/95 p-3 text-xs text-[#E4DFD5] shadow-2xl backdrop-blur-md"
+            >
+              <div className="flex items-center justify-between gap-2 border-b border-[#55527D]/25 pb-2">
+                <div>
+                  <h2 className="text-[11px] font-semibold tracking-wider text-[#C5A36D] uppercase">
+                    {isProbingRegion
+                      ? `Escaneando grilla ${regionGridSize}×${regionGridSize}...`
+                      : regionError
+                      ? "Error en sondeo regional"
+                      : `Prospección ${rankedRegionResult?.grid_size ?? 3}×${rankedRegionResult?.grid_size ?? 3} · ${rankedRegionResult?.evaluated_count ?? 0} pts`}
+                  </h2>
+                  {!regionError && rankedRegionResult && (
+                    <p className="mt-0.5 font-mono text-[10px] tabular-nums text-[#A3A1BD]">
+                      {rankedRegionResult.bounds.minLat.toFixed(2)}°..
+                      {rankedRegionResult.bounds.maxLat.toFixed(2)}°N,{" "}
+                      {rankedRegionResult.bounds.minLon.toFixed(2)}°..
+                      {rankedRegionResult.bounds.maxLon.toFixed(2)}°E
+                    </p>
+                  )}
+                </div>
+                <div className="flex items-center gap-1">
+                  {!regionError && rankedRegionResult && (
+                    <>
+                      <button
+                        type="button"
+                        onClick={() => setRegionCollapsed((prev) => !prev)}
+                        aria-expanded={!regionCollapsed}
+                        aria-label={
+                          regionCollapsed
+                            ? "Expandir prospección regional"
+                            : "Contraer prospección regional"
+                        }
+                        className="rounded p-1 text-[#A3A1BD] hover:bg-[#1F243B] hover:text-[#E4DFD5]"
+                      >
+                        {regionCollapsed ? (
+                          <ChevronUp className="h-3.5 w-3.5" aria-hidden="true" />
+                        ) : (
+                          <ChevronDown className="h-3.5 w-3.5" aria-hidden="true" />
+                        )}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const blob = new Blob(
+                            [JSON.stringify(rankedRegionResult.geojson, null, 2)],
+                            { type: "application/geo+json" }
+                          );
+                          const url = URL.createObjectURL(blob);
+                          const link = document.createElement("a");
+                          link.href = url;
+                          link.download = `region-prospeccion-${rankedRegionResult.grid_size}x${rankedRegionResult.grid_size}.geojson`;
+                          link.click();
+                          URL.revokeObjectURL(url);
+                          notifyUser("GeoJSON de prospección regional descargado");
+                        }}
+                        title="Exportar GeoJSON de prospección regional"
+                        aria-label="Exportar GeoJSON de prospección regional"
+                        className="rounded p-1 text-[#A3A1BD] hover:bg-[#1F243B] hover:text-[#C5A36D]"
+                      >
+                        <Download className="h-3.5 w-3.5" aria-hidden="true" />
+                      </button>
+                    </>
+                  )}
                   <button
                     type="button"
                     onClick={() => {
-                      const blob = new Blob(
-                        [JSON.stringify(rankedRegionResult.geojson, null, 2)],
-                        { type: "application/geo+json" }
-                      );
-                      const url = URL.createObjectURL(blob);
-                      const link = document.createElement("a");
-                      link.href = url;
-                      link.download = `region-prospeccion-${rankedRegionResult.grid_size}x${rankedRegionResult.grid_size}.geojson`;
-                      link.click();
-                      URL.revokeObjectURL(url);
+                      setRegionResult(null);
+                      setRegionError(null);
                     }}
-                    title="Exportar GeoJSON de prospección regional"
-                    aria-label="Exportar GeoJSON de prospección regional"
-                    className="rounded p-1 text-[#94A3B8] hover:bg-[#132434] hover:text-[#F5B82E]"
+                    aria-label="Cerrar prospección regional"
+                    className="rounded p-1 text-[#A3A1BD] hover:bg-[#1F243B] hover:text-[#E4DFD5]"
                   >
-                    <Download className="h-3.5 w-3.5" />
+                    <X className="h-3.5 w-3.5" aria-hidden="true" />
                   </button>
-                </>
-              )}
-              <button
-                type="button"
-                onClick={() => {
-                  setRegionResult(null);
-                  setRegionError(null);
-                }}
-                aria-label="Cerrar prospección regional"
-                className="rounded p-1 text-[#94A3B8] hover:bg-[#132434] hover:text-[#F1F5F9]"
-              >
-                <X className="h-3.5 w-3.5" />
-              </button>
-            </div>
-          </div>
-
-          {isProbingRegion ? (
-            <p className="mt-2.5 font-mono text-[11px] text-[#00D9F5]">
-              Consultando NASA POWER y Copernicus DEM para {regionGridSize * regionGridSize} sectores...
-            </p>
-          ) : regionError ? (
-            <p className="mt-2 text-rose-300">{regionError}</p>
-          ) : (
-            !regionCollapsed &&
-            rankedRegionResult && (
-              <div className="mt-2 space-y-2">
-                <div className="flex items-center justify-between gap-1.5">
-                  <span className="text-[11px] text-[#94A3B8]">Ordenación:</span>
-                  <div
-                    className="flex items-center rounded border border-[rgba(100,180,210,0.2)] bg-[#071018] p-0.5"
-                    role="group"
-                    aria-label="Modo de clasificación regional"
-                  >
-                    <button
-                      type="button"
-                      onClick={() => setRegionRankByActiveTarget(true)}
-                      aria-pressed={regionRankByActiveTarget}
-                      className={`whitespace-nowrap rounded px-2 py-0.5 text-[11px] font-medium transition-colors ${
-                        regionRankByActiveTarget
-                          ? "bg-[#F5B82E]/20 text-[#F5B82E]"
-                          : "text-[#94A3B8] hover:text-[#F1F5F9]"
-                      }`}
-                    >
-                      {(translatedReferences[activeTargetId]?.name ?? "Objetivo Activo").split(" / ")[0]}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setRegionRankByActiveTarget(false)}
-                      aria-pressed={!regionRankByActiveTarget}
-                      className={`whitespace-nowrap rounded px-2 py-0.5 text-[11px] font-medium transition-colors ${
-                        !regionRankByActiveTarget
-                          ? "bg-[#F5B82E]/20 text-[#F5B82E]"
-                          : "text-[#94A3B8] hover:text-[#F1F5F9]"
-                      }`}
-                    >
-                      Mejor global
-                    </button>
-                  </div>
                 </div>
+              </div>
 
-                {regionSummary && (
-                  <div className="rounded-lg border border-[rgba(100,180,210,0.18)] bg-[#071018]/90 p-2 font-mono text-[10px] tabular-nums">
-                    <div className="flex items-center justify-between text-slate-200">
-                      <span>
-                        Mejor:{" "}
-                        <strong className="text-[#F5B82E]">
-                          {regionSummary.maxAsi.toFixed(1)}%
-                        </strong>{" "}
-                        · Prom:{" "}
-                        <strong className="text-[#00D9F5]">
-                          {regionSummary.meanAsi.toFixed(1)}%
-                        </strong>
-                      </span>
-                      <span>
-                        Elev {Math.round(regionSummary.elevMinM)}–
-                        {Math.round(regionSummary.elevMaxM)} m
-                      </span>
-                    </div>
-                    <div className="mt-1 flex items-center justify-between text-[#94A3B8]">
-                      <span>
-                        Supera {regionSummary.beatenCatalogCount}/
-                        {regionSummary.totalCatalogCount} sitios
-                      </span>
-                      <span>Pend. máx {regionSummary.maxSlopeDeg.toFixed(1)}°</span>
-                    </div>
-                  </div>
-                )}
-
-                <ul className="max-h-52 space-y-1.5 overflow-y-auto pr-1">
-                  {rankedRegionResult.points.map((pt, idx) => {
-                    const isSelected = selectedSite?.id === pt.id;
-                    const activeTarget = regionRankByActiveTarget
-                      ? activeTargetId
-                      : null;
-                    const scored = getPointTargetScore(pt, activeTarget);
-                    const why = buildSiteRationale(pt, activeTarget);
-                    return (
-                      <li key={pt.id}>
+              {isProbingRegion ? (
+                <p className="mt-2.5 font-mono text-[11px] text-[#7CA5B8]">
+                  Consultando NASA POWER y Copernicus DEM para{" "}
+                  {regionGridSize * regionGridSize} sectores...
+                </p>
+              ) : regionError ? (
+                <p className="mt-2 text-rose-300">{regionError}</p>
+              ) : (
+                !regionCollapsed &&
+                rankedRegionResult && (
+                  <div className="mt-2 space-y-2">
+                    <div className="flex items-center justify-between gap-1.5">
+                      <span className="text-[11px] text-[#A3A1BD]">Orden:</span>
+                      <div
+                        className="flex items-center rounded bg-[#181B2C] p-0.5 ring-1 ring-[#55527D]/25"
+                        role="group"
+                        aria-label="Modo de clasificación regional"
+                      >
                         <button
                           type="button"
-                          onClick={() => handleSelectSite(pt.id)}
-                          className={`w-full rounded-lg border px-2.5 py-1.5 text-left transition-colors ${
-                            isSelected
-                              ? "border-[#F5B82E] bg-[#F5B82E]/15"
-                              : "border-[rgba(100,180,210,0.16)] bg-[#071018]/75 hover:border-[rgba(100,180,210,0.4)]"
+                          onClick={() => setRegionRankByActiveTarget(true)}
+                          aria-pressed={regionRankByActiveTarget}
+                          className={`whitespace-nowrap rounded px-2 py-0.5 text-[11px] font-medium transition-colors ${
+                            regionRankByActiveTarget
+                              ? "bg-[#C5A36D]/20 text-[#E4DFD5]"
+                              : "text-[#A3A1BD] hover:text-[#E4DFD5]"
                           }`}
                         >
-                          <div className="flex items-center justify-between gap-2">
-                            <span className="font-mono text-[11px] font-semibold text-[#F1F5F9] tabular-nums">
-                              #{idx + 1} · {pt.latitude.toFixed(2)}°,{" "}
-                              {pt.longitude.toFixed(2)}°
-                            </span>
-                            <span
-                              className={`font-mono text-xs font-bold tabular-nums ${
-                                scored.body === "Mars"
-                                  ? "text-[#E07A5F]"
-                                  : "text-[#00D9F5]"
+                          {(
+                            translatedReferences[activeTargetId]?.name ??
+                            "Objetivo activo"
+                          ).split(" / ")[0]}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setRegionRankByActiveTarget(false)}
+                          aria-pressed={!regionRankByActiveTarget}
+                          className={`whitespace-nowrap rounded px-2 py-0.5 text-[11px] font-medium transition-colors ${
+                            !regionRankByActiveTarget
+                              ? "bg-[#C5A36D]/20 text-[#E4DFD5]"
+                              : "text-[#A3A1BD] hover:text-[#E4DFD5]"
+                          }`}
+                        >
+                          Mejor global
+                        </button>
+                      </div>
+                    </div>
+
+                    {regionSummary && (
+                      <div className="rounded-lg bg-[#181B2C]/80 p-2 font-mono text-[10px] tabular-nums">
+                        <div className="flex items-center justify-between text-[#E4DFD5]">
+                          <span>
+                            Mejor:{" "}
+                            <strong className="text-[#C5A36D]">
+                              {regionSummary.maxAsi.toFixed(1)}%
+                            </strong>{" "}
+                            · Prom:{" "}
+                            <strong className="text-[#7CA5B8]">
+                              {regionSummary.meanAsi.toFixed(1)}%
+                            </strong>
+                          </span>
+                          <span>
+                            {Math.round(regionSummary.elevMinM)}–
+                            {Math.round(regionSummary.elevMaxM)} m
+                          </span>
+                        </div>
+                        <div className="mt-1 flex items-center justify-between text-[#A3A1BD]">
+                          <span>
+                            Supera {regionSummary.beatenCatalogCount}/
+                            {regionSummary.totalCatalogCount} sitios
+                          </span>
+                          <span>Pend. máx {regionSummary.maxSlopeDeg.toFixed(1)}°</span>
+                        </div>
+                      </div>
+                    )}
+
+                    <ul className="max-h-48 space-y-1.5 overflow-y-auto pr-1">
+                      {rankedRegionResult.points.map((pt, idx) => {
+                        const isSelected = selectedSite?.id === pt.id;
+                        const activeTarget = regionRankByActiveTarget
+                          ? activeTargetId
+                          : null;
+                        const scored = getPointTargetScore(pt, activeTarget);
+                        const why = buildSiteRationale(pt, activeTarget);
+                        return (
+                          <li key={pt.id}>
+                            <button
+                              type="button"
+                              onClick={() => handleSelectSite(pt.id)}
+                              className={`w-full rounded-lg border px-2.5 py-1.5 text-left transition-colors ${
+                                isSelected
+                                  ? "border-[#C5A36D] bg-[#C5A36D]/15"
+                                  : "border-[#55527D]/25 bg-[#181B2C]/60 hover:border-[#C5A36D]/40"
                               }`}
                             >
-                              {scored.asi.toFixed(1)}%
-                            </span>
-                          </div>
-                          <div className="mt-0.5 flex items-center justify-between font-mono text-[10px] text-[#94A3B8] tabular-nums">
-                            <span>
-                              Elev {Math.round(pt.elevation_m)} m · Pend{" "}
-                              {pt.dem_telemetry.dem_slope_deg.toFixed(1)}°
-                            </span>
-                            <span>{scored.targetName}</span>
-                          </div>
-                          <p className="mt-0.5 line-clamp-1 text-[10px] text-slate-400">
-                            {why}
-                          </p>
-                        </button>
-                      </li>
-                    );
-                  })}
-                </ul>
-              </div>
-            )
+                              <div className="flex items-center justify-between gap-2">
+                                <span className="font-mono text-[11px] font-semibold tabular-nums text-[#E4DFD5]">
+                                  #{idx + 1} · {pt.latitude.toFixed(2)}°,{" "}
+                                  {pt.longitude.toFixed(2)}°
+                                </span>
+                                <span
+                                  className={`font-mono text-xs font-bold tabular-nums ${
+                                    scored.body === "Mars"
+                                      ? "text-[#D47A61]"
+                                      : "text-[#7CA5B8]"
+                                  }`}
+                                >
+                                  {scored.asi.toFixed(1)}%
+                                </span>
+                              </div>
+                              <div className="mt-0.5 flex items-center justify-between font-mono text-[10px] tabular-nums text-[#A3A1BD]">
+                                <span>
+                                  {Math.round(pt.elevation_m)} m ·{" "}
+                                  {pt.dem_telemetry.dem_slope_deg.toFixed(1)}°
+                                </span>
+                                <span>{scored.targetName}</span>
+                              </div>
+                              <p className="mt-0.5 line-clamp-1 text-[10px] text-[#A3A1BD]">
+                                {why}
+                              </p>
+                            </button>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  </div>
+                )
+              )}
+            </section>
           )}
-        </section>
-      )}
+        </div>
+      </main>
 
       {showPresentation && (
         <MissionPresentation

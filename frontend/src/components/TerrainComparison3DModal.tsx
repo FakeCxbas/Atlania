@@ -271,7 +271,9 @@ export function TerrainComparison3DModal({
   const [wireframe, setWireframe] = useState<boolean>(false);
 
   const syncRef = useRef(syncCameras);
-  syncRef.current = syncCameras;
+  useEffect(() => {
+    syncRef.current = syncCameras;
+  }, [syncCameras]);
   const isSyncingRef = useRef(false);
 
   const [earthLoaded, setEarthLoaded] = useState<{

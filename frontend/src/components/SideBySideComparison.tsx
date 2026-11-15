@@ -262,9 +262,9 @@ export function SideBySideComparison({
             <button
               type="button"
               onClick={() => setShow3DComparison(true)}
-              className="inline-flex min-h-[36px] items-center gap-1.5 rounded-lg border border-[#06B6D4]/55 bg-[#06B6D4]/15 px-3 py-1.5 text-xs font-semibold text-[#06B6D4] transition-colors hover:bg-[#06B6D4]/25 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#06B6D4]"
+              className="inline-flex min-h-[36px] items-center gap-1.5 rounded-lg border border-[#7CA5B8]/55 bg-[#7CA5B8]/15 px-3 py-1.5 text-xs font-semibold text-[#E4DFD5] transition-colors hover:bg-[#7CA5B8]/25 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C5A36D]"
             >
-              <Mountain className="h-3.5 w-3.5" aria-hidden="true" />
+              <Mountain className="h-3.5 w-3.5 text-[#7CA5B8]" aria-hidden="true" />
               <span>Comparar superficies en 3D</span>
             </button>
 
@@ -272,7 +272,7 @@ export function SideBySideComparison({
               <button
                 type="button"
                 onClick={onToggleExpand}
-                className="inline-flex min-h-[36px] items-center gap-1.5 rounded-lg border border-[#F5B82E]/50 bg-[#F5B82E]/15 px-3 py-1.5 text-xs font-semibold text-[#F5B82E] transition-colors hover:bg-[#F5B82E]/25"
+                className="inline-flex min-h-[36px] items-center gap-1.5 rounded-lg border border-[#C5A36D]/50 bg-[#C5A36D]/15 px-3 py-1.5 text-xs font-semibold text-[#C5A36D] transition-colors hover:bg-[#C5A36D]/25 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C5A36D]"
               >
                 {expanded ? (
                   <>
