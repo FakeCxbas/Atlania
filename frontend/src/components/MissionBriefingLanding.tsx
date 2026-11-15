@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import type { AnalogDataset, DimensionScores } from "@/types/analog";
@@ -22,6 +22,9 @@ import {
   ArrowUpRight,
   ExternalLink,
   Menu,
+  Orbit,
+  Radio,
+  Satellite,
   ShieldAlert,
   X,
 } from "lucide-react";
@@ -86,6 +89,83 @@ const TARGET_MEDIA: Record<string, TargetMediaMeta> = {
     archiveUrl:
       "https://science.nasa.gov/resource/valles-marineris-the-grand-canyon-of-mars/",
     alt: "Sistema de cañones tectónicos Valles Marineris a lo largo del ecuador marciano",
+  },
+};
+
+interface HeroSatelliteMeta {
+  id: "landsat9" | "sentinel1" | "suomi-npp";
+  name: string;
+  agency: string;
+  instrument: string;
+  orbit: string;
+  resolution: string;
+  spectrum: string;
+  roleInAtlania: string;
+  analogSites: string;
+  limitations: string;
+  image: string;
+  width: number;
+  height: number;
+  officialUrl: string;
+}
+
+const HERO_SATELLITES: Record<HeroSatelliteMeta["id"], HeroSatelliteMeta> = {
+  landsat9: {
+    id: "landsat9",
+    name: "Landsat 9",
+    agency: "NASA / USGS",
+    instrument: "OLI-2 (Óptico) + TIRS-2 (Infrarrojo Térmico)",
+    orbit: "705 km · Heliosíncrona (16 días de revisita)",
+    resolution: "15 m pancromático · 30 m VNIR/SWIR · 100 m térmico",
+    spectrum: "Visible, NIR, SWIR y bandas térmicas 10–11",
+    roleInAtlania:
+      "Perfil de observatorio candidato para mapear textura geomorfológica, contrastes litológicos y variabilidad térmica superficial en los 35 sitios análogos de ATLANIA.",
+    analogSites:
+      "Galápagos (tubos basálticos), Salar de Atacama, Cráter Barringer, Mauna Loa e Isla Devon.",
+    limitations:
+      "Cobertura nubosa y vegetación densa atenúan la señal superficial; no mide temperaturas internas de tubos de lava ni composición mineral directa.",
+    image: "/nasa/landsat9-cutout.png",
+    width: 900,
+    height: 399,
+    officialUrl: "https://science.nasa.gov/mission/landsat/oli/",
+  },
+  sentinel1: {
+    id: "sentinel1",
+    name: "Sentinel-1",
+    agency: "ESA / Copernicus",
+    instrument: "C-SAR (Radar de Apertura Sintética)",
+    orbit: "693 km · Heliosíncrona polar (6–12 días)",
+    resolution: "5 × 20 m (modo Interferometric Wide Swath)",
+    spectrum: "Microondas Banda C (5.405 GHz · λ ≈ 5.6 cm)",
+    roleInAtlania:
+      "Perfil radar asignado para analizar rugosidad superficial, propiedades dieléctricas y lineamientos estructurales incluso a través de nubes densas.",
+    analogSites:
+      "Chimborazo, Cotopaxi, Lanzarote, Haughton Crater y campos volcánicos de altura.",
+    limitations:
+      "La banda C no penetra roca basáltica sólida para detectar cavernas profundas; el relieve abrupto introduce sombreado y escorzo radar.",
+    image: "/nasa/sentinel1-cutout.png",
+    width: 900,
+    height: 731,
+    officialUrl: "https://sentiwiki.copernicus.eu/web/s1-mission",
+  },
+  "suomi-npp": {
+    id: "suomi-npp",
+    name: "Suomi NPP",
+    agency: "NASA / NOAA",
+    instrument: "VIIRS (Visible Infrared Imaging Radiometer Suite)",
+    orbit: "824 km · Polar heliosíncrona (cobertura global diaria)",
+    resolution: "375 m – 750 m (bandas de imagen y radiometría)",
+    spectrum: "22 canales espectrales (0.412 – 12.01 µm)",
+    roleInAtlania:
+      "Alimenta en vivo la capa cartográfica NASA GIBS / Worldview VIIRS True Color integrada directamente en el Explorador Geoespacial 3D.",
+    analogSites:
+      "Cobertura sinóptica continua sobre los 35 análogos terrestres en 5 continentes.",
+    limitations:
+      "Su resolución espacial regional (375–750 m) es ideal para contexto sinóptico, pero no resuelve micro-cráteres ni bocas de tubos lávicos.",
+    image: "/nasa/suomi-npp-cutout.png",
+    width: 900,
+    height: 682,
+    officialUrl: "https://science.nasa.gov/mission/suomi-npp/",
   },
 };
 
@@ -382,6 +462,20 @@ export function MissionBriefingLanding({
   const [destinationFilter, setDestinationFilter] = useState<
     "ALL" | "Moon" | "Mars"
   >("ALL");
+
+  // Interactive orbital satellite modal state
+  const [selectedSatelliteId, setSelectedSatelliteId] = useState<
+    HeroSatelliteMeta["id"] | null
+  >(null);
+
+  useEffect(() => {
+    if (!selectedSatelliteId) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setSelectedSatelliteId(null);
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [selectedSatelliteId]);
 
   const translatedSites = useMemo(
     () => dataset.sites.map((site) => translateSite(site)),
@@ -785,73 +879,221 @@ export function MissionBriefingLanding({
                     aria-hidden="true"
                   />
 
-                  {/* INTEGRATED FLOATING SATELLITE CONSTELLATION (Cutout PNGs + Multi-Depth Parallax + Rim Lighting) */}
-                  {/* 1. Sentinel-1 (C-SAR Radar) — Upper-right orbital track */}
+                  {/* INTEGRATED INTERACTIVE SATELLITE CONSTELLATION (Nadir-oriented + Reflector Beams + Uniform Sunlit Rim + Clickable Telemetry) */}
+                  {/* 1. Sentinel-1 (C-SAR Radar) — Upper-right, pointing down-left toward Earth */}
                   <div
                     style={{
                       opacity: satOpacity,
                       transform: `translate3d(${sentinelX}px, ${sentinelY}px, 0) scale(${sentinelScale})`,
+                      pointerEvents: satOpacity < 0.15 ? "none" : "auto",
                     }}
-                    className="pointer-events-none absolute top-[13%] right-[2%] z-10 w-[165px] select-none will-change-transform sm:top-[14%] sm:right-[5%] sm:w-[245px] lg:right-[7%] lg:w-[300px] xl:w-[340px]"
+                    className="absolute top-[12%] right-[2%] z-30 w-[170px] select-none will-change-transform sm:top-[13%] sm:right-[5%] sm:w-[245px] lg:right-[7%] lg:w-[295px] xl:w-[335px]"
                   >
-                    <div
-                      className="absolute inset-6 -z-10 rounded-full bg-[radial-gradient(circle_at_45%_45%,rgba(56,189,248,0.18),transparent_70%)] blur-2xl"
-                      aria-hidden="true"
-                    />
-                    <Image
-                      src="/nasa/sentinel1-cutout.png"
-                      alt="Satélite Copernicus Sentinel-1 con antena radar C-SAR observando la superficie terrestre"
-                      width={900}
-                      height={731}
-                      priority
-                      sizes="(max-width: 640px) 165px, (max-width: 1024px) 245px, 340px"
-                      className="mb-sat-float-b h-auto w-full object-contain drop-shadow-[0_24px_42px_rgba(0,0,0,0.88)]"
-                    />
+                    <button
+                      type="button"
+                      onClick={() => setSelectedSatelliteId("sentinel1")}
+                      aria-label="Inspeccionar telemetría del satélite Copernicus Sentinel-1"
+                      className="group relative block w-full cursor-pointer rounded-2xl text-left transition-transform duration-300 hover:scale-[1.04] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00D9F5] focus-visible:ring-offset-4 focus-visible:ring-offset-[#03070D]"
+                    >
+                      {/* Nadir Reflector / C-SAR Scan Cone pointing down-left toward Earth */}
+                      <svg
+                        viewBox="0 0 220 220"
+                        aria-hidden="true"
+                        className="pointer-events-none absolute top-[46%] right-[44%] -z-10 h-[150px] w-[150px] origin-top-right opacity-65 transition-opacity duration-300 group-hover:opacity-95 sm:h-[210px] sm:w-[210px]"
+                      >
+                        <defs>
+                          <linearGradient id="beam-sentinel" x1="100%" y1="0%" x2="10%" y2="95%">
+                            <stop offset="0%" stopColor="#00D9F5" stopOpacity="0.48" />
+                            <stop offset="45%" stopColor="#38BDF8" stopOpacity="0.16" />
+                            <stop offset="100%" stopColor="#00D9F5" stopOpacity="0" />
+                          </linearGradient>
+                        </defs>
+                        <polygon points="210,10 15,150 95,215" fill="url(#beam-sentinel)" />
+                        <line x1="210" y1="10" x2="52" y2="185" stroke="#00D9F5" strokeOpacity="0.32" strokeWidth="1" strokeDasharray="4 5" />
+                      </svg>
+
+                      <div
+                        className="mb-sat-float-b relative"
+                        style={{ transformOrigin: "center center" }}
+                      >
+                        <div className="relative -rotate-[14deg]">
+                          <div
+                            className="absolute inset-6 -z-10 rounded-full bg-[radial-gradient(circle_at_35%_35%,rgba(56,189,248,0.22),transparent_70%)] blur-2xl"
+                            aria-hidden="true"
+                          />
+                          <Image
+                            src="/nasa/sentinel1-cutout.png"
+                            alt="Satélite Copernicus Sentinel-1 con antena radar C-SAR apuntando hacia la Tierra"
+                            width={900}
+                            height={731}
+                            priority
+                            sizes="(max-width: 640px) 170px, (max-width: 1024px) 245px, 335px"
+                            className="h-auto w-full object-contain brightness-[1.18] contrast-[1.05] saturate-[0.92] drop-shadow-[0_24px_42px_rgba(0,0,0,0.88)]"
+                          />
+                          {/* Uniform unilateral sunlit rim-light masked to exact satellite silhouette */}
+                          <div
+                            aria-hidden="true"
+                            style={{
+                              maskImage: "url(/nasa/sentinel1-cutout.png)",
+                              WebkitMaskImage: "url(/nasa/sentinel1-cutout.png)",
+                              maskSize: "contain",
+                              WebkitMaskSize: "contain",
+                              maskRepeat: "no-repeat",
+                              WebkitMaskRepeat: "no-repeat",
+                              maskPosition: "center",
+                              WebkitMaskPosition: "center",
+                            }}
+                            className="pointer-events-none absolute inset-0 bg-[linear-gradient(135deg,rgba(224,247,255,0.48)_0%,rgba(56,189,248,0.18)_36%,transparent_66%)] mix-blend-screen"
+                          />
+                        </div>
+                      </div>
+
+                      <span className="mt-1 inline-flex items-center gap-1.5 rounded-full border border-[#00D9F5]/35 bg-[#060913]/85 px-2.5 py-1 font-mono text-[10px] font-semibold tracking-wider text-slate-200 backdrop-blur-md transition-colors group-hover:border-[#00D9F5] group-hover:text-[#00D9F5] sm:text-[11px]">
+                        <span className="h-1.5 w-1.5 rounded-full bg-[#00D9F5] animate-pulse" aria-hidden="true" />
+                        SENTINEL-1 · C-SAR
+                      </span>
+                    </button>
                   </div>
 
-                  {/* 2. Suomi NPP (VIIRS / NASA GIBS) — Mid-orbit secondary depth */}
+                  {/* 2. Suomi NPP (VIIRS / NASA GIBS) — Mid-orbit, pointing down-right toward Earth */}
                   <div
                     style={{
-                      opacity: satOpacity * 0.92,
+                      opacity: satOpacity * 0.94,
                       transform: `translate3d(${suomiX}px, ${suomiY}px, 0) scale(${suomiScale})`,
+                      pointerEvents: satOpacity < 0.15 ? "none" : "auto",
                     }}
-                    className="pointer-events-none hidden select-none will-change-transform sm:absolute sm:right-[26%] sm:bottom-[37%] sm:z-10 sm:block sm:w-[190px] lg:right-[29%] lg:bottom-[39%] lg:w-[235px] xl:w-[260px]"
+                    className="hidden sm:absolute sm:right-[27%] sm:bottom-[39%] sm:z-30 sm:block sm:w-[190px] lg:right-[30%] lg:bottom-[41%] lg:w-[230px] xl:w-[255px]"
                   >
-                    <div
-                      className="absolute inset-6 -z-10 rounded-full bg-[radial-gradient(circle_at_50%_50%,rgba(0,217,245,0.15),transparent_70%)] blur-2xl"
-                      aria-hidden="true"
-                    />
-                    <Image
-                      src="/nasa/suomi-npp-cutout.png"
-                      alt="Satélite NASA/NOAA Suomi NPP con sensor VIIRS para reflectancia verdadera"
-                      width={900}
-                      height={682}
-                      sizes="(max-width: 1024px) 190px, 260px"
-                      className="mb-sat-float-c h-auto w-full object-contain drop-shadow-[0_20px_36px_rgba(0,0,0,0.85)]"
-                    />
+                    <button
+                      type="button"
+                      onClick={() => setSelectedSatelliteId("suomi-npp")}
+                      aria-label="Inspeccionar telemetría del satélite NASA/NOAA Suomi NPP"
+                      className="group relative block w-full cursor-pointer rounded-2xl text-left transition-transform duration-300 hover:scale-[1.04] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00D9F5] focus-visible:ring-offset-4 focus-visible:ring-offset-[#03070D]"
+                    >
+                      {/* Nadir Reflector / VIIRS Scan Cone pointing down toward Earth */}
+                      <svg
+                        viewBox="0 0 200 200"
+                        aria-hidden="true"
+                        className="pointer-events-none absolute top-[62%] left-[38%] -z-10 h-[145px] w-[145px] opacity-65 transition-opacity duration-300 group-hover:opacity-95 lg:h-[175px] lg:w-[175px]"
+                      >
+                        <defs>
+                          <linearGradient id="beam-suomi" x1="30%" y1="0%" x2="70%" y2="100%">
+                            <stop offset="0%" stopColor="#00D9F5" stopOpacity="0.45" />
+                            <stop offset="50%" stopColor="#38BDF8" stopOpacity="0.14" />
+                            <stop offset="100%" stopColor="#00D9F5" stopOpacity="0" />
+                          </linearGradient>
+                        </defs>
+                        <polygon points="75,5 25,185 155,165" fill="url(#beam-suomi)" />
+                        <line x1="75" y1="5" x2="90" y2="175" stroke="#00D9F5" strokeOpacity="0.28" strokeWidth="1" strokeDasharray="4 5" />
+                      </svg>
+
+                      <div className="mb-sat-float-c relative">
+                        <div className="relative rotate-[10deg]">
+                          <div
+                            className="absolute inset-6 -z-10 rounded-full bg-[radial-gradient(circle_at_35%_35%,rgba(56,189,248,0.2),transparent_70%)] blur-2xl"
+                            aria-hidden="true"
+                          />
+                          <Image
+                            src="/nasa/suomi-npp-cutout.png"
+                            alt="Satélite NASA/NOAA Suomi NPP con sensor VIIRS apuntando hacia la Tierra"
+                            width={900}
+                            height={682}
+                            sizes="(max-width: 1024px) 190px, 255px"
+                            className="h-auto w-full object-contain brightness-[0.95] contrast-[1.06] saturate-[0.86] drop-shadow-[0_20px_36px_rgba(0,0,0,0.85)]"
+                          />
+                          <div
+                            aria-hidden="true"
+                            style={{
+                              maskImage: "url(/nasa/suomi-npp-cutout.png)",
+                              WebkitMaskImage: "url(/nasa/suomi-npp-cutout.png)",
+                              maskSize: "contain",
+                              WebkitMaskSize: "contain",
+                              maskRepeat: "no-repeat",
+                              WebkitMaskRepeat: "no-repeat",
+                              maskPosition: "center",
+                              WebkitMaskPosition: "center",
+                            }}
+                            className="pointer-events-none absolute inset-0 bg-[linear-gradient(135deg,rgba(224,247,255,0.44)_0%,rgba(56,189,248,0.16)_36%,transparent_66%)] mix-blend-screen"
+                          />
+                        </div>
+                      </div>
+
+                      <span className="mt-1 inline-flex items-center gap-1.5 rounded-full border border-[#00D9F5]/35 bg-[#060913]/85 px-2.5 py-1 font-mono text-[10px] font-semibold tracking-wider text-slate-200 backdrop-blur-md transition-colors group-hover:border-[#00D9F5] group-hover:text-[#00D9F5]">
+                        <span className="h-1.5 w-1.5 rounded-full bg-[#00D9F5] animate-pulse" aria-hidden="true" />
+                        SUOMI NPP · VIIRS
+                      </span>
+                    </button>
                   </div>
 
-                  {/* 3. Landsat 9 (OLI-2 / TIRS-2) — Primary foreground satellite */}
+                  {/* 3. Landsat 9 (OLI-2 / TIRS-2) — Primary foreground satellite, pointing up-left toward Earth */}
                   <div
                     style={{
                       opacity: satOpacity,
                       transform: `translate3d(${landsatX}px, ${landsatY}px, 0) scale(${landsatScale})`,
+                      pointerEvents: satOpacity < 0.15 ? "none" : "auto",
                     }}
-                    className="pointer-events-none absolute right-[-4%] bottom-[17%] z-10 w-[260px] select-none will-change-transform sm:right-[3%] sm:bottom-[12%] sm:w-[390px] lg:right-[4%] lg:bottom-[12%] lg:w-[490px] xl:w-[540px]"
+                    className="absolute right-[-3%] bottom-[16%] z-30 w-[260px] select-none will-change-transform sm:right-[3%] sm:bottom-[12%] sm:w-[390px] lg:right-[4%] lg:bottom-[12%] lg:w-[480px] xl:w-[530px]"
                   >
-                    <div
-                      className="absolute inset-6 -z-10 rounded-full bg-[radial-gradient(circle_at_35%_45%,rgba(56,189,248,0.22),transparent_68%)] blur-2xl"
-                      aria-hidden="true"
-                    />
-                    <Image
-                      src="/nasa/landsat9-cutout.png"
-                      alt="Satélite NASA/USGS Landsat 9 con instrumentos OLI-2 y TIRS-2 en órbita sobre el horizonte terrestre"
-                      width={900}
-                      height={399}
-                      priority
-                      sizes="(max-width: 640px) 260px, (max-width: 1024px) 390px, 540px"
-                      className="mb-sat-float-a h-auto w-full object-contain drop-shadow-[0_28px_48px_rgba(0,0,0,0.92)]"
-                    />
+                    <button
+                      type="button"
+                      onClick={() => setSelectedSatelliteId("landsat9")}
+                      aria-label="Inspeccionar telemetría del satélite NASA/USGS Landsat 9"
+                      className="group relative block w-full cursor-pointer rounded-2xl text-left transition-transform duration-300 hover:scale-[1.03] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00D9F5] focus-visible:ring-offset-4 focus-visible:ring-offset-[#03070D]"
+                    >
+                      {/* Nadir Reflector / OLI-2 + TIRS-2 Scan Cone pointing up-left toward Earth */}
+                      <svg
+                        viewBox="0 0 240 200"
+                        aria-hidden="true"
+                        className="pointer-events-none absolute -top-[28%] -left-[18%] -z-10 h-[150px] w-[180px] opacity-70 transition-opacity duration-300 group-hover:opacity-100 sm:h-[200px] sm:w-[240px]"
+                      >
+                        <defs>
+                          <linearGradient id="beam-landsat" x1="85%" y1="90%" x2="10%" y2="10%">
+                            <stop offset="0%" stopColor="#00D9F5" stopOpacity="0.52" />
+                            <stop offset="45%" stopColor="#38BDF8" stopOpacity="0.18" />
+                            <stop offset="100%" stopColor="#00D9F5" stopOpacity="0" />
+                          </linearGradient>
+                        </defs>
+                        <polygon points="225,180 10,75 85,10" fill="url(#beam-landsat)" />
+                        <line x1="225" y1="180" x2="45" y2="40" stroke="#00D9F5" strokeOpacity="0.34" strokeWidth="1" strokeDasharray="4 5" />
+                      </svg>
+
+                      <div className="mb-sat-float-a relative">
+                        <div className="relative rotate-[8deg]">
+                          <div
+                            className="absolute inset-6 -z-10 rounded-full bg-[radial-gradient(circle_at_35%_35%,rgba(56,189,248,0.24),transparent_68%)] blur-2xl"
+                            aria-hidden="true"
+                          />
+                          <Image
+                            src="/nasa/landsat9-cutout.png"
+                            alt="Satélite NASA/USGS Landsat 9 con instrumentos OLI-2 y TIRS-2 apuntando hacia la Tierra"
+                            width={900}
+                            height={399}
+                            priority
+                            sizes="(max-width: 640px) 260px, (max-width: 1024px) 390px, 530px"
+                            className="h-auto w-full object-contain brightness-[1.08] contrast-[1.05] saturate-[0.95] drop-shadow-[0_28px_48px_rgba(0,0,0,0.92)]"
+                          />
+                          <div
+                            aria-hidden="true"
+                            style={{
+                              maskImage: "url(/nasa/landsat9-cutout.png)",
+                              WebkitMaskImage: "url(/nasa/landsat9-cutout.png)",
+                              maskSize: "contain",
+                              WebkitMaskSize: "contain",
+                              maskRepeat: "no-repeat",
+                              WebkitMaskRepeat: "no-repeat",
+                              maskPosition: "center",
+                              WebkitMaskPosition: "center",
+                            }}
+                            className="pointer-events-none absolute inset-0 bg-[linear-gradient(135deg,rgba(224,247,255,0.48)_0%,rgba(56,189,248,0.18)_36%,transparent_66%)] mix-blend-screen"
+                          />
+                        </div>
+                      </div>
+
+                      <span className="mt-1 inline-flex items-center gap-1.5 rounded-full border border-[#00D9F5]/45 bg-[#060913]/88 px-3 py-1 font-mono text-[10px] font-semibold tracking-wider text-[#F1F5F9] backdrop-blur-md transition-colors group-hover:border-[#00D9F5] group-hover:text-[#00D9F5] sm:text-[11px]">
+                        <span className="h-1.5 w-1.5 rounded-full bg-[#00D9F5] animate-pulse" aria-hidden="true" />
+                        LANDSAT 9 · OLI-2 / TIRS-2
+                      </span>
+                    </button>
                   </div>
 
                   {/* CHAPTER 1 EDITORIAL CONTENT (Fades out upward as camera advances toward Earth) */}
@@ -1724,6 +1966,162 @@ export function MissionBriefingLanding({
           );
         }}
       </ScrollScene>
+
+      {/* =====================================================================
+          INTERACTIVE SATELLITE TELEMETRY MODAL (Click on Hero Satellites)
+      ===================================================================== */}
+      {selectedSatelliteId && (() => {
+        const sat = HERO_SATELLITES[selectedSatelliteId];
+        return (
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="sat-modal-title"
+            className="fixed inset-0 z-[70] flex items-center justify-center bg-[#03070D]/80 p-4 backdrop-blur-md"
+            onClick={() => setSelectedSatelliteId(null)}
+          >
+            <div
+              onClick={(e) => e.stopPropagation()}
+              className="relative w-full max-w-2xl overflow-hidden rounded-2xl border border-slate-800/80 bg-[#0D1424]/95 shadow-[0_32px_90px_rgba(0,0,0,0.85)] backdrop-blur-xl"
+            >
+              {/* Top HUD header */}
+              <div className="flex items-start justify-between gap-4 border-b border-slate-800/80 bg-[#060913]/80 px-6 py-4">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-[#00D9F5]/35 bg-[#00D9F5]/10 text-[#00D9F5]">
+                    <Satellite className="h-5 w-5" aria-hidden="true" />
+                  </div>
+                  <div>
+                    <p className="font-mono text-[11px] font-semibold tracking-[0.18em] text-[#00D9F5] uppercase">
+                      OBSERVATORIO ORBITAL · {sat.agency}
+                    </p>
+                    <h2
+                      id="sat-modal-title"
+                      className="text-xl font-semibold text-[#F1F5F9]"
+                    >
+                      {sat.name}
+                    </h2>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setSelectedSatelliteId(null)}
+                  aria-label="Cerrar ficha de satélite"
+                  className="inline-flex min-h-11 min-w-11 cursor-pointer items-center justify-center rounded-xl border border-slate-800 bg-[#060913] text-slate-300 transition-colors hover:border-[#00D9F5]/50 hover:text-[#F1F5F9] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00D9F5]"
+                >
+                  <X className="h-5 w-5" aria-hidden="true" />
+                </button>
+              </div>
+
+              {/* Body */}
+              <div className="grid grid-cols-1 gap-6 p-6 sm:grid-cols-12">
+                {/* Satellite Cutout Preview */}
+                <div className="relative flex items-center justify-center rounded-xl border border-slate-800/80 bg-[#060913] p-4 sm:col-span-5">
+                  <div
+                    className="pointer-events-none absolute inset-4 rounded-full bg-[radial-gradient(circle_at_35%_35%,rgba(56,189,248,0.2),transparent_70%)] blur-xl"
+                    aria-hidden="true"
+                  />
+                  <Image
+                    src={sat.image}
+                    alt={`Modelo orbital de ${sat.name}`}
+                    width={sat.width}
+                    height={sat.height}
+                    className="relative max-h-44 w-auto object-contain brightness-[1.08] drop-shadow-[0_18px_32px_rgba(0,0,0,0.9)]"
+                  />
+                </div>
+
+                {/* Telemetry Specs */}
+                <div className="space-y-3 sm:col-span-7">
+                  <div className="rounded-xl border border-slate-800/80 bg-[#060913]/75 p-3">
+                    <p className="flex items-center gap-1.5 font-mono text-[10px] tracking-[0.16em] text-slate-400 uppercase">
+                      <Radio className="h-3.5 w-3.5 text-[#00D9F5]" aria-hidden="true" />
+                      Instrumento y espectro
+                    </p>
+                    <p className="mt-1 text-sm font-medium text-[#F1F5F9]">
+                      {sat.instrument}
+                    </p>
+                    <p className="mt-0.5 font-mono text-xs tabular-nums text-slate-400">
+                      {sat.spectrum}
+                    </p>
+                  </div>
+
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                    <div className="rounded-xl border border-slate-800/80 bg-[#060913]/75 p-3">
+                      <p className="flex items-center gap-1.5 font-mono text-[10px] tracking-[0.16em] text-slate-400 uppercase">
+                        <Orbit className="h-3.5 w-3.5 text-[#00D9F5]" aria-hidden="true" />
+                        Órbita
+                      </p>
+                      <p className="mt-1 font-mono text-xs tabular-nums text-slate-200">
+                        {sat.orbit}
+                      </p>
+                    </div>
+                    <div className="rounded-xl border border-slate-800/80 bg-[#060913]/75 p-3">
+                      <p className="font-mono text-[10px] tracking-[0.16em] text-slate-400 uppercase">
+                        Resolución
+                      </p>
+                      <p className="mt-1 font-mono text-xs tabular-nums text-slate-200">
+                        {sat.resolution}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Scientific Role & Analog Sites */}
+              <div className="space-y-3 border-t border-slate-800/80 px-6 py-4">
+                <div>
+                  <p className="font-mono text-[10px] tracking-[0.16em] text-[#00D9F5] uppercase">
+                    Uso en ATLANIA sobre puntos análogos
+                  </p>
+                  <p className="mt-1 text-sm leading-relaxed text-slate-200">
+                    {sat.roleInAtlania}
+                  </p>
+                  <p className="mt-1.5 font-mono text-xs text-slate-400">
+                    Sitios clave: <span className="text-slate-200">{sat.analogSites}</span>
+                  </p>
+                </div>
+
+                <div className="flex items-start gap-2.5 rounded-xl border border-amber-500/25 bg-amber-500/5 p-3">
+                  <ShieldAlert className="mt-0.5 h-4 w-4 shrink-0 text-amber-400" aria-hidden="true" />
+                  <p className="text-xs leading-relaxed text-slate-300">
+                    <span className="font-semibold text-amber-300">Límites físicos:</span>{" "}
+                    {sat.limitations}
+                  </p>
+                </div>
+              </div>
+
+              {/* Footer Actions */}
+              <div className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-800/80 bg-[#060913]/80 px-6 py-4">
+                <a
+                  href={sat.officialUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex min-h-11 items-center gap-1.5 text-xs font-semibold text-slate-300 underline decoration-slate-600 underline-offset-4 transition-colors hover:text-[#00D9F5]"
+                >
+                  <span>Documentación oficial de la misión</span>
+                  <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" />
+                </a>
+
+                <div className="flex items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setSelectedSatelliteId(null)}
+                    className="inline-flex min-h-11 cursor-pointer items-center rounded-full border border-slate-700 px-4 py-2 text-xs font-semibold text-slate-200 transition-colors hover:border-slate-500 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00D9F5]"
+                  >
+                    Cerrar ficha
+                  </button>
+                  <Link
+                    href="/explorer"
+                    className="inline-flex min-h-11 items-center gap-2 rounded-full bg-[#00D9F5] px-5 py-2 text-xs font-semibold tracking-wider text-[#03070D] uppercase transition-transform hover:scale-[1.02]"
+                  >
+                    <span>Explorar sitios en 3D</span>
+                    <ArrowUpRight className="h-3.5 w-3.5" aria-hidden="true" />
+                  </Link>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
     </div>
   );
 }
