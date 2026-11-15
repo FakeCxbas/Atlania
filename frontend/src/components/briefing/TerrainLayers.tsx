@@ -205,11 +205,8 @@ export function TerrainLayers({
                         }`}
                       >
                         <div className="overflow-hidden">
-                          <div className="mt-2.5 pl-7 text-sm leading-relaxed text-slate-200">
+                          <div className="mt-2 pl-7 text-sm leading-relaxed text-slate-200">
                             <p className="font-medium text-slate-100">{s.summary}</p>
-                            <p className="mt-1 font-mono text-xs text-slate-300">
-                              {s.detail}
-                            </p>
                           </div>
                         </div>
                       </div>
@@ -317,14 +314,16 @@ export function TerrainLayers({
                 {pipelineSteps[activePipelineStep].description}
               </p>
 
-              <ul className="mt-6 grid gap-2.5 border-t border-white/10 pt-5 font-mono text-xs text-[#F1F5F9]/85 sm:grid-cols-2">
+              <div className="mt-5 flex flex-wrap gap-2 border-t border-white/10 pt-4 font-mono text-xs text-[#F1F5F9]/90">
                 {pipelineSteps[activePipelineStep].sources.map((src) => (
-                  <li key={src} className="flex items-start gap-2.5">
-                    <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-[#00D9F5]" />
-                    <span>{src}</span>
-                  </li>
+                  <span
+                    key={src}
+                    className="rounded-full border border-white/15 bg-white/5 px-3 py-1"
+                  >
+                    {src}
+                  </span>
                 ))}
-              </ul>
+              </div>
             </div>
           </div>
         </div>

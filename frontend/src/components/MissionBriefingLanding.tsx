@@ -687,10 +687,10 @@ export function MissionBriefingLanding({
         description:
           "Clima (NASA POWER), relieve (Copernicus DEM 90 m) y misiones PDS.",
         sources: [
-          `NASA POWER: 7 variables climáticas (${dataset.methodology.source_counts.nasa_power}/${dataset.sites.length} sitios)`,
-          "Copernicus DEM 90 m: pendiente y rugosidad en 5 puntos",
-          "NASA PDS: misiones LRO, MRO y Perseverance",
-          "NASA GIBS VIIRS y relieve 3D sombreado",
+          `NASA POWER (${dataset.methodology.source_counts.nasa_power} sitios)`,
+          "Copernicus DEM 90 m",
+          "NASA PDS (LRO / MRO)",
+          "NASA GIBS VIIRS",
         ],
         brands: ["nasa-power", "copernicus", "nasa-pds"] as BrandId[],
       },
@@ -701,10 +701,10 @@ export function MissionBriefingLanding({
         description:
           "Pendientes, rugosidad, amplitud térmica, aridez y perfil de roca.",
         sources: [
-          "Gradiente local por diferencias centrales (±0.01°)",
-          "Índice continuo de aridez superficial",
-          "Superposición difusa: basalto, regolito, sales e impacto",
-          "Separación clara entre telemetría medida y supuestos",
+          "Gradiente topográfico 90 m",
+          "Índice de aridez",
+          "Litología difusa",
+          "Telemetría verificada",
         ],
         brands: ["python", "open-meteo", "nasa-power"] as BrandId[],
       },
@@ -715,10 +715,10 @@ export function MissionBriefingLanding({
         description:
           "Compara cada sitio terrestre contra 6 destinos de la Luna y Marte.",
         sources: [
-          "Puntuación global ASI (0–100%) ponderada por misión",
-          "Jaccard difuso para litología y vulcanismo",
-          "Alertas físicas: gravedad, atmósfera y radiación",
-          "Validado con suite de pruebas unitarias",
+          "ASI 0–100 ponderado",
+          "Jaccard litológico",
+          "Límites físicos reales",
+          "Pruebas unitarias",
         ],
         brands: ["python", "nasa-pds"] as BrandId[],
       },
@@ -729,10 +729,10 @@ export function MissionBriefingLanding({
         description:
           "Globo 3D, comparación lado a lado, sondeo libre y exportación QGIS.",
         sources: [
-          "Globo 3D con filtros por planeta y país",
-          "Sondeo puntual y grillas 3x3 / 4x4 en vivo",
-          "Radar pentagonal de afinidad y vista lado a lado",
-          "Exportación a GeoJSON (QGIS), Markdown y JSON",
+          "Globo 3D interactivo",
+          "Sondeo libre en vivo",
+          "Radar de 5 ejes",
+          "Exportación GeoJSON / QGIS",
         ],
         brands: ["nextjs", "maplibre", "github"] as BrandId[],
       },
@@ -1273,50 +1273,36 @@ export function MissionBriefingLanding({
 
                       {/* Three Open Editorial Columns (Hairline dividers, no boxy cards) */}
                       <div className="mt-8 grid grid-cols-1 gap-6 border-t border-white/15 pt-6 lg:grid-cols-3 lg:gap-10">
-                        {challengeCards.map((item, idx) => {
-                          const isSelected = activeChallengeIdx === idx;
-                          return (
-                            <div
-                              key={item.id}
-                              className="group flex flex-col justify-between"
-                            >
-                              <div>
-                                <div className="flex items-center justify-between gap-2">
-                                  <span className="font-mono text-xs font-semibold tracking-wider text-[#00D9F5] uppercase">
-                                    0{idx + 1} · {item.tag}
-                                  </span>
-                                  <ScientificIcon
-                                    concept={item.concept}
-                                    className="h-4 w-4 text-slate-400"
-                                  />
-                                </div>
-                                <h3 className="mt-3 text-lg font-bold leading-snug text-slate-100 sm:text-xl">
-                                  {item.question}
-                                </h3>
-                                <p className="mt-2.5 text-sm leading-relaxed text-slate-200">
-                                  {isSelected ? item.detail : item.shortAnswer}
-                                </p>
-                              </div>
-
-                              <div className="mt-5 flex flex-wrap items-center justify-between gap-2 border-t border-white/10 pt-3">
-                                <span className="rounded-md border border-white/15 bg-white/5 px-2.5 py-1 font-mono text-xs text-slate-200 tabular-nums">
-                                  {item.metricValue}
+                        {challengeCards.map((item, idx) => (
+                          <div
+                            key={item.id}
+                            className="group flex flex-col justify-between"
+                          >
+                            <div>
+                              <div className="flex items-center justify-between gap-2">
+                                <span className="font-mono text-xs font-semibold tracking-wider text-[#00D9F5] uppercase">
+                                  0{idx + 1} · {item.tag}
                                 </span>
-                                <button
-                                  type="button"
-                                  onClick={() =>
-                                    setActiveChallengeIdx(
-                                      isSelected ? -1 : idx
-                                    )
-                                  }
-                                  className="font-mono text-xs font-semibold text-[#00D9F5] underline-offset-4 hover:underline"
-                                >
-                                  {isSelected ? "Sintetizar" : "Profundizar"}
-                                </button>
+                                <ScientificIcon
+                                  concept={item.concept}
+                                  className="h-4 w-4 text-slate-400"
+                                />
                               </div>
+                              <h3 className="mt-2.5 text-lg font-bold leading-snug text-slate-100">
+                                {item.question}
+                              </h3>
+                              <p className="mt-2 text-sm leading-relaxed text-slate-200">
+                                {item.shortAnswer}
+                              </p>
                             </div>
-                          );
-                        })}
+
+                            <div className="mt-4 border-t border-white/10 pt-3">
+                              <span className="rounded-md border border-white/15 bg-white/5 px-2.5 py-1 font-mono text-xs text-slate-200 tabular-nums">
+                                {item.metricValue}
+                              </span>
+                            </div>
+                          </div>
+                        ))}
                       </div>
                     </div>
 
@@ -1580,17 +1566,16 @@ export function MissionBriefingLanding({
                 >
                   <div className="max-w-3xl">
                     <p className="font-mono text-xs font-semibold tracking-wider text-[#00D9F5] uppercase">
-                      ÍNDICE DE SIMILITUD ANÁLOGA (ASI) · ESCALA REAL 0 – 100
+                      ÍNDICE DE SIMILITUD ANÁLOGA (ASI) · ESCALA 0 – 100
                     </p>
                     <h3 className="mt-3 text-3xl font-semibold tracking-tight text-[#F1F5F9] sm:text-4xl">
-                      Cómo se interpreta una puntuación real en ATLANIA
+                      Similitud cuantitativa por misión
                     </h3>
-                    <p className="mt-4 text-base leading-relaxed text-slate-200">
-                      El ASI pondera cinco dimensiones clave (Topografía, Geología, Clima, Aridez/Hielo y Refugio Subterráneo) según los requisitos de cada misión:{" "}
+                    <p className="mt-3 text-base leading-relaxed text-slate-200">
+                      Pondera 5 dimensiones según el destino:{" "}
                       <span className="inline-flex items-center rounded-md border border-[#00D9F5]/40 bg-[#00D9F5]/10 px-2.5 py-1 font-mono text-xs font-semibold text-[#00D9F5]">
                         ASI Global = Σ (Peso[d] × Afinidad[d])
                       </span>
-                      . Todos los valores se calculan a partir de telemetría satelital abierta y priors geológicos documentados.
                     </p>
                   </div>
 
@@ -1754,9 +1739,6 @@ export function MissionBriefingLanding({
                                       }}
                                     />
                                   </div>
-                                  <p className="mt-1.5 font-mono text-xs text-slate-300">
-                                    {dim.formulaNote}
-                                  </p>
                                 </div>
                               );
                             })}
