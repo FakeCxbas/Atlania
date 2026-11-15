@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import type { AnalogDataset, DimensionScores } from "@/types/analog";
@@ -20,6 +20,8 @@ import { ExplorerTransition } from "@/components/briefing/ExplorerTransition";
 import {
   ArrowDown,
   ArrowUpRight,
+  ChevronDown,
+  ChevronUp,
   ExternalLink,
   Menu,
   Orbit,
@@ -477,17 +479,86 @@ export function MissionBriefingLanding({
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [selectedSatelliteId]);
 
+  const LANDING_PHASES = useMemo(
+    () => [
+      { id: "capitulo-1", label: "01 · Inicio", offsetVh: 0 },
+      { id: "el-desafio", label: "02 · La Tierra", offsetVh: 0 },
+      { id: "capas-del-terreno", label: "03 · Estrato 01", offsetVh: 0 },
+      { id: "capas-del-terreno", label: "03 · Estrato 02", offsetVh: 1 },
+      { id: "capas-del-terreno", label: "03 · Estrato 03", offsetVh: 2 },
+      { id: "capas-del-terreno", label: "03 · Estrato 04", offsetVh: 3 },
+      { id: "nuestra-solucion", label: "03 · Solución", offsetVh: 0 },
+      { id: "que-es-un-analogo", label: "04 · Comparación", offsetVh: 0 },
+      { id: "similitud-asi", label: "04 · Índice ASI", offsetVh: 0 },
+      { id: "explora-los-destinos", label: "04 · Destinos", offsetVh: 0 },
+      { id: "acceso-al-explorador", label: "05 · Explorador", offsetVh: 0 },
+    ],
+    []
+  );
+
+  const [currentPhaseIdx, setCurrentPhaseIdx] = useState(0);
+
+  const getPhaseY = useCallback(
+    (idx: number) => {
+      const phase = LANDING_PHASES[idx];
+      if (!phase) return 0;
+      if (phase.id === "capitulo-1") return 0;
+      const el = document.getElementById(phase.id);
+      if (!el) return 0;
+      const rect = el.getBoundingClientRect();
+      return Math.max(
+        0,
+        Math.round(rect.top + window.scrollY + phase.offsetVh * window.innerHeight)
+      );
+    },
+    [LANDING_PHASES]
+  );
+
+  const navigatePhase = useCallback(
+    (delta: -1 | 1) => {
+      const nextIdx = Math.max(
+        0,
+        Math.min(LANDING_PHASES.length - 1, currentPhaseIdx + delta)
+      );
+      setCurrentPhaseIdx(nextIdx);
+      const targetY = getPhaseY(nextIdx);
+      window.scrollTo({ top: targetY, behavior: "smooth" });
+    },
+    [LANDING_PHASES.length, currentPhaseIdx, getPhaseY]
+  );
+
   useEffect(() => {
-    const html = document.documentElement;
-    const prevSnapType = html.style.scrollSnapType;
-    const prevScrollPadding = html.style.scrollPaddingTop;
-    html.style.scrollSnapType = "y mandatory";
-    html.style.scrollPaddingTop = "0px";
-    return () => {
-      html.style.scrollSnapType = prevSnapType;
-      html.style.scrollPaddingTop = prevScrollPadding;
+    const syncPhaseOnScroll = () => {
+      const y = window.scrollY + window.innerHeight * 0.28;
+      let active = 0;
+      for (let i = 0; i < LANDING_PHASES.length; i++) {
+        if (getPhaseY(i) <= y) active = i;
+      }
+      setCurrentPhaseIdx(active);
     };
-  }, []);
+    syncPhaseOnScroll();
+    window.addEventListener("scroll", syncPhaseOnScroll, { passive: true });
+    return () => window.removeEventListener("scroll", syncPhaseOnScroll);
+  }, [LANDING_PHASES, getPhaseY]);
+
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (selectedSatelliteId || document.querySelector('[role="dialog"]')) {
+        return;
+      }
+      const tag = (e.target as HTMLElement | null)?.tagName;
+      if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return;
+      if (e.key === "ArrowDown" || e.key === "PageDown") {
+        e.preventDefault();
+        navigatePhase(1);
+      } else if (e.key === "ArrowUp" || e.key === "PageUp") {
+        e.preventDefault();
+        navigatePhase(-1);
+      }
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [selectedSatelliteId, navigatePhase]);
 
   const translatedSites = useMemo(
     () => dataset.sites.map((site) => translateSite(site)),
@@ -2115,6 +2186,37 @@ export function MissionBriefingLanding({
           </div>
         );
       })()}
+      {/* Floating Up/Down Phase Arrow Navigator */}
+      <nav
+        aria-label="Navegación por fases con flechas"
+        className="fixed right-5 bottom-5 z-40 flex items-center gap-1.5 rounded-full border border-white/15 bg-[#03070D]/85 p-1.5 shadow-2xl backdrop-blur-md"
+      >
+        <button
+          type="button"
+          onClick={() => navigatePhase(-1)}
+          disabled={currentPhaseIdx <= 0}
+          aria-label="Subir a la fase anterior"
+          title="Fase anterior (↑)"
+          className="inline-flex h-11 w-11 cursor-pointer items-center justify-center rounded-full text-slate-200 transition-colors hover:bg-white/10 hover:text-[#00D9F5] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00D9F5] disabled:cursor-not-allowed disabled:opacity-35"
+        >
+          <ChevronUp className="h-5 w-5" aria-hidden="true" />
+        </button>
+
+        <span className="hidden px-2 font-mono text-[11px] font-semibold tracking-wider text-slate-200 uppercase sm:inline">
+          {LANDING_PHASES[currentPhaseIdx]?.label}
+        </span>
+
+        <button
+          type="button"
+          onClick={() => navigatePhase(1)}
+          disabled={currentPhaseIdx >= LANDING_PHASES.length - 1}
+          aria-label="Bajar a la siguiente fase"
+          title="Siguiente fase (↓)"
+          className="inline-flex h-11 w-11 cursor-pointer items-center justify-center rounded-full bg-[#00D9F5]/15 text-[#00D9F5] transition-colors hover:bg-[#00D9F5]/25 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00D9F5] disabled:cursor-not-allowed disabled:opacity-35"
+        >
+          <ChevronDown className="h-5 w-5" aria-hidden="true" />
+        </button>
+      </nav>
     </div>
   );
 }
