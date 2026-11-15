@@ -68,6 +68,24 @@ export interface NasaPowerClimatology {
   aggregation: string;
 }
 
+export interface SatelliteSensorProfile {
+  mission: string;
+  instrument: string;
+  spectrum?: string;
+  band?: string;
+  collects: string;
+  site_application: string;
+  limitations: string;
+  source_url: string;
+}
+
+export interface SatelliteObservatory {
+  optical: SatelliteSensorProfile;
+  radar_sar: SatelliteSensorProfile;
+  thermal_tir: SatelliteSensorProfile;
+  summary: string;
+}
+
 export interface AnalogSite {
   id: string;
   name: string;
@@ -95,6 +113,7 @@ export interface AnalogSite {
   overall_asi: number;
   analogy_strengths: string[];
   analogy_breakdowns: Record<string, string>;
+  satellite_observatory?: SatelliteObservatory;
 }
 
 export interface AnalogDataset {

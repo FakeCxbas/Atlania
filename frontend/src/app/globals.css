@@ -2,31 +2,47 @@
 @import "maplibre-gl/dist/maplibre-gl.css";
 
 :root {
-  --bg-space: #050b13;
-  --bg-deep: #0a1624;
-  --surface-panel: #0d1925;
-  --surface-secondary: #101f30;
-  --border-subtle: rgba(100, 180, 210, 0.22);
-  --text-primary: #f1f5f9;
-  --text-secondary: #94a3b8;
-  --accent-earth: #00d9f5;
-  --accent-amber: #f5b82e;
-  --accent-valid: #34d399;
-  --accent-mars: #e07a5f;
-  --accent-moon: #cbd5e1;
-  --scrollbar-thumb: #101f30;
-  --scrollbar-track: #050b13;
+  --bg-space: #101321; /* Midnight */
+  --bg-deep: #0c0e18;
+  --surface-panel: #181b2c;
+  --surface-secondary: #27233E; /* Nebula */
+  --border-subtle: rgba(85, 82, 125, 0.35); /* Twilight */
+  --text-primary: #E4DFD5; /* Moonlight */
+  --text-secondary: #A3A1BD;
+  --accent-gold: #C5A36D; /* Stardust */
+  --accent-earth: #38bdf8; /* Earth atmospheric blue */
+  --accent-amber: #C5A36D; /* Stardust */
+  --accent-valid: #526D62; /* Earth Moss */
+  --accent-desert: #9A795E; /* Desert */
+  --accent-mars: #E07A5F; /* Mars iron oxide */
+  --accent-moon: #899095; /* Lunar Grey */
+  --scrollbar-thumb: #27233E;
+  --font-cormorant: "Cormorant Garamond", Georgia, serif;
+  --font-playfair: "Playfair Display", Georgia, serif;
+  --font-dm-sans: "DM Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-ibm-plex-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
 
   color-scheme: dark;
-  accent-color: var(--accent-earth);
+  accent-color: var(--accent-gold);
   scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
 }
 
 @theme inline {
   --color-background: var(--bg-space);
   --color-foreground: var(--text-primary);
-  --font-sans: var(--font-space-grotesk);
-  --font-mono: var(--font-jetbrains-mono);
+  --font-serif: var(--font-cormorant);
+  --font-display: var(--font-playfair);
+  --font-sans: var(--font-dm-sans);
+  --font-mono: var(--font-ibm-plex-mono);
+
+  --color-midnight: #101321;
+  --color-nebula: #27233E;
+  --color-twilight: #55527D;
+  --color-stardust: #C5A36D;
+  --color-moonlight: #E4DFD5;
+  --color-earth-moss: #526D62;
+  --color-desert: #9A795E;
+  --color-lunar-grey: #899095;
 }
 
 @supports not (scrollbar-color: auto) {
@@ -52,17 +68,18 @@ html {
 body {
   background-color: var(--bg-space);
   color: var(--text-primary);
-  font-family: var(--font-space-grotesk), system-ui, sans-serif;
+  font-family: var(--font-dm-sans), system-ui, sans-serif;
   overflow-x: hidden;
 }
 
 .mc-panel {
-  background-color: rgba(13, 25, 37, 0.94);
+  background-color: rgba(39, 35, 62, 0.88);
   border-color: var(--border-subtle);
+  backdrop-filter: blur(12px);
 }
 
 .mc-surface {
-  background-color: rgba(16, 31, 48, 0.78);
+  background-color: rgba(24, 27, 44, 0.85);
   border-color: var(--border-subtle);
 }
 

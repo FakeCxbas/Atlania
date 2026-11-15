@@ -533,19 +533,18 @@ export function MissionControlApp({ dataset }: MissionControlAppProps) {
           <div className="flex items-center gap-2.5">
             <Link
               href="/"
-              title="Volver a TERR-ANALOG — Mission Briefing"
+              title="Volver a ATLANIA — Observatorio Planetario"
               className="group flex items-center gap-2.5 rounded-lg pr-1 transition-opacity hover:opacity-90"
             >
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg border border-[#D4AF37]/50 bg-[#D4AF37]/15 text-[#D4AF37] shadow-[0_0_12px_rgba(212,175,55,0.25)]">
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg border border-[#C5A36D]/60 bg-[#C5A36D]/15 text-[#C5A36D] shadow-[0_0_15px_rgba(197,163,109,0.3)]">
                 <Compass className="h-4 w-4" aria-hidden="true" />
               </div>
               <div>
-                <span className="block text-xs font-bold tracking-wider text-slate-100 uppercase sm:text-sm">
-                  TERR-ANALOG
+                <span className="block font-serif text-sm font-semibold tracking-widest text-[#E4DFD5] uppercase sm:text-base">
+                  ATLANIA
                 </span>
-                <span className="text-[10px] text-slate-400">
-                  NASA Space Apps · {dataset.methodology.source_counts.nasa_power} NASA POWER +{" "}
-                  {dataset.methodology.source_counts.fallback} Fallback
+                <span className="text-[10px] font-mono text-[#A3A1BD]">
+                  Planetary Observatory · {dataset.sites.length} Análogos
                 </span>
               </div>
             </Link>
@@ -652,8 +651,8 @@ export function MissionControlApp({ dataset }: MissionControlAppProps) {
                   exportSites,
                   dataset.references,
                   rankedRegionResult
-                    ? `terr-analog-region-${rankedRegionResult.grid_size}x${rankedRegionResult.grid_size}.geojson`
-                    : "terr-analog-sites.geojson"
+                    ? `atlania-region-${rankedRegionResult.grid_size}x${rankedRegionResult.grid_size}.geojson`
+                    : "atlania-sites.geojson"
                 );
               }}
               title="Exportar GeoJSON compatible con QGIS"

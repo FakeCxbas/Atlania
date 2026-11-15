@@ -126,7 +126,7 @@ export function ExplorerTransition({ sites }: ExplorerTransitionProps) {
         {/* Left 5 Cols: Clean Hairline Feature Index (No boxy cards) */}
         <div
           role="listbox"
-          aria-label="Funciones implementadas en el explorador TERR-ANALOG"
+          aria-label="Funciones implementadas en el observatorio ATLANIA"
           className="divide-y divide-white/10 border-y border-white/10 lg:col-span-5"
         >
           {EXPLORER_HOTSPOTS.map((spot) => {
@@ -179,7 +179,7 @@ export function ExplorerTransition({ sites }: ExplorerTransitionProps) {
                   aria-hidden="true"
                 />
                 <span className="font-bold tracking-wider text-[#F1F5F9]">
-                  TERR-ANALOG // EXPLORER WORKBENCH
+                  ATLANIA // PLANETARY OBSERVATORY
                 </span>
               </div>
               <div className="flex items-center gap-2 font-mono text-[10px] text-[#94A3B8]">
@@ -318,9 +318,9 @@ export function ExplorerTransition({ sites }: ExplorerTransitionProps) {
 
             <Link
               href="/explorer"
-              className="inline-flex min-h-13 items-center gap-2.5 rounded-full border border-white/25 bg-[#050B13]/60 px-7 py-3.5 text-sm font-bold tracking-[0.1em] text-[#F1F5F9] backdrop-blur-md transition-colors hover:border-[#00D9F5] hover:text-[#00D9F5]"
+              className="inline-flex min-h-13 items-center gap-2.5 rounded-full border border-[#C5A36D]/40 bg-[#101321]/80 px-7 py-3.5 text-sm font-bold tracking-[0.1em] text-[#E4DFD5] backdrop-blur-md transition-colors hover:border-[#C5A36D] hover:text-[#C5A36D]"
             >
-              <span>ENTRAR A TERR-ANALOG</span>
+              <span>ENTRAR A ATLANIA</span>
               <ArrowUpRight className="h-4 w-4" aria-hidden="true" />
             </Link>
 

@@ -480,7 +480,7 @@ export function MissionBriefingLanding({
         shortAnswer:
           "La correspondencia medible o documentada entre las propiedades del sitio terrestre y los requisitos operativos de la misión extraterrestre.",
         detail:
-          "La utilidad de un análogo depende de qué subsistema se desea poner a prueba. En TERR-ANALOG evaluamos cinco ejes complementarios: Topografía (pendiente y rugosidad para locomoción de rovers y aterrizaje), Geología (presencia de basalto, regolito, sedimentos, evaporitas o estructuras de impacto), Régimen Térmico (temperatura media y oscilación térmica), Hidrología y Criósfera (aridez extrema, presencia de hielo/permafrost e historia acuosa) y Operaciones Subterráneas (tubos de lava y potencial de refugio natural). Cada destino pondera estos ejes según su prioridad científica.",
+          "La utilidad de un análogo depende de qué subsistema se desea poner a prueba. En ATLANIA evaluamos cinco ejes complementarios: Topografía (pendiente y rugosidad para locomoción de rovers y aterrizaje), Geología (presencia de basalto, regolito, sedimentos, evaporitas o estructuras de impacto), Régimen Térmico (temperatura media y oscilación térmica), Hidrología y Criósfera (aridez extrema, presencia de hielo/permafrost e historia acuosa) y Operaciones Subterráneas (tubos de lava y potencial de refugio natural). Cada destino pondera estos ejes según su prioridad científica.",
         metricLabel: "Dimensiones del modelo ASI",
         metricValue: `${
           dataset.methodology.dimensions?.length ?? 5
@@ -579,9 +579,9 @@ export function MissionBriefingLanding({
       {/* Accessibility Skip Link */}
       <a
         href="#capitulo-1"
-        className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[60] focus:rounded-full focus:bg-[#00D9F5] focus:px-5 focus:py-2.5 focus:text-sm focus:font-semibold focus:text-[#03070D]"
+        className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[60] focus:rounded-full focus:bg-[#C5A36D] focus:px-5 focus:py-2.5 focus:text-sm focus:font-semibold focus:text-[#101321]"
       >
-        Saltar al contenido principal de TERR-ANALOG
+        Saltar al contenido principal de ATLANIA
       </a>
 
       {/* =====================================================================
@@ -592,11 +592,11 @@ export function MissionBriefingLanding({
           {/* Brand Wordmark */}
           <Link
             href="/"
-            className="flex items-center gap-3 text-sm font-semibold tracking-[0.22em] text-[#F1F5F9] uppercase transition-opacity hover:opacity-80"
+            className="flex items-center gap-3 text-sm font-semibold tracking-[0.25em] text-[#E4DFD5] uppercase transition-opacity hover:opacity-80"
           >
-            <Compass className="h-4 w-4 text-[#00D9F5]" aria-hidden="true" />
-            <span>
-              TERR<span className="font-light text-[#00D9F5]">-ANALOG</span>
+            <Compass className="h-4 w-4 text-[#C5A36D]" aria-hidden="true" />
+            <span className="font-serif tracking-widest text-lg font-semibold text-[#E4DFD5]">
+              ATLANIA
             </span>
           </Link>
 
@@ -805,32 +805,34 @@ export function MissionBriefingLanding({
                     className="relative z-20 mx-auto flex h-full max-w-[1440px] flex-col justify-between px-6 pt-28 pb-10 will-change-transform sm:px-10 lg:px-16 lg:pt-32 lg:pb-12"
                   >
                     <div className="my-auto max-w-2xl">
-                      <p className="font-mono text-xs font-medium tracking-[0.28em] text-[#00D9F5] uppercase">
-                        NASA SPACE APPS CHALLENGE 2026
+                      <p className="font-mono text-xs font-medium tracking-[0.28em] text-[#C5A36D] uppercase">
+                        NASA SPACE APPS CHALLENGE · OBSERVATORIO PLANETARIO
                       </p>
 
-                      <h1 className="mt-5 text-5xl font-bold tracking-[-0.03em] text-[#F1F5F9] sm:text-7xl lg:text-[5.5rem] lg:leading-[0.96]">
-                        TERR-ANALOG
+                      <h1 className="mt-5 font-serif text-6xl font-normal tracking-wide text-[#E4DFD5] sm:text-7xl lg:text-[6.5rem] lg:leading-[0.96]">
+                        ATLANIA
                       </h1>
 
-                      <p className="mt-6 max-w-xl text-xl font-light leading-snug text-[#E2E8F0] sm:text-2xl lg:text-[1.75rem]">
-                        La Tierra como laboratorio para explorar otros mundos.
+                      <p className="mt-3 font-display italic text-base tracking-wide text-[#C5A36D] sm:text-lg">
+                        Somewhere between Earth and the stars.
                       </p>
 
-                      <p className="mt-5 max-w-lg text-sm leading-relaxed text-[#94A3B8] sm:text-base">
-                        Explora qué regiones de nuestro planeta reproducen
-                        condiciones clave de la Luna y Marte para preparar
-                        futuras misiones humanas y robóticas.
+                      <p className="mt-5 max-w-xl text-xl font-light leading-snug text-[#E4DFD5]/90 sm:text-2xl">
+                        ¿Y si para comprender otros planetas primero tuviéramos que volver a descubrir el nuestro?
+                      </p>
+
+                      <p className="mt-5 max-w-lg text-sm leading-relaxed text-[#A3A1BD] sm:text-base">
+                        Un atlas dedicado a explorar los territorios extraordinarios de la Tierra y descubrir sus semejanzas con los paisajes de la Luna y Marte mediante teledetección satelital, geomorfología y datos ambientales.
                       </p>
 
                       {/* Primary CTAs */}
                       <div className="mt-9 flex flex-wrap items-center gap-4">
                         <Link
                           href="/explorer"
-                          className="inline-flex min-h-12 items-center gap-3 rounded-full bg-[#F1F5F9] px-7 py-3.5 text-sm font-semibold text-[#03070D] transition-all hover:bg-[#00D9F5]"
+                          className="inline-flex min-h-12 items-center gap-3 rounded-full bg-[#C5A36D] px-7 py-3.5 text-sm font-semibold text-[#101321] transition-all hover:bg-[#E4DFD5]"
                         >
                           <span>Iniciar exploración</span>
-                          <ArrowUpRight className="h-4 w-4" aria-hidden="true" />
+                          <ArrowUpRight className="h-4 w-4 stroke-[2.5]" aria-hidden="true" />
                         </Link>
 
                         <a
@@ -987,7 +989,7 @@ export function MissionBriefingLanding({
                 chapterNumber="04"
                 chapterTitle="Comparación Planetaria"
                 eyebrow="Tierra vs. Luna y Marte"
-                title="Qué compara TERR-ANALOG entre nuestro planeta y otros mundos"
+                title="Qué compara ATLANIA entre nuestro planeta y otros mundos"
                 subtitle="Un análogo planetario es una región de la Tierra cuyas condiciones físicas o geológicas presentan similitudes medibles con entornos específicos de la Luna o Marte."
               >
                 {/* Clean Editorial Selector Bar */}
@@ -1207,7 +1209,7 @@ export function MissionBriefingLanding({
                       ÍNDICE DE SIMILITUD ANÁLOGA (ASI) · ESCALA REAL 0 – 100
                     </p>
                     <h3 className="mt-3 text-3xl font-semibold tracking-tight text-[#F1F5F9] sm:text-4xl">
-                      Cómo se interpreta una puntuación real en TERR-ANALOG
+                      Cómo se interpreta una puntuación real en ATLANIA
                     </h3>
                     <p className="mt-4 text-base leading-relaxed text-[#94A3B8]">
                       El ASI combina cinco dimensiones mediante la suma
@@ -1570,7 +1572,7 @@ export function MissionBriefingLanding({
                 chapterNumber="05"
                 chapterTitle="Acceso al Explorador"
                 eyebrow="Del Relato Científico a la Herramienta Geoespacial"
-                title="Inicia la exploración interactiva en TERR-ANALOG"
+                title="Inicia la exploración interactiva en ATLANIA"
                 subtitle="La cámara se aleja del paisaje para dar paso a la estación de trabajo completa en /explorer: globo 3D, comparación sincronizada Tierra vs. Luna/Marte, sondeo de coordenadas en vivo y exportación de dossiers."
               >
                 <ExplorerTransition sites={translatedSites} />
@@ -1625,7 +1627,7 @@ export function MissionBriefingLanding({
 
                       <div className="mt-8 flex flex-wrap items-center justify-between gap-4 border-t border-white/10 pt-6 text-xs text-[#94A3B8]">
                         <span>
-                          TERR-ANALOG · Motor ASI v{dataset.methodology.version}
+                          ATLANIA · Motor ASI v{dataset.methodology.version}
                         </span>
                         <div className="flex items-center gap-6">
                           <a

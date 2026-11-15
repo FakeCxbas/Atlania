@@ -23,6 +23,10 @@ import {
   ChevronDown,
   Maximize2,
   Minimize2,
+  Satellite,
+  Radio,
+  Eye,
+  ExternalLink,
 } from "lucide-react";
 
 import { translateSite, translateTarget } from "@/lib/spanishTranslations";
@@ -34,7 +38,7 @@ interface TelemetryDrawerProps {
   activeTargetId: string;
   onSelectTarget: (targetId: string) => void;
   onClose?: () => void;
-  initialTab?: "overview" | "comparison";
+  initialTab?: "overview" | "satellites" | "comparison";
   expanded?: boolean;
   onToggleExpand?: () => void;
 }
@@ -58,7 +62,9 @@ export function TelemetryDrawer({
   expanded = false,
   onToggleExpand,
 }: TelemetryDrawerProps) {
-  const [tab, setTab] = useState<"overview" | "comparison">(initialTab);
+  const [tab, setTab] = useState<"overview" | "satellites" | "comparison">(
+    initialTab
+  );
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -116,9 +122,9 @@ export function TelemetryDrawer({
   const isLivePower = site.climatology.source === "nasa_power";
   const isLiveDem = site.dem_telemetry.source === "open_meteo";
 
-  const handleSwitchTab = (nextTab: "overview" | "comparison") => {
+  const handleSwitchTab = (nextTab: "overview" | "satellites" | "comparison") => {
     setTab(nextTab);
-    if (nextTab === "overview" && expanded && onToggleExpand) {
+    if ((nextTab === "overview" || nextTab === "satellites") && expanded && onToggleExpand) {
       onToggleExpand();
     }
   };
@@ -247,38 +253,52 @@ export function TelemetryDrawer({
           </select>
         </div>
 
-        {/* B. NAVEGACIÓN (Resumen General vs Comparación Científica) */}
+        {/* B. NAVEGACIÓN (Telemetría vs Observatorio Satelital vs Comparación Científica) */}
         <div
           role="tablist"
           aria-label="Vistas de análisis del sitio"
-          className="mt-2.5 flex gap-1 rounded-lg border border-[rgba(100,180,210,0.2)] bg-[#071018] p-1"
+          className="mt-2.5 grid grid-cols-3 gap-1 rounded-lg border border-[#55527D]/35 bg-[#101321]/90 p-1"
         >
           <button
             type="button"
             role="tab"
             onClick={() => handleSwitchTab("overview")}
             aria-selected={tab === "overview"}
-            className={`flex-1 rounded-md py-1.5 text-xs font-semibold transition-colors ${
+            className={`rounded-md py-1.5 text-center text-xs font-semibold transition-colors ${
               tab === "overview"
-                ? "border border-[#00D9F5]/60 bg-[#00D9F5]/15 text-[#00D9F5]"
-                : "text-[#94A3B8] hover:text-[#F1F5F9]"
+                ? "border border-[#C5A36D]/60 bg-[#C5A36D]/15 text-[#C5A36D]"
+                : "text-[#A3A1BD] hover:text-[#E4DFD5]"
             }`}
           >
-            Resumen General
+            Telemetría
+          </button>
+          <button
+            type="button"
+            role="tab"
+            onClick={() => handleSwitchTab("satellites")}
+            aria-selected={tab === "satellites"}
+            className={`flex items-center justify-center gap-1 rounded-md py-1.5 text-center text-xs font-semibold transition-colors ${
+              tab === "satellites"
+                ? "border border-[#38BDF8]/60 bg-[#38BDF8]/15 text-[#38BDF8]"
+                : "text-[#A3A1BD] hover:text-[#E4DFD5]"
+            }`}
+          >
+            <Satellite className="h-3 w-3" aria-hidden="true" />
+            <span>Satélites</span>
           </button>
           <button
             type="button"
             role="tab"
             onClick={() => handleSwitchTab("comparison")}
             aria-selected={tab === "comparison"}
-            className={`flex flex-1 items-center justify-center gap-1.5 rounded-md py-1.5 text-xs font-semibold transition-colors ${
+            className={`flex items-center justify-center gap-1 rounded-md py-1.5 text-center text-xs font-semibold transition-colors ${
               tab === "comparison"
-                ? "border border-[#F5B82E]/60 bg-[#F5B82E]/15 text-[#F5B82E]"
-                : "text-[#94A3B8] hover:text-[#F1F5F9]"
+                ? "border border-[#C5A36D]/60 bg-[#C5A36D]/15 text-[#C5A36D]"
+                : "text-[#A3A1BD] hover:text-[#E4DFD5]"
             }`}
           >
-            <Sparkles className="h-3.5 w-3.5 text-[#F5B82E]" aria-hidden="true" />
-            <span>Comparación Lado a Lado</span>
+            <Sparkles className="h-3 w-3 text-[#C5A36D]" aria-hidden="true" />
+            <span>Lado a Lado</span>
           </button>
         </div>
       </div>
@@ -541,6 +561,206 @@ export function TelemetryDrawer({
               >
                 Exportar Markdown
               </button>
+            </div>
+          </div>
+        ) : tab === "satellites" ? (
+          <div className="space-y-3.5">
+            {/* Satellite Observatory Banner */}
+            <div className="rounded-xl border border-[#55527D]/40 bg-[#27233E]/60 p-3.5">
+              <div className="flex items-center gap-2">
+                <div className="flex h-7 w-7 items-center justify-center rounded-lg border border-[#C5A36D]/50 bg-[#C5A36D]/15 text-[#C5A36D]">
+                  <Satellite className="h-4 w-4" aria-hidden="true" />
+                </div>
+                <div>
+                  <h3 className="font-serif text-sm font-semibold text-[#E4DFD5]">
+                    Satellite Observatory
+                  </h3>
+                  <p className="font-mono text-[10px] text-[#A3A1BD]">
+                    Misiones orbitales · Perfil óptico, radar SAR y térmico
+                  </p>
+                </div>
+              </div>
+              <p className="mt-2.5 text-xs leading-relaxed text-[#E4DFD5]/90">
+                {site.satellite_observatory?.summary ??
+                  "Perfil satelital multiespectral para caracterización del sitio análogo sin alterar el cálculo ASI."}
+              </p>
+            </div>
+
+            {/* 1. Sensor Óptico / Multiespectral */}
+            <div className="rounded-xl border border-[#55527D]/35 bg-[#181B2C]/90 p-3.5">
+              <div className="flex items-center justify-between border-b border-[#55527D]/30 pb-2">
+                <div className="flex items-center gap-2">
+                  <Eye className="h-4 w-4 text-[#38BDF8]" aria-hidden="true" />
+                  <span className="font-serif text-xs font-semibold text-[#E4DFD5]">
+                    1. Óptico / Multiespectral
+                  </span>
+                </div>
+                <span className="rounded border border-[#38BDF8]/40 bg-[#38BDF8]/15 px-1.5 py-0.5 font-mono text-[10px] text-[#38BDF8]">
+                  VNIR / SWIR
+                </span>
+              </div>
+              <div className="mt-2.5 space-y-2 text-xs">
+                <div className="flex justify-between font-mono text-[11px]">
+                  <span className="text-[#A3A1BD]">Misión / Sensor:</span>
+                  <span className="font-semibold text-[#E4DFD5]">
+                    {site.satellite_observatory?.optical.mission} · {site.satellite_observatory?.optical.instrument}
+                  </span>
+                </div>
+                {site.satellite_observatory?.optical.spectrum && (
+                  <div>
+                    <span className="block font-mono text-[10px] text-[#A3A1BD]">Espectro y Bandas:</span>
+                    <span className="text-[11px] text-[#E4DFD5]">
+                      {site.satellite_observatory.optical.spectrum}
+                    </span>
+                  </div>
+                )}
+                <div>
+                  <span className="block font-mono text-[10px] text-[#A3A1BD]">Información Recolectada:</span>
+                  <p className="mt-0.5 text-[11px] leading-relaxed text-[#A3A1BD]">
+                    {site.satellite_observatory?.optical.collects}
+                  </p>
+                </div>
+                <div className="rounded-lg border border-[#55527D]/25 bg-[#101321]/60 p-2">
+                  <span className="block font-mono text-[10px] text-[#C5A36D]">Aplicación al Análogo:</span>
+                  <p className="mt-0.5 text-[11px] text-[#E4DFD5]">
+                    {site.satellite_observatory?.optical.site_application}
+                  </p>
+                </div>
+                {site.satellite_observatory?.optical.limitations && (
+                  <p className="text-[10px] italic text-[#A3A1BD]/80">
+                    Límites: {site.satellite_observatory.optical.limitations}
+                  </p>
+                )}
+                {site.satellite_observatory?.optical.source_url && (
+                  <a
+                    href={site.satellite_observatory.optical.source_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 font-mono text-[10px] text-[#38BDF8] underline decoration-[#38BDF8]/40 underline-offset-2 hover:text-[#C5A36D]"
+                  >
+                    <span>Documentación oficial de la misión</span>
+                    <ExternalLink className="h-3 w-3" aria-hidden="true" />
+                  </a>
+                )}
+              </div>
+            </div>
+
+            {/* 2. Sensor Radar SAR */}
+            <div className="rounded-xl border border-[#55527D]/35 bg-[#181B2C]/90 p-3.5">
+              <div className="flex items-center justify-between border-b border-[#55527D]/30 pb-2">
+                <div className="flex items-center gap-2">
+                  <Radio className="h-4 w-4 text-[#C5A36D]" aria-hidden="true" />
+                  <span className="font-serif text-xs font-semibold text-[#E4DFD5]">
+                    2. Radar de Apertura Sintética (SAR)
+                  </span>
+                </div>
+                <span className="rounded border border-[#C5A36D]/40 bg-[#C5A36D]/15 px-1.5 py-0.5 font-mono text-[10px] text-[#C5A36D]">
+                  Microondas
+                </span>
+              </div>
+              <div className="mt-2.5 space-y-2 text-xs">
+                <div className="flex justify-between font-mono text-[11px]">
+                  <span className="text-[#A3A1BD]">Misión / Sensor:</span>
+                  <span className="font-semibold text-[#E4DFD5]">
+                    {site.satellite_observatory?.radar_sar.mission} · {site.satellite_observatory?.radar_sar.instrument}
+                  </span>
+                </div>
+                {site.satellite_observatory?.radar_sar.band && (
+                  <div>
+                    <span className="block font-mono text-[10px] text-[#A3A1BD]">Banda de Frecuencia:</span>
+                    <span className="text-[11px] text-[#E4DFD5]">
+                      {site.satellite_observatory.radar_sar.band}
+                    </span>
+                  </div>
+                )}
+                <div>
+                  <span className="block font-mono text-[10px] text-[#A3A1BD]">Información Recolectada:</span>
+                  <p className="mt-0.5 text-[11px] leading-relaxed text-[#A3A1BD]">
+                    {site.satellite_observatory?.radar_sar.collects}
+                  </p>
+                </div>
+                <div className="rounded-lg border border-[#55527D]/25 bg-[#101321]/60 p-2">
+                  <span className="block font-mono text-[10px] text-[#C5A36D]">Aplicación al Análogo:</span>
+                  <p className="mt-0.5 text-[11px] text-[#E4DFD5]">
+                    {site.satellite_observatory?.radar_sar.site_application}
+                  </p>
+                </div>
+                {site.satellite_observatory?.radar_sar.limitations && (
+                  <p className="text-[10px] italic text-[#A3A1BD]/80">
+                    Límites: {site.satellite_observatory.radar_sar.limitations}
+                  </p>
+                )}
+                {site.satellite_observatory?.radar_sar.source_url && (
+                  <a
+                    href={site.satellite_observatory.radar_sar.source_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 font-mono text-[10px] text-[#C5A36D] underline decoration-[#C5A36D]/40 underline-offset-2 hover:text-[#38BDF8]"
+                  >
+                    <span>Documentación oficial de la misión</span>
+                    <ExternalLink className="h-3 w-3" aria-hidden="true" />
+                  </a>
+                )}
+              </div>
+            </div>
+
+            {/* 3. Sensor Infrarrojo Térmico TIR */}
+            <div className="rounded-xl border border-[#55527D]/35 bg-[#181B2C]/90 p-3.5">
+              <div className="flex items-center justify-between border-b border-[#55527D]/30 pb-2">
+                <div className="flex items-center gap-2">
+                  <Thermometer className="h-4 w-4 text-[#E07A5F]" aria-hidden="true" />
+                  <span className="font-serif text-xs font-semibold text-[#E4DFD5]">
+                    3. Infrarrojo Térmico (TIR)
+                  </span>
+                </div>
+                <span className="rounded border border-[#E07A5F]/40 bg-[#E07A5F]/15 px-1.5 py-0.5 font-mono text-[10px] text-[#E07A5F]">
+                  Radiometría TIR
+                </span>
+              </div>
+              <div className="mt-2.5 space-y-2 text-xs">
+                <div className="flex justify-between font-mono text-[11px]">
+                  <span className="text-[#A3A1BD]">Misión / Sensor:</span>
+                  <span className="font-semibold text-[#E4DFD5]">
+                    {site.satellite_observatory?.thermal_tir.mission} · {site.satellite_observatory?.thermal_tir.instrument}
+                  </span>
+                </div>
+                {site.satellite_observatory?.thermal_tir.spectrum && (
+                  <div>
+                    <span className="block font-mono text-[10px] text-[#A3A1BD]">Espectro y Bandas:</span>
+                    <span className="text-[11px] text-[#E4DFD5]">
+                      {site.satellite_observatory.thermal_tir.spectrum}
+                    </span>
+                  </div>
+                )}
+                <div>
+                  <span className="block font-mono text-[10px] text-[#A3A1BD]">Información Recolectada:</span>
+                  <p className="mt-0.5 text-[11px] leading-relaxed text-[#A3A1BD]">
+                    {site.satellite_observatory?.thermal_tir.collects}
+                  </p>
+                </div>
+                <div className="rounded-lg border border-[#55527D]/25 bg-[#101321]/60 p-2">
+                  <span className="block font-mono text-[10px] text-[#C5A36D]">Aplicación al Análogo:</span>
+                  <p className="mt-0.5 text-[11px] text-[#E4DFD5]">
+                    {site.satellite_observatory?.thermal_tir.site_application}
+                  </p>
+                </div>
+                {site.satellite_observatory?.thermal_tir.limitations && (
+                  <p className="text-[10px] italic text-[#A3A1BD]/80">
+                    Límites: {site.satellite_observatory.thermal_tir.limitations}
+                  </p>
+                )}
+                {site.satellite_observatory?.thermal_tir.source_url && (
+                  <a
+                    href={site.satellite_observatory.thermal_tir.source_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 font-mono text-[10px] text-[#E07A5F] underline decoration-[#E07A5F]/40 underline-offset-2 hover:text-[#C5A36D]"
+                  >
+                    <span>Documentación oficial de la misión</span>
+                    <ExternalLink className="h-3 w-3" aria-hidden="true" />
+                  </a>
+                )}
+              </div>
             </div>
           </div>
         ) : (

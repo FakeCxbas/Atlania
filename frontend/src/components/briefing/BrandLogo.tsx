@@ -29,7 +29,7 @@ const SIZE_MAP = {
 
 /**
  * Renders verified official vector logos for institutions and technologies
- * referenced in TERR-ANALOG, without altering official geometry or proportions.
+ * referenced in ATLANIA, without altering official geometry or proportions.
  * When a scientific portal (e.g. NASA POWER, NASA PDS, Open-Meteo) does not
  * distribute a standalone geometric emblem, renders an authentic typographic
  * badge paired with its parent institution's official mark or clean typography.
