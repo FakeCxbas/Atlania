@@ -6,12 +6,17 @@ import {
   Box,
   ChevronDown,
   ChevronUp,
+  Mountain,
   RotateCcw,
   RotateCw,
   Square,
 } from "lucide-react";
 import type { AnalogSite, TargetProfile } from "@/types/analog";
 import type { RegionBounds, RegionEvaluationResult } from "@/lib/evaluateRegion";
+import {
+  TerrainDioramaModal,
+  type TerrainDioramaTarget,
+} from "@/components/TerrainDioramaModal";
 
 if (typeof window !== "undefined") {
   maplibregl.setWorkerUrl("/maplibre-gl-worker.mjs");
@@ -95,7 +100,7 @@ function getBasemapStyle(mode: BasemapMode): string | maplibregl.StyleSpecificat
           type: "raster",
           source: "esri-labels",
           minzoom: 6,
-          maxzoom: 18,
+          maxzoom: 13.5,
           paint: {
             "raster-fade-duration": 100,
             "raster-opacity": [
@@ -105,9 +110,11 @@ function getBasemapStyle(mode: BasemapMode): string | maplibregl.StyleSpecificat
               6,
               0.35,
               9,
-              0.85,
-              14,
-              0.95,
+              0.8,
+              11.5,
+              0.7,
+              13.2,
+              0,
             ],
           },
         },
@@ -156,7 +163,7 @@ function getBasemapStyle(mode: BasemapMode): string | maplibregl.StyleSpecificat
         type: "raster",
         source: "esri-labels",
         minzoom: 6,
-        maxzoom: 18,
+        maxzoom: 13.5,
         paint: {
           "raster-fade-duration": 100,
           "raster-opacity": [
@@ -166,9 +173,11 @@ function getBasemapStyle(mode: BasemapMode): string | maplibregl.StyleSpecificat
             6,
             0.35,
             9,
-            0.85,
-            14,
-            0.95,
+            0.8,
+            11.5,
+            0.7,
+            13.2,
+            0,
           ],
         },
       },
@@ -221,6 +230,7 @@ export function AnalogMap({
 
   const [basemap, setBasemap] = useState<BasemapMode>("satellite");
   const [terrain3d, setTerrain3d] = useState(true);
+  const [dioramaTarget, setDioramaTarget] = useState<TerrainDioramaTarget | null>(null);
   const [cameraView, setCameraView] = useState<{ pitch: number; bearing: number }>({
     pitch: selectedSiteId ? 45 : 0,
     bearing: 0,
@@ -231,6 +241,31 @@ export function AnalogMap({
     curX: number;
     curY: number;
   } | null>(null);
+
+  const handleOpenDiorama = useCallback(() => {
+    const activeSite = selectedSiteId
+      ? sites.find((s) => s.id === selectedSiteId) ?? null
+      : null;
+
+    if (activeSite) {
+      setDioramaTarget({
+        name: activeSite.name,
+        country: activeSite.country,
+        latitude: activeSite.latitude,
+        longitude: activeSite.longitude,
+        asiScore: activeSite.overall_asi,
+      });
+      return;
+    }
+
+    const map = mapRef.current;
+    const center = map ? map.getCenter() : { lat: 29.02, lng: -13.75 };
+    setDioramaTarget({
+      name: "Sector Central del Mapa",
+      latitude: center.lat,
+      longitude: center.lng,
+    });
+  }, [selectedSiteId, sites]);
 
   const getFlyDuration = useCallback((ms: number) => {
     if (typeof window === "undefined") return ms;
@@ -454,13 +489,25 @@ export function AnalogMap({
           ],
           tileSize: 256,
           minzoom: 0,
-          maxzoom: 11,
+          maxzoom: 13,
           encoding: "terrarium",
         });
       }
 
       if (!map.getTerrain()) {
-        map.setTerrain({ source: "terrain-dem", exaggeration: 1.2 });
+        map.setTerrain({ source: "terrain-dem", exaggeration: 1.25 });
+      }
+
+      if (typeof map.setSky === "function") {
+        map.setSky({
+          "sky-color": "#060913",
+          "sky-horizon-blend": 0.45,
+          "horizon-color": "#111C33",
+          "horizon-fog-blend": 0.65,
+          "fog-color": "#080D1A",
+          "fog-ground-blend": 0.25,
+          "atmosphere-blend": 0.7,
+        });
       }
     };
 
@@ -1151,6 +1198,15 @@ export function AnalogMap({
           >
             Relieve 3D
           </button>
+          <button
+            type="button"
+            onClick={handleOpenDiorama}
+            title="Abrir Gemelo Topográfico 3D HD (Three.js + Simulador Solar)"
+            className="inline-flex items-center gap-1 rounded border border-amber-400/50 bg-amber-500/15 px-2.5 py-1 text-xs font-semibold text-amber-200 transition-colors hover:border-amber-400 hover:bg-amber-500/25 hover:text-white"
+          >
+            <Mountain className="h-3.5 w-3.5" aria-hidden="true" />
+            <span>Gemelo 3D HD</span>
+          </button>
         </div>
 
         {(onToggleProbeMode || onToggleRegionProbeMode) && (
@@ -1403,6 +1459,11 @@ export function AnalogMap({
           </div>
         </div>
       </div>
+
+      <TerrainDioramaModal
+        target={dioramaTarget}
+        onClose={() => setDioramaTarget(null)}
+      />
     </div>
   );
 }
