@@ -23,7 +23,6 @@ import {
   ChevronDown,
   ChevronUp,
   ExternalLink,
-  Menu,
   Orbit,
   Radio,
   Satellite,
@@ -447,7 +446,6 @@ const SHORT_TARGET_SUMMARIES: Record<string, string> = {
 export function MissionBriefingLanding({
   dataset,
 }: MissionBriefingLandingProps) {
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [activeBodyTab, setActiveBodyTab] = useState<"Moon" | "Mars">("Moon");
   const [activeExampleId, setActiveExampleId] =
     useState<string>("moon-lava-tubes");
@@ -760,64 +758,17 @@ export function MissionBriefingLanding({
       ===================================================================== */}
       <header className="fixed inset-x-0 top-0 z-50 border-b border-[#55527D]/30 bg-[#121626]/85 backdrop-blur-md">
         <div className="mx-auto flex max-w-[1440px] items-center justify-between px-6 py-4 sm:px-10 lg:px-16">
-          {/* Brand Wordmark + Route Breadcrumb */}
-          <div className="flex items-center gap-3">
-            <Link
-              href="/"
-              className="flex items-center transition-opacity hover:opacity-85"
-            >
-              <AtlaniaLockup size="sm" />
-            </Link>
-            <span className="hidden items-center gap-1.5 font-mono text-xs text-[#A3A1BD] sm:inline-flex">
-              <span className="text-[#A3A1BD]">/</span>
-              <span className="rounded border border-[#C5A36D]/40 bg-[#27233E]/80 px-2 py-0.5 font-semibold text-[#C5A36D]">
-                Inicio
-              </span>
-            </span>
-          </div>
-
-          {/* Minimal Chapter Links (Desktop) */}
-          <nav
-            aria-label="Capítulos del viaje espacial"
-            className="hidden items-center gap-7 text-xs font-semibold tracking-[0.14em] text-[#A3A1BD] uppercase lg:flex"
+          {/* Brand Wordmark */}
+          <Link
+            href="/"
+            className="flex items-center transition-opacity hover:opacity-85"
           >
-            <a
-              href="#capitulo-1"
-              className="text-[#C5A36D] transition-colors hover:text-[#E4DFD5]"
-            >
-              01 · Inicio
-            </a>
-            <a
-              href="#el-desafio"
-              className="transition-colors hover:text-[#E4DFD5]"
-            >
-              02 · La Tierra
-            </a>
-            <a
-              href="#capas-del-terreno"
-              className="transition-colors hover:text-[#E4DFD5]"
-            >
-              03 · Capas 3D
-            </a>
-            <a
-              href="#que-es-un-analogo"
-              className="transition-colors hover:text-[#E4DFD5]"
-            >
-              04 · Comparación y ASI
-            </a>
-            <a
-              href="#explora-los-destinos"
-              className="transition-colors hover:text-[#E4DFD5]"
-            >
-              05 · Destinos
-            </a>
-          </nav>
+            <AtlaniaLockup size="sm" />
+          </Link>
 
           {/* Right Action Controls */}
-          <div className="flex items-center gap-4">
-            <div className="hidden sm:block">
-              <MethodologyDialog dataset={dataset} />
-            </div>
+          <div className="flex items-center gap-3 sm:gap-4">
+            <MethodologyDialog dataset={dataset} />
 
             <Link
               href="/explorer"
@@ -826,76 +777,8 @@ export function MissionBriefingLanding({
               <span>Abrir Explorador</span>
               <ArrowUpRight className="h-3.5 w-3.5" aria-hidden="true" />
             </Link>
-
-            {/* Mobile Hamburger Button */}
-            <button
-              type="button"
-              onClick={() => setMobileMenuOpen((prev) => !prev)}
-              aria-expanded={mobileMenuOpen}
-              aria-label={
-                mobileMenuOpen
-                  ? "Cerrar menú de navegación"
-                  : "Abrir menú de navegación"
-              }
-              className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-[#55527D]/35 bg-[#181B2C]/85 text-[#E4DFD5] lg:hidden"
-            >
-              {mobileMenuOpen ? (
-                <X className="h-5 w-5" aria-hidden="true" />
-              ) : (
-                <Menu className="h-5 w-5" aria-hidden="true" />
-              )}
-            </button>
           </div>
         </div>
-
-        {/* Mobile Dropdown Navigation */}
-        {mobileMenuOpen && (
-          <nav
-            aria-label="Navegación móvil"
-            className="border-t border-[#55527D]/30 bg-[#121626]/92 px-6 py-6 backdrop-blur-xl lg:hidden"
-          >
-            <div className="flex flex-col gap-4 text-sm font-medium text-[#E4DFD5]">
-              <a
-                href="#capitulo-1"
-                onClick={() => setMobileMenuOpen(false)}
-                className="py-1 text-[#A3A1BD] hover:text-[#E4DFD5]"
-              >
-                01 · El Comienzo
-              </a>
-              <a
-                href="#el-desafio"
-                onClick={() => setMobileMenuOpen(false)}
-                className="py-1 text-[#A3A1BD] hover:text-[#E4DFD5]"
-              >
-                02 · Aproximación a la Tierra
-              </a>
-              <a
-                href="#capas-del-terreno"
-                onClick={() => setMobileMenuOpen(false)}
-                className="py-1 text-[#A3A1BD] hover:text-[#E4DFD5]"
-              >
-                03 · Capas Tridimensionales del Terreno
-              </a>
-              <a
-                href="#que-es-un-analogo"
-                onClick={() => setMobileMenuOpen(false)}
-                className="py-1 text-[#A3A1BD] hover:text-[#E4DFD5]"
-              >
-                04 · Comparación Planetaria y ASI
-              </a>
-              <a
-                href="#explora-los-destinos"
-                onClick={() => setMobileMenuOpen(false)}
-                className="py-1 text-[#A3A1BD] hover:text-[#E4DFD5]"
-              >
-                05 · Explora los Destinos
-              </a>
-              <div className="pt-2">
-                <MethodologyDialog dataset={dataset} />
-              </div>
-            </div>
-          </nav>
-        )}
       </header>
 
       {/* =====================================================================
