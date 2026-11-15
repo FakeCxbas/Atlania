@@ -908,35 +908,39 @@ export function MissionBriefingLanding({
                     }}
                     className="absolute inset-0 z-20 mx-auto flex h-full max-w-[1440px] flex-col justify-between px-6 pt-24 pb-10 will-change-transform sm:px-10 lg:px-16 lg:pt-28 lg:pb-12"
                   >
+                    {/* Subtle contrast scrim behind Chapter 2 typography so bright Earth clouds never reduce legibility */}
+                    <div
+                      aria-hidden="true"
+                      className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_28%_30%,rgba(4,9,18,0.84)_0%,rgba(4,9,18,0.52)_48%,rgba(4,9,18,0.18)_100%)]"
+                    />
+
                     <div className="my-auto">
-                      <div className="max-w-3xl">
-                        <p className="font-mono text-xs font-medium tracking-[0.24em] text-[#00D9F5] uppercase">
-                          02 / APROXIMACIÓN A LA TIERRA · EL DESAFÍO CIENTÍFICO
+                      <div className="max-w-2xl">
+                        <p className="font-mono text-xs font-medium tracking-[0.24em] text-[#00D9F5] uppercase drop-shadow-[0_2px_10px_rgba(3,7,13,0.95)]">
+                          02 · Aproximación a la Tierra
                         </p>
-                        <h2 className="mt-4 text-3xl font-semibold tracking-tight text-[#F1F5F9] sm:text-5xl lg:text-[3.35rem] lg:leading-[1.06]">
+                        <h2 className="mt-4 text-3xl font-semibold tracking-tight text-[#F8FAFC] drop-shadow-[0_4px_24px_rgba(3,7,13,0.95)] sm:text-5xl lg:text-[3.35rem] lg:leading-[1.06]">
                           Antes de llegar a otros mundos, debemos aprender aquí.
                         </h2>
-                        <p className="mt-4 max-w-2xl text-sm leading-relaxed text-[#CBD5E1] sm:text-base">
-                          A medida que nos aproximamos a la atmósfera y corteza
-                          terrestre, ciertos desiertos hiperáridos, campos
-                          volcánicos y cráteres polares actúan como bancos de
-                          prueba naturales para validar hábitats, rovers y
-                          sistemas de soporte vital.
+                        <p className="mt-4 max-w-xl text-sm leading-relaxed text-[#E2E8F0] drop-shadow-[0_2px_14px_rgba(3,7,13,0.95)] sm:text-base">
+                          Desiertos hiperáridos, campos volcánicos y cráteres
+                          polares funcionan como laboratorios naturales para
+                          validar hábitats, rovers y soporte vital.
                         </p>
                       </div>
 
-                      {/* Three Open Editorial Columns (Hairline dividers, no boxy cards) */}
-                      <div className="mt-8 grid grid-cols-1 gap-6 border-t border-white/15 pt-6 lg:grid-cols-3 lg:gap-10">
+                      {/* Three Minimalist Translucent Cards */}
+                      <div className="mt-8 grid grid-cols-1 gap-5 lg:grid-cols-3 lg:gap-6">
                         {challengeCards.map((item, idx) => {
                           const isSelected = activeChallengeIdx === idx;
                           return (
                             <div
                               key={item.id}
-                              className="group flex flex-col justify-between"
+                              className="group flex flex-col justify-between rounded-2xl border border-white/10 bg-[#060d18]/75 p-6 backdrop-blur-md transition-colors hover:border-white/20 sm:p-7"
                             >
                               <div>
                                 <div className="flex items-center justify-between gap-2">
-                                  <span className="font-mono text-xs font-semibold tracking-wider text-[#00D9F5] uppercase">
+                                  <span className="font-mono text-xs font-medium tracking-wider text-[#00D9F5] uppercase">
                                     0{idx + 1} · {item.tag}
                                   </span>
                                   <ScientificIcon
@@ -944,16 +948,16 @@ export function MissionBriefingLanding({
                                     className="h-4 w-4 text-slate-400"
                                   />
                                 </div>
-                                <h3 className="mt-3 text-lg font-bold leading-snug text-slate-100 sm:text-xl">
+                                <h3 className="mt-3.5 text-lg font-semibold leading-snug text-[#F8FAFC] sm:text-xl">
                                   {item.question}
                                 </h3>
-                                <p className="mt-2.5 text-sm leading-relaxed text-slate-200">
+                                <p className="mt-3 text-sm leading-relaxed text-slate-300">
                                   {isSelected ? item.detail : item.shortAnswer}
                                 </p>
                               </div>
 
-                              <div className="mt-5 flex flex-wrap items-center justify-between gap-2 border-t border-white/10 pt-3">
-                                <span className="rounded-md border border-white/15 bg-white/5 px-2.5 py-1 font-mono text-xs text-slate-200 tabular-nums">
+                              <div className="mt-6 flex flex-wrap items-center justify-between gap-2 border-t border-white/10 pt-4">
+                                <span className="font-mono text-xs text-slate-300 tabular-nums">
                                   {item.metricValue}
                                 </span>
                                 <button
@@ -963,7 +967,7 @@ export function MissionBriefingLanding({
                                       isSelected ? -1 : idx
                                     )
                                   }
-                                  className="font-mono text-xs font-semibold text-[#00D9F5] underline-offset-4 hover:underline"
+                                  className="font-mono text-xs font-medium text-[#00D9F5] underline-offset-4 hover:underline"
                                 >
                                   {isSelected ? "Sintetizar" : "Profundizar"}
                                 </button>
@@ -974,10 +978,7 @@ export function MissionBriefingLanding({
                       </div>
                     </div>
 
-                    <div className="flex items-center justify-between border-t border-white/10 pt-3 font-mono text-[11px] text-[#94A3B8]">
-                      <span>
-                        TELEMETRÍA ORBITAL · ESCALA PLANETARIA CONTINUA
-                      </span>
+                    <div className="flex items-center justify-end pt-3 font-mono text-[11px] text-[#94A3B8]">
                       <a
                         href="#capas-del-terreno"
                         className="text-[#00D9F5] hover:underline"

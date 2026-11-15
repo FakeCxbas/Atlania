@@ -171,10 +171,10 @@ export function ScrollScene({
         focusedLayer={focusedLayer}
       />
 
-      {/* Minimalist Editorial 5-Chapter Progress Rail (Desktop) */}
+      {/* Minimalist 5-Chapter Progress Dots (Desktop, no floating labels over cards) */}
       <aside
         aria-label="Progreso de capítulos del viaje espacial"
-        className="fixed top-1/2 right-6 z-30 hidden -translate-y-1/2 flex-col gap-3 xl:flex"
+        className="fixed top-1/2 right-5 z-30 hidden -translate-y-1/2 flex-col items-end gap-3 xl:flex"
       >
         {CHAPTER_MARKERS.map((ch) => {
           const isCurrent = scrollState.activeChapter === ch.index;
@@ -182,21 +182,14 @@ export function ScrollScene({
             <a
               key={ch.index}
               href={ch.href}
-              className="group flex items-center justify-end gap-3 py-1 font-mono text-[11px] transition-colors"
+              title={ch.label}
+              aria-label={ch.label}
+              className="group flex items-center justify-end p-1 transition-colors"
             >
-              <span
-                className={`transition-opacity duration-300 ${
-                  isCurrent
-                    ? "opacity-100 font-semibold text-[#F1F5F9]"
-                    : "opacity-0 text-[#94A3B8] group-hover:opacity-100"
-                }`}
-              >
-                {ch.label}
-              </span>
               <span
                 className={`h-1.5 rounded-full transition-all duration-300 ${
                   isCurrent
-                    ? "w-6 bg-[#00D9F5]"
+                    ? "w-5 bg-[#00D9F5]"
                     : "w-1.5 bg-white/30 group-hover:bg-white/70"
                 }`}
               />

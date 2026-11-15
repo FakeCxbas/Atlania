@@ -37,57 +37,53 @@ const STRATA: StratumSpec[] = [
   {
     id: 1,
     number: "01",
-    title: "Superficie y Atmósfera (Clima a 2 m)",
+    title: "Superficie y Atmósfera",
     concept: "thermal",
-    natureBadge: "Telemetría Satelital Medida · NASA POWER",
+    natureBadge: "NASA POWER",
     accentColor: "#38BDF8",
     summary:
-      "7 parámetros climáticos satelitales: T2M_MAX, T2M_MIN, precipitación, viento, humedad, irradiancia solar y presión superficial.",
-    detail:
-      "El plano superior representa la frontera atmosférica; la grilla 3D es esquemática, mientras que los valores térmicos y de aridez provienen de NASA POWER API.",
+      "Mide temperatura a 2 m, precipitación, viento, humedad, irradiancia solar y presión superficial para caracterizar el microclima.",
+    detail: "",
   },
   {
     id: 2,
     number: "02",
-    title: "Relieve y Topografía (DEM 90 m)",
+    title: "Relieve y Topografía",
     concept: "topography",
-    natureBadge: "Muestreo DEM Medido + Malla 3D Esquemática",
+    natureBadge: "Copernicus DEM",
     accentColor: "#00D9F5",
     summary:
-      "Pendiente media (dem_slope_deg) y rugosidad (dem_roughness_m) calculadas mediante 5 puntos cardinales (±0.01° N, S, E, O) en Copernicus DEM GLO-90.",
-    detail:
-      "La malla tridimensional con sombras muestra ilustrativamente cómo se evalúan gradientes y depresiones cratéricas para movilidad de rovers.",
+      "Evalúa pendiente media y rugosidad del terreno a 90 m de resolución para estimar la navegabilidad de rovers y sitios de aterrizaje.",
+    detail: "",
   },
   {
     id: 3,
     number: "03",
     title: "Geología y Litología",
     concept: "geology",
-    natureBadge: "Prior Documental de Escenario · Jaccard Difuso",
+    natureBadge: "Litología",
     accentColor: "#F5B82E",
     summary:
-      "Membresía en [0, 1] para basalto, regolito/tefra, sedimentario, evaporitas/sales e impacto comparada mediante Σ min / Σ max.",
-    detail:
-      "Representación esquemática de la corteza rocosa frente a firmas orbitales de MRO CRISM y LRO.",
+      "Compara basalto, regolito, sedimentos, evaporitas e impacto frente a firmas orbitales de la Luna y Marte.",
+    detail: "",
   },
   {
     id: 4,
     number: "04",
-    title: "Subsuelo, Criósfera y Tubos de Lava",
+    title: "Subsuelo y Tubos de Lava",
     concept: "subsurface",
-    natureBadge: "Prior Operativo Ilustrativo · Sin Tomografía en Vivo",
+    natureBadge: "Subsuelo",
     accentColor: "#E07A5F",
     summary:
-      "Potencial de refugio subterráneo (tubos de lava basálticos) y presencia de permafrost/hielo para ensayos de perforación e ISRU.",
-    detail:
-      "El conducto cilíndrico en la base 3D es estrictamente esquemático; el motor no ejecuta radar de penetración terrestre (GPR) en tiempo real.",
+      "Analiza el potencial de refugio en conductos basálticos subterráneos, criósfera e hielo para perforación e ISRU.",
+    detail: "",
   },
 ];
 
 /**
  * Chapter 3 component: Pairs a pinned/sticky full-viewport 3D terrain descent
  * (where the right side of the screen leaves the Three.js 4-layer volumetric terrain block
- * completely unobstructed as it separates with scroll) with Awwwards-grade editorial
+ * completely unobstructed as it separates with scroll) with minimalist accordion
  * typography on the left, followed by the 4-stage pipeline.
  */
 export function TerrainLayers({
@@ -111,59 +107,43 @@ export function TerrainLayers({
   const activeStratumId =
     focusedLayer === 0 ? scrollActiveStratum : focusedLayer;
 
-  // CSS 3D isometric offset for the floating callout markers on the right
-  const sepPct = Math.round(Math.max(0, Math.min(1, layerSeparation)) * 100);
-
   return (
     <div>
       {/* Pinned / Sticky 3D Stratification Track (240vh) */}
       <div id="terrain-3d-track" className="relative h-[240vh]">
         <div className="sticky top-0 flex h-screen w-full items-center overflow-hidden px-6 sm:px-12 lg:px-16">
           <div className="mx-auto grid w-full max-w-7xl items-center gap-12 lg:grid-cols-12">
-            {/* Left 6 Cols: Editorial Typography + Hairline Layer List */}
+            {/* Left 6 Cols: Minimalist Title + Clean Accordion */}
             <div className="lg:col-span-6">
-              <div className="flex items-center gap-3 font-mono text-xs tracking-[0.2em] text-[#00D9F5] uppercase">
-                <span>03 // Capas del Terreno</span>
-                <span className="h-px w-8 bg-[#00D9F5]/50" />
-                <span className="text-[#94A3B8] tabular-nums">
-                  Separación 3D: {sepPct}%
-                </span>
-              </div>
+              <p className="font-mono text-xs tracking-[0.22em] text-[#00D9F5] uppercase">
+                03 · Capas del terreno
+              </p>
 
               <h2
                 id="capas-del-terreno-heading"
-                className="mt-4 text-3xl font-bold tracking-tight text-[#F1F5F9] sm:text-5xl sm:leading-[1.08]"
+                className="mt-5 text-3xl font-bold tracking-tight text-[#F8FAFC] sm:text-5xl sm:leading-[1.08]"
               >
                 Anatomía tridimensional de un análogo.
               </h2>
 
-              <p className="mt-4 max-w-xl text-sm leading-relaxed text-[#94A3B8] sm:text-base">
-                Al descender hacia la superficie terrestre, el bloque 3D se separa
-                en cuatro estratos sincronizados con el scroll.{" "}
-                <strong className="font-normal text-[#F5B82E]">
-                  Las geometrías 3D de relieve, roca y conductos son
-                  representaciones esquemáticas e ilustrativas
-                </strong>
-                , combinadas con telemetría satelital real.
-              </p>
-
-              {/* Editorial Hairline List of the 4 Strata (No boxy cards) */}
-              <div className="mt-8 divide-y divide-white/10 border-y border-white/10">
+              {/* Minimalist Accordion List of the 4 Strata */}
+              <div className="mt-10 divide-y divide-white/10 border-y border-white/10">
                 {STRATA.map((s) => {
                   const isCurrent = activeStratumId === s.id;
                   return (
                     <button
                       key={s.id}
                       type="button"
+                      aria-expanded={isCurrent}
                       onClick={() =>
                         onSelectLayer(focusedLayer === s.id ? 0 : s.id)
                       }
-                      className="group w-full py-3.5 text-left transition-opacity"
+                      className="group w-full py-4 text-left transition-colors"
                     >
                       <div className="flex items-center justify-between gap-4">
-                        <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-3.5">
                           <span
-                            className="inline-flex items-center gap-2 font-mono text-xs font-bold tabular-nums"
+                            className="inline-flex items-center gap-2 font-mono text-xs font-semibold tabular-nums transition-colors"
                             style={{
                               color: isCurrent ? s.accentColor : "#64748B",
                             }}
@@ -175,54 +155,47 @@ export function TerrainLayers({
                             />
                           </span>
                           <span
-                            className={`text-sm font-semibold tracking-tight transition-colors sm:text-base ${
+                            className={`text-base font-medium tracking-tight transition-colors sm:text-lg ${
                               isCurrent
-                                ? "text-[#F1F5F9]"
-                                : "text-[#94A3B8] group-hover:text-[#F1F5F9]"
+                                ? "text-[#F8FAFC]"
+                                : "text-[#94A3B8] group-hover:text-[#F8FAFC]"
                             }`}
                           >
                             {s.title}
                           </span>
                         </div>
 
-                        <span className="font-mono text-xs font-semibold tracking-wider text-slate-300 uppercase">
-                          {s.natureBadge}
+                        <span
+                          aria-hidden="true"
+                          className="font-mono text-sm text-[#64748B] transition-colors group-hover:text-[#F8FAFC]"
+                        >
+                          {isCurrent ? "−" : "+"}
                         </span>
                       </div>
 
                       {isCurrent && (
-                        <div className="mt-2.5 pl-7 text-sm leading-relaxed text-slate-200">
-                          <p className="font-medium text-slate-100">{s.summary}</p>
-                          <p className="mt-1 font-mono text-xs text-slate-300">
-                            {s.detail}
-                          </p>
-                        </div>
+                        <p className="mt-2.5 pl-10 text-sm leading-relaxed text-slate-300">
+                          {s.summary}
+                        </p>
                       )}
                     </button>
                   );
                 })}
               </div>
+
+              {focusedLayer !== 0 && (
+                <button
+                  type="button"
+                  onClick={() => onSelectLayer(0)}
+                  className="mt-5 font-mono text-xs text-[#00D9F5] underline-offset-4 hover:underline"
+                >
+                  Restablecer vista automática
+                </button>
+              )}
             </div>
 
-            {/* Right 6 Cols: Unobstructed Viewport Window for the Three.js 3D Volumetric Terrain Block */}
-            <div className="relative hidden h-[480px] flex-col justify-end pointer-events-none lg:col-span-6 lg:flex">
-              <div className="flex items-center justify-between border-t border-white/10 pt-3 font-mono text-[11px] text-[#94A3B8]">
-                <span className="text-[#00D9F5]">
-                  MODELO 3D ESQUEMÁTICO · RELIEVE Y SOMBRAS EN VIVO
-                </span>
-                {focusedLayer !== 0 ? (
-                  <button
-                    type="button"
-                    onClick={() => onSelectLayer(0)}
-                    className="pointer-events-auto text-[#F1F5F9] underline decoration-[#00D9F5] underline-offset-4 hover:text-[#00D9F5]"
-                  >
-                    Ver las 4 capas simultáneamente
-                  </button>
-                ) : (
-                  <span>4 estratos sincronizados con el scroll</span>
-                )}
-              </div>
-            </div>
+            {/* Right 6 Cols: Clean Unobstructed Viewport Window for the Three.js 3D Terrain Strata */}
+            <div className="hidden lg:col-span-6 lg:block" aria-hidden="true" />
           </div>
         </div>
       </div>
