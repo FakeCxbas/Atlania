@@ -852,22 +852,11 @@ export function MissionBriefingLanding({
                       aria-label="Inspeccionar telemetría del satélite NASA/NOAA Suomi NPP"
                       className="group relative block w-full cursor-pointer rounded-2xl text-left transition-transform duration-300 hover:scale-[1.04] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C5A36D] focus-visible:ring-offset-4 focus-visible:ring-offset-[#101321]"
                     >
-                      {/* Nadir Reflector / VIIRS Scan Cone pointing down-right onto Earth */}
-                      <svg
-                        viewBox="0 0 220 220"
+                      {/* Soft feathered nadir scan glow pointing down-right toward Earth */}
+                      <div
                         aria-hidden="true"
-                        className="pointer-events-none absolute top-[55%] left-[52%] -z-10 h-[160px] w-[160px] opacity-75 transition-opacity duration-300 group-hover:opacity-100 lg:h-[200px] lg:w-[200px]"
-                      >
-                        <defs>
-                          <linearGradient id="beam-suomi" x1="10%" y1="5%" x2="90%" y2="95%">
-                            <stop offset="0%" stopColor="#7CA5B8" stopOpacity="0.52" />
-                            <stop offset="50%" stopColor="#7CA5B8" stopOpacity="0.16" />
-                            <stop offset="100%" stopColor="#7CA5B8" stopOpacity="0" />
-                          </linearGradient>
-                        </defs>
-                        <polygon points="15,12 205,155 115,210" fill="url(#beam-suomi)" />
-                        <line x1="15" y1="12" x2="165" y2="185" stroke="#7CA5B8" strokeOpacity="0.34" strokeWidth="1" strokeDasharray="4 5" />
-                      </svg>
+                        className="pointer-events-none absolute top-[44%] left-[44%] -z-10 h-[150px] w-[150px] rotate-[-42deg] rounded-full bg-[radial-gradient(ellipse_at_top,rgba(124,165,184,0.28)_0%,rgba(124,165,184,0.08)_48%,transparent_75%)] blur-md transition-opacity duration-300 group-hover:opacity-100"
+                      />
 
                       <div className="mb-sat-float-c relative">
                         <div className="relative -rotate-[12deg]">
@@ -885,14 +874,44 @@ export function MissionBriefingLanding({
                             className="h-auto w-full object-contain brightness-[0.95] contrast-[1.06] saturate-[0.86] drop-shadow-[0_20px_36px_rgba(0,0,0,0.85)]"
                           />
                         </div>
-                      </div>
 
-                      {/* Leader-line callout (no box) */}
-                      <span className="mt-2 inline-flex items-center gap-2 font-mono text-[10px] font-semibold tracking-[0.16em] text-[#E4DFD5] drop-shadow-[0_2px_8px_rgba(0,0,0,0.95)] transition-colors group-hover:text-[#7CA5B8] sm:text-[11px]">
-                        <span className="h-1.5 w-1.5 rounded-full bg-[#7CA5B8] shadow-[0_0_8px_#7CA5B8]" aria-hidden="true" />
-                        <span className="h-px w-7 bg-gradient-to-r from-[#7CA5B8] to-[#7CA5B8]/25 transition-all duration-300 group-hover:w-10" aria-hidden="true" />
-                        SUOMI NPP · VIIRS
-                      </span>
+                        {/* Precision angled SVG elbow callout anchored to spacecraft bus */}
+                        <div className="relative -mt-3 flex flex-col items-start pl-2">
+                          <svg
+                            viewBox="0 0 180 30"
+                            aria-hidden="true"
+                            className="h-7 w-40 overflow-visible"
+                          >
+                            <circle
+                              cx="104"
+                              cy="2"
+                              r="5"
+                              fill="rgba(124,165,184,0.16)"
+                              stroke="#7CA5B8"
+                              strokeOpacity="0.55"
+                              strokeWidth="1"
+                            />
+                            <circle cx="104" cy="2" r="2.2" fill="#7CA5B8" />
+                            <polyline
+                              points="104,2 84,22 16,22"
+                              fill="none"
+                              stroke="#7CA5B8"
+                              strokeOpacity="0.7"
+                              strokeWidth="1.2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            />
+                            <circle cx="16" cy="22" r="1.8" fill="#C5A36D" />
+                          </svg>
+                          <span className="-mt-1 inline-flex items-center gap-2 rounded-md border border-[#55527D]/45 bg-[#121626]/85 px-2.5 py-1 font-mono text-[10px] font-semibold tracking-[0.16em] text-[#E4DFD5] shadow-[0_8px_20px_rgba(0,0,0,0.65)] backdrop-blur-md transition-colors group-hover:border-[#7CA5B8]/65 group-hover:text-[#7CA5B8] sm:text-[11px]">
+                            <span
+                              className="h-1.5 w-1.5 rounded-full bg-[#C5A36D]"
+                              aria-hidden="true"
+                            />
+                            SUOMI NPP · VIIRS
+                          </span>
+                        </div>
+                      </div>
                     </button>
                   </div>
 
@@ -911,22 +930,11 @@ export function MissionBriefingLanding({
                       aria-label="Inspeccionar telemetría del satélite Copernicus Sentinel-1"
                       className="group relative block w-full cursor-pointer rounded-2xl text-left transition-transform duration-300 hover:scale-[1.04] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C5A36D] focus-visible:ring-offset-4 focus-visible:ring-offset-[#101321]"
                     >
-                      {/* Nadir Reflector / C-SAR Scan Cone pointing down-left toward Earth */}
-                      <svg
-                        viewBox="0 0 220 220"
+                      {/* Soft feathered radar glow pointing down-left toward Earth */}
+                      <div
                         aria-hidden="true"
-                        className="pointer-events-none absolute top-[46%] right-[44%] -z-10 h-[155px] w-[155px] origin-top-right opacity-70 transition-opacity duration-300 group-hover:opacity-100 sm:h-[220px] sm:w-[220px]"
-                      >
-                        <defs>
-                          <linearGradient id="beam-sentinel" x1="100%" y1="0%" x2="10%" y2="95%">
-                            <stop offset="0%" stopColor="#7CA5B8" stopOpacity="0.52" />
-                            <stop offset="45%" stopColor="#7CA5B8" stopOpacity="0.18" />
-                            <stop offset="100%" stopColor="#7CA5B8" stopOpacity="0" />
-                          </linearGradient>
-                        </defs>
-                        <polygon points="210,10 10,155 95,215" fill="url(#beam-sentinel)" />
-                        <line x1="210" y1="10" x2="50" y2="188" stroke="#7CA5B8" strokeOpacity="0.34" strokeWidth="1" strokeDasharray="4 5" />
-                      </svg>
+                        className="pointer-events-none absolute top-[38%] right-[38%] -z-10 h-[165px] w-[165px] rotate-[40deg] rounded-full bg-[radial-gradient(ellipse_at_top,rgba(124,165,184,0.26)_0%,rgba(124,165,184,0.08)_48%,transparent_75%)] blur-md transition-opacity duration-300 group-hover:opacity-100"
+                      />
 
                       <div
                         className="mb-sat-float-b relative"
@@ -947,14 +955,44 @@ export function MissionBriefingLanding({
                             className="h-auto w-full object-contain brightness-[1.18] contrast-[1.05] saturate-[0.92] drop-shadow-[0_24px_42px_rgba(0,0,0,0.88)]"
                           />
                         </div>
-                      </div>
 
-                      {/* Leader-line callout (no box) */}
-                      <span className="mt-1 inline-flex items-center gap-2 font-mono text-[10px] font-semibold tracking-[0.16em] text-[#E4DFD5] drop-shadow-[0_2px_8px_rgba(0,0,0,0.95)] transition-colors group-hover:text-[#7CA5B8] sm:text-[11px]">
-                        <span className="h-1.5 w-1.5 rounded-full bg-[#7CA5B8] shadow-[0_0_8px_#7CA5B8]" aria-hidden="true" />
-                        <span className="h-px w-7 bg-gradient-to-r from-[#7CA5B8] to-[#7CA5B8]/25 transition-all duration-300 group-hover:w-10" aria-hidden="true" />
-                        SENTINEL-1 · C-SAR
-                      </span>
+                        {/* Precision angled SVG elbow callout anchored to C-SAR core */}
+                        <div className="relative -mt-4 flex flex-col items-end pr-2 sm:pr-4">
+                          <svg
+                            viewBox="0 0 200 30"
+                            aria-hidden="true"
+                            className="h-7 w-44 overflow-visible"
+                          >
+                            <circle
+                              cx="82"
+                              cy="2"
+                              r="5"
+                              fill="rgba(124,165,184,0.16)"
+                              stroke="#7CA5B8"
+                              strokeOpacity="0.55"
+                              strokeWidth="1"
+                            />
+                            <circle cx="82" cy="2" r="2.2" fill="#7CA5B8" />
+                            <polyline
+                              points="82,2 104,22 184,22"
+                              fill="none"
+                              stroke="#7CA5B8"
+                              strokeOpacity="0.7"
+                              strokeWidth="1.2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            />
+                            <circle cx="184" cy="22" r="1.8" fill="#C5A36D" />
+                          </svg>
+                          <span className="-mt-1 inline-flex items-center gap-2 rounded-md border border-[#55527D]/45 bg-[#121626]/85 px-2.5 py-1 font-mono text-[10px] font-semibold tracking-[0.16em] text-[#E4DFD5] shadow-[0_8px_20px_rgba(0,0,0,0.65)] backdrop-blur-md transition-colors group-hover:border-[#7CA5B8]/65 group-hover:text-[#7CA5B8] sm:text-[11px]">
+                            <span
+                              className="h-1.5 w-1.5 rounded-full bg-[#C5A36D]"
+                              aria-hidden="true"
+                            />
+                            SENTINEL-1 · C-SAR
+                          </span>
+                        </div>
+                      </div>
                     </button>
                   </div>
 
@@ -973,22 +1011,11 @@ export function MissionBriefingLanding({
                       aria-label="Inspeccionar telemetría del satélite NASA/USGS Landsat 9"
                       className="group relative block w-full cursor-pointer rounded-2xl text-left transition-transform duration-300 hover:scale-[1.03] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C5A36D] focus-visible:ring-offset-4 focus-visible:ring-offset-[#101321]"
                     >
-                      {/* Nadir Reflector / OLI-2 + TIRS-2 Scan Cone pointing up-left toward centered Earth */}
-                      <svg
-                        viewBox="0 0 260 190"
+                      {/* Soft feathered optical scan glow pointing up-left toward Earth */}
+                      <div
                         aria-hidden="true"
-                        className="pointer-events-none absolute -top-[16%] -left-[34%] -z-10 h-[145px] w-[195px] opacity-75 transition-opacity duration-300 group-hover:opacity-100 sm:h-[185px] sm:w-[250px]"
-                      >
-                        <defs>
-                          <linearGradient id="beam-landsat" x1="95%" y1="75%" x2="5%" y2="20%">
-                            <stop offset="0%" stopColor="#7CA5B8" stopOpacity="0.54" />
-                            <stop offset="45%" stopColor="#7CA5B8" stopOpacity="0.18" />
-                            <stop offset="100%" stopColor="#7CA5B8" stopOpacity="0" />
-                          </linearGradient>
-                        </defs>
-                        <polygon points="250,140 8,25 22,125" fill="url(#beam-landsat)" />
-                        <line x1="250" y1="140" x2="18" y2="75" stroke="#7CA5B8" strokeOpacity="0.34" strokeWidth="1" strokeDasharray="4 5" />
-                      </svg>
+                        className="pointer-events-none absolute -top-[12%] left-[8%] -z-10 h-[140px] w-[180px] rotate-[-32deg] rounded-full bg-[radial-gradient(ellipse_at_bottom_right,rgba(124,165,184,0.26)_0%,rgba(124,165,184,0.08)_48%,transparent_75%)] blur-md transition-opacity duration-300 group-hover:opacity-100"
+                      />
 
                       <div className="mb-sat-float-a relative">
                         <div className="relative rotate-[18deg]">
@@ -1006,14 +1033,44 @@ export function MissionBriefingLanding({
                             className="h-auto w-full object-contain brightness-[1.08] contrast-[1.05] saturate-[0.95] drop-shadow-[0_28px_48px_rgba(0,0,0,0.92)]"
                           />
                         </div>
-                      </div>
 
-                      {/* Leader-line callout (no box, right-aligned) */}
-                      <span className="mt-2 flex w-full items-center justify-end gap-2 pr-2 font-mono text-[10px] font-semibold tracking-[0.16em] text-[#E4DFD5] drop-shadow-[0_2px_8px_rgba(0,0,0,0.95)] transition-colors group-hover:text-[#7CA5B8] sm:pr-6 sm:text-[11px]">
-                        <span className="h-1.5 w-1.5 rounded-full bg-[#7CA5B8] shadow-[0_0_8px_#7CA5B8]" aria-hidden="true" />
-                        <span className="h-px w-8 bg-gradient-to-r from-[#7CA5B8] to-[#7CA5B8]/25 transition-all duration-300 group-hover:w-11" aria-hidden="true" />
-                        LANDSAT 9 · OLI-2 / TIRS-2
-                      </span>
+                        {/* Precision angled SVG elbow callout anchored to OLI-2/TIRS-2 sensor bench */}
+                        <div className="relative -mt-2 flex flex-col items-end pr-3 sm:pr-6">
+                          <svg
+                            viewBox="0 0 220 28"
+                            aria-hidden="true"
+                            className="h-6 w-48 overflow-visible"
+                          >
+                            <circle
+                              cx="64"
+                              cy="0"
+                              r="5"
+                              fill="rgba(124,165,184,0.16)"
+                              stroke="#7CA5B8"
+                              strokeOpacity="0.55"
+                              strokeWidth="1"
+                            />
+                            <circle cx="64" cy="0" r="2.2" fill="#7CA5B8" />
+                            <polyline
+                              points="64,0 86,20 204,20"
+                              fill="none"
+                              stroke="#7CA5B8"
+                              strokeOpacity="0.7"
+                              strokeWidth="1.2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            />
+                            <circle cx="204" cy="20" r="1.8" fill="#C5A36D" />
+                          </svg>
+                          <span className="-mt-1 inline-flex items-center gap-2 rounded-md border border-[#55527D]/45 bg-[#121626]/85 px-2.5 py-1 font-mono text-[10px] font-semibold tracking-[0.16em] text-[#E4DFD5] shadow-[0_8px_20px_rgba(0,0,0,0.65)] backdrop-blur-md transition-colors group-hover:border-[#7CA5B8]/65 group-hover:text-[#7CA5B8] sm:text-[11px]">
+                            <span
+                              className="h-1.5 w-1.5 rounded-full bg-[#C5A36D]"
+                              aria-hidden="true"
+                            />
+                            LANDSAT 9 · OLI-2 / TIRS-2
+                          </span>
+                        </div>
+                      </div>
                     </button>
                   </div>
 
