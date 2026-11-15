@@ -218,8 +218,6 @@ export function AnalogMap({
   const latSpanRef = useRef<HTMLSpanElement | null>(null);
   const lonSpanRef = useRef<HTMLSpanElement | null>(null);
   const zoomSpanRef = useRef<HTMLSpanElement | null>(null);
-  const flightTokenRef = useRef(0);
-  const activeFlightCleanupRef = useRef<(() => void) | null>(null);
 
   const [basemap, setBasemap] = useState<BasemapMode>("satellite");
   const [terrain3d, setTerrain3d] = useState(true);
@@ -296,30 +294,13 @@ export function AnalogMap({
     [getFlyDuration]
   );
 
-  const cancelActiveFlight = useCallback(() => {
-    flightTokenRef.current += 1;
-    if (activeFlightCleanupRef.current) {
-      activeFlightCleanupRef.current();
-      activeFlightCleanupRef.current = null;
-    }
-  }, []);
-
   const flyToSiteCinematographically = useCallback(
     (site: AnalogSite, requestedZoom?: number) => {
       const map = mapRef.current;
       if (!map) return;
 
-      cancelActiveFlight();
-      const token = flightTokenRef.current;
-
-      const isPolar = site.latitude < -60 || site.latitude > 75;
-      if (isPolar) {
-        queueMicrotask(() => {
-          setBasemap((prev) => (prev === "satellite" ? "nasa-gibs" : prev));
-        });
-      }
-
-      const finalZoom = isPolar ? 8.5 : Math.max(map.getZoom(), requestedZoom ?? 12.0);
+      const isPolar = Math.abs(site.latitude) > 60;
+      const targetZoom = isPolar ? 7.5 : (requestedZoom ?? 12);
       const prefersReducedMotion =
         typeof window !== "undefined" &&
         window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -327,60 +308,23 @@ export function AnalogMap({
       if (prefersReducedMotion) {
         map.jumpTo({
           center: [site.longitude, site.latitude],
-          zoom: finalZoom,
-          pitch: terrain3d ? 52 : map.getPitch(),
+          zoom: targetZoom,
+          pitch: terrain3d ? Math.max(map.getPitch(), 48) : map.getPitch(),
         });
         return;
       }
 
-      const startBearing = map.getBearing();
-      const midZoom = isPolar ? 7.0 : Math.min(finalZoom - 2.0, 9.8);
-      const approachPitch = terrain3d ? Math.max(map.getPitch(), 38) : map.getPitch();
-      const finalPitch = terrain3d ? 55 : map.getPitch();
-
-      const onUserInteract = () => {
-        cancelActiveFlight();
-      };
-
-      const onMoveEnd = () => {
-        cleanup();
-        if (flightTokenRef.current !== token) return;
-        map.easeTo({
-          center: [site.longitude, site.latitude],
-          zoom: finalZoom,
-          pitch: finalPitch,
-          bearing: startBearing + 30,
-          duration: 1400,
-          essential: true,
-        });
-      };
-
-      const cleanup = () => {
-        map.off("moveend", onMoveEnd);
-        map.off("mousedown", onUserInteract);
-        map.off("touchstart", onUserInteract);
-        map.off("wheel", onUserInteract);
-        map.off("dragstart", onUserInteract);
-      };
-
-      activeFlightCleanupRef.current = cleanup;
-      map.on("mousedown", onUserInteract);
-      map.on("touchstart", onUserInteract);
-      map.on("wheel", onUserInteract);
-      map.on("dragstart", onUserInteract);
-      map.once("moveend", onMoveEnd);
-
       map.flyTo({
         center: [site.longitude, site.latitude],
-        zoom: midZoom,
-        pitch: approachPitch,
-        bearing: startBearing + 22,
-        speed: 0.75,
-        curve: 1.45,
+        zoom: targetZoom,
+        pitch: terrain3d ? Math.max(map.getPitch(), 48) : map.getPitch(),
+        bearing: map.getBearing() + 20,
+        speed: 0.85,
+        curve: 1.35,
         essential: true,
       });
     },
-    [cancelActiveFlight, terrain3d]
+    [terrain3d]
   );
 
   // Register tile cache Service Worker once on client
@@ -1107,7 +1051,6 @@ export function AnalogMap({
     const dur = prefersReducedMotion ? 0 : 750;
 
     if (cameraTarget.type === "world") {
-      cancelActiveFlight();
       map.fitBounds(
         [
           [-170, -55],
@@ -1119,7 +1062,6 @@ export function AnalogMap({
     }
 
     if (cameraTarget.type === "fitBounds") {
-      cancelActiveFlight();
       const { sites: targetSites, padding } = cameraTarget;
       if (!targetSites.length) return;
 
@@ -1141,7 +1083,7 @@ export function AnalogMap({
       if (!site) return;
       flyToSiteCinematographically(site, cameraTarget.zoom);
     }
-  }, [cameraTarget, sites, cancelActiveFlight, flyToSiteCinematographically]);
+  }, [cameraTarget, sites, flyToSiteCinematographically]);
 
   return (
     <div className="relative h-full w-full bg-[#060913]">
