@@ -869,25 +869,93 @@ export function MissionBriefingLanding({
                   id="capitulo-1"
                   className="sticky top-0 h-screen w-full overflow-hidden"
                 >
-                  {/* Directional scrims for strict WCAG AA text legibility over 3D Earth */}
+                  {/* Directional bottom scrim for strict WCAG AA text legibility over centered 3D Earth */}
                   <div
-                    className="pointer-events-none absolute inset-0 bg-gradient-to-r from-[#03070D]/90 via-[#03070D]/55 to-transparent"
-                    aria-hidden="true"
-                  />
-                  <div
-                    className="pointer-events-none absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-[#03070D]/95 via-[#03070D]/60 to-transparent"
+                    className="pointer-events-none absolute inset-x-0 bottom-0 h-[58vh] bg-gradient-to-t from-[#03070D]/95 via-[#03070D]/60 to-transparent"
                     aria-hidden="true"
                   />
 
-                  {/* INTEGRATED INTERACTIVE SATELLITE CONSTELLATION (Nadir-oriented + Reflector Beams + Uniform Sunlit Rim + Clickable Telemetry) */}
-                  {/* 1. Sentinel-1 (C-SAR Radar) — Upper-right, pointing down-left toward Earth */}
+                  {/* INTEGRATED INTERACTIVE SATELLITE CONSTELLATION (Spread across viewport + All pointing at centered Earth) */}
+                  {/* 1. Suomi NPP (VIIRS / NASA GIBS) — Upper-Left, pointing down-right toward Earth */}
+                  <div
+                    style={{
+                      opacity: satOpacity * 0.96,
+                      transform: `translate3d(${suomiX}px, ${suomiY}px, 0) scale(${suomiScale})`,
+                      pointerEvents: satOpacity < 0.15 ? "none" : "auto",
+                    }}
+                    className="hidden sm:absolute sm:top-[13%] sm:left-[3%] sm:z-30 sm:block sm:w-[205px] lg:top-[12%] lg:left-[5%] lg:w-[245px] xl:w-[270px]"
+                  >
+                    <button
+                      type="button"
+                      onClick={() => setSelectedSatelliteId("suomi-npp")}
+                      aria-label="Inspeccionar telemetría del satélite NASA/NOAA Suomi NPP"
+                      className="group relative block w-full cursor-pointer rounded-2xl text-left transition-transform duration-300 hover:scale-[1.04] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00D9F5] focus-visible:ring-offset-4 focus-visible:ring-offset-[#03070D]"
+                    >
+                      {/* Nadir Reflector / VIIRS Scan Cone pointing down-right onto Earth */}
+                      <svg
+                        viewBox="0 0 220 220"
+                        aria-hidden="true"
+                        className="pointer-events-none absolute top-[55%] left-[52%] -z-10 h-[160px] w-[160px] opacity-75 transition-opacity duration-300 group-hover:opacity-100 lg:h-[200px] lg:w-[200px]"
+                      >
+                        <defs>
+                          <linearGradient id="beam-suomi" x1="10%" y1="5%" x2="90%" y2="95%">
+                            <stop offset="0%" stopColor="#00D9F5" stopOpacity="0.52" />
+                            <stop offset="50%" stopColor="#38BDF8" stopOpacity="0.16" />
+                            <stop offset="100%" stopColor="#00D9F5" stopOpacity="0" />
+                          </linearGradient>
+                        </defs>
+                        <polygon points="15,12 205,155 115,210" fill="url(#beam-suomi)" />
+                        <line x1="15" y1="12" x2="165" y2="185" stroke="#00D9F5" strokeOpacity="0.34" strokeWidth="1" strokeDasharray="4 5" />
+                      </svg>
+
+                      <div className="mb-sat-float-c relative">
+                        <div className="relative -rotate-[12deg]">
+                          <div
+                            className="absolute inset-6 -z-10 rounded-full bg-[radial-gradient(circle_at_35%_35%,rgba(56,189,248,0.22),transparent_70%)] blur-2xl"
+                            aria-hidden="true"
+                          />
+                          <Image
+                            src="/nasa/suomi-npp-cutout.png"
+                            alt="Satélite NASA/NOAA Suomi NPP con sensor VIIRS apuntando hacia la Tierra"
+                            width={900}
+                            height={682}
+                            sizes="(max-width: 1024px) 205px, 270px"
+                            className="h-auto w-full object-contain brightness-[0.95] contrast-[1.06] saturate-[0.86] drop-shadow-[0_20px_36px_rgba(0,0,0,0.85)]"
+                          />
+                          <div
+                            aria-hidden="true"
+                            style={{
+                              maskImage: "url(/nasa/suomi-npp-cutout.png)",
+                              WebkitMaskImage: "url(/nasa/suomi-npp-cutout.png)",
+                              maskSize: "contain",
+                              WebkitMaskSize: "contain",
+                              maskRepeat: "no-repeat",
+                              WebkitMaskRepeat: "no-repeat",
+                              maskPosition: "center",
+                              WebkitMaskPosition: "center",
+                            }}
+                            className="pointer-events-none absolute inset-0 bg-[linear-gradient(135deg,rgba(224,247,255,0.44)_0%,rgba(56,189,248,0.16)_36%,transparent_66%)] mix-blend-screen"
+                          />
+                        </div>
+                      </div>
+
+                      {/* Leader-line callout (no box) */}
+                      <span className="mt-2 inline-flex items-center gap-2 font-mono text-[10px] font-semibold tracking-[0.16em] text-slate-100 drop-shadow-[0_2px_8px_rgba(0,0,0,0.95)] transition-colors group-hover:text-[#00D9F5] sm:text-[11px]">
+                        <span className="h-1.5 w-1.5 rounded-full bg-[#00D9F5] shadow-[0_0_8px_#00D9F5]" aria-hidden="true" />
+                        <span className="h-px w-7 bg-gradient-to-r from-[#00D9F5] to-[#00D9F5]/25 transition-all duration-300 group-hover:w-10" aria-hidden="true" />
+                        SUOMI NPP · VIIRS
+                      </span>
+                    </button>
+                  </div>
+
+                  {/* 2. Sentinel-1 (C-SAR Radar) — Upper-Right, pointing down-left toward Earth */}
                   <div
                     style={{
                       opacity: satOpacity,
                       transform: `translate3d(${sentinelX}px, ${sentinelY}px, 0) scale(${sentinelScale})`,
                       pointerEvents: satOpacity < 0.15 ? "none" : "auto",
                     }}
-                    className="absolute top-[12%] right-[2%] z-30 w-[170px] select-none will-change-transform sm:top-[13%] sm:right-[5%] sm:w-[245px] lg:right-[7%] lg:w-[295px] xl:w-[335px]"
+                    className="absolute top-[11%] right-[2%] z-30 w-[170px] select-none will-change-transform sm:top-[12%] sm:right-[4%] sm:w-[245px] lg:right-[6%] lg:w-[295px] xl:w-[330px]"
                   >
                     <button
                       type="button"
@@ -927,10 +995,9 @@ export function MissionBriefingLanding({
                             width={900}
                             height={731}
                             priority
-                            sizes="(max-width: 640px) 170px, (max-width: 1024px) 245px, 335px"
+                            sizes="(max-width: 640px) 170px, (max-width: 1024px) 245px, 330px"
                             className="h-auto w-full object-contain brightness-[1.18] contrast-[1.05] saturate-[0.92] drop-shadow-[0_24px_42px_rgba(0,0,0,0.88)]"
                           />
-                          {/* Uniform unilateral sunlit rim-light masked to exact satellite silhouette */}
                           <div
                             aria-hidden="true"
                             style={{
@@ -957,86 +1024,14 @@ export function MissionBriefingLanding({
                     </button>
                   </div>
 
-                  {/* 2. Suomi NPP (VIIRS / NASA GIBS) — Mid-orbit, pointing down-left toward Earth */}
-                  <div
-                    style={{
-                      opacity: satOpacity * 0.94,
-                      transform: `translate3d(${suomiX}px, ${suomiY}px, 0) scale(${suomiScale})`,
-                      pointerEvents: satOpacity < 0.15 ? "none" : "auto",
-                    }}
-                    className="hidden sm:absolute sm:right-[26%] sm:bottom-[41%] sm:z-30 sm:block sm:w-[190px] lg:right-[29%] lg:bottom-[43%] lg:w-[230px] xl:w-[255px]"
-                  >
-                    <button
-                      type="button"
-                      onClick={() => setSelectedSatelliteId("suomi-npp")}
-                      aria-label="Inspeccionar telemetría del satélite NASA/NOAA Suomi NPP"
-                      className="group relative block w-full cursor-pointer rounded-2xl text-left transition-transform duration-300 hover:scale-[1.04] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00D9F5] focus-visible:ring-offset-4 focus-visible:ring-offset-[#03070D]"
-                    >
-                      {/* Nadir Reflector / VIIRS Scan Cone pointing down-left onto Earth */}
-                      <svg
-                        viewBox="0 0 210 210"
-                        aria-hidden="true"
-                        className="pointer-events-none absolute top-[58%] right-[20%] -z-10 h-[150px] w-[150px] opacity-70 transition-opacity duration-300 group-hover:opacity-100 lg:h-[180px] lg:w-[180px]"
-                      >
-                        <defs>
-                          <linearGradient id="beam-suomi" x1="85%" y1="5%" x2="20%" y2="95%">
-                            <stop offset="0%" stopColor="#00D9F5" stopOpacity="0.48" />
-                            <stop offset="50%" stopColor="#38BDF8" stopOpacity="0.15" />
-                            <stop offset="100%" stopColor="#00D9F5" stopOpacity="0" />
-                          </linearGradient>
-                        </defs>
-                        <polygon points="175,8 15,155 105,198" fill="url(#beam-suomi)" />
-                        <line x1="175" y1="8" x2="60" y2="178" stroke="#00D9F5" strokeOpacity="0.3" strokeWidth="1" strokeDasharray="4 5" />
-                      </svg>
-
-                      <div className="mb-sat-float-c relative">
-                        <div className="relative rotate-[26deg]">
-                          <div
-                            className="absolute inset-6 -z-10 rounded-full bg-[radial-gradient(circle_at_35%_35%,rgba(56,189,248,0.2),transparent_70%)] blur-2xl"
-                            aria-hidden="true"
-                          />
-                          <Image
-                            src="/nasa/suomi-npp-cutout.png"
-                            alt="Satélite NASA/NOAA Suomi NPP con sensor VIIRS apuntando hacia la Tierra"
-                            width={900}
-                            height={682}
-                            sizes="(max-width: 1024px) 190px, 255px"
-                            className="h-auto w-full object-contain brightness-[0.95] contrast-[1.06] saturate-[0.86] drop-shadow-[0_20px_36px_rgba(0,0,0,0.85)]"
-                          />
-                          <div
-                            aria-hidden="true"
-                            style={{
-                              maskImage: "url(/nasa/suomi-npp-cutout.png)",
-                              WebkitMaskImage: "url(/nasa/suomi-npp-cutout.png)",
-                              maskSize: "contain",
-                              WebkitMaskSize: "contain",
-                              maskRepeat: "no-repeat",
-                              WebkitMaskRepeat: "no-repeat",
-                              maskPosition: "center",
-                              WebkitMaskPosition: "center",
-                            }}
-                            className="pointer-events-none absolute inset-0 bg-[linear-gradient(135deg,rgba(224,247,255,0.44)_0%,rgba(56,189,248,0.16)_36%,transparent_66%)] mix-blend-screen"
-                          />
-                        </div>
-                      </div>
-
-                      {/* Leader-line callout (no box) */}
-                      <span className="mt-2 inline-flex items-center gap-2 font-mono text-[10px] font-semibold tracking-[0.16em] text-slate-100 drop-shadow-[0_2px_8px_rgba(0,0,0,0.95)] transition-colors group-hover:text-[#00D9F5] sm:text-[11px]">
-                        <span className="h-1.5 w-1.5 rounded-full bg-[#00D9F5] shadow-[0_0_8px_#00D9F5]" aria-hidden="true" />
-                        <span className="h-px w-7 bg-gradient-to-r from-[#00D9F5] to-[#00D9F5]/25 transition-all duration-300 group-hover:w-10" aria-hidden="true" />
-                        SUOMI NPP · VIIRS
-                      </span>
-                    </button>
-                  </div>
-
-                  {/* 3. Landsat 9 (OLI-2 / TIRS-2) — Primary foreground satellite, pointing left onto Earth */}
+                  {/* 3. Landsat 9 (OLI-2 / TIRS-2) — Lower-Right, pointing up-left toward centered Earth */}
                   <div
                     style={{
                       opacity: satOpacity,
                       transform: `translate3d(${landsatX}px, ${landsatY}px, 0) scale(${landsatScale})`,
                       pointerEvents: satOpacity < 0.15 ? "none" : "auto",
                     }}
-                    className="absolute right-[-3%] bottom-[17%] z-30 w-[260px] select-none will-change-transform sm:right-[3%] sm:bottom-[14%] sm:w-[390px] lg:right-[4%] lg:bottom-[14%] lg:w-[480px] xl:w-[530px]"
+                    className="absolute right-[-3%] bottom-[22%] z-30 w-[240px] select-none will-change-transform sm:right-[2%] sm:bottom-[21%] sm:w-[340px] lg:right-[3%] lg:bottom-[23%] lg:w-[410px] xl:w-[450px]"
                   >
                     <button
                       type="button"
@@ -1044,21 +1039,21 @@ export function MissionBriefingLanding({
                       aria-label="Inspeccionar telemetría del satélite NASA/USGS Landsat 9"
                       className="group relative block w-full cursor-pointer rounded-2xl text-left transition-transform duration-300 hover:scale-[1.03] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00D9F5] focus-visible:ring-offset-4 focus-visible:ring-offset-[#03070D]"
                     >
-                      {/* Nadir Reflector / OLI-2 + TIRS-2 Scan Cone pointing left onto Earth's globe */}
+                      {/* Nadir Reflector / OLI-2 + TIRS-2 Scan Cone pointing up-left toward centered Earth */}
                       <svg
-                        viewBox="0 0 260 180"
+                        viewBox="0 0 260 190"
                         aria-hidden="true"
-                        className="pointer-events-none absolute top-[18%] -left-[32%] -z-10 h-[145px] w-[200px] opacity-75 transition-opacity duration-300 group-hover:opacity-100 sm:h-[190px] sm:w-[260px]"
+                        className="pointer-events-none absolute -top-[16%] -left-[34%] -z-10 h-[145px] w-[195px] opacity-75 transition-opacity duration-300 group-hover:opacity-100 sm:h-[185px] sm:w-[250px]"
                       >
                         <defs>
-                          <linearGradient id="beam-landsat" x1="95%" y1="55%" x2="5%" y2="45%">
+                          <linearGradient id="beam-landsat" x1="95%" y1="75%" x2="5%" y2="20%">
                             <stop offset="0%" stopColor="#00D9F5" stopOpacity="0.54" />
                             <stop offset="45%" stopColor="#38BDF8" stopOpacity="0.18" />
                             <stop offset="100%" stopColor="#00D9F5" stopOpacity="0" />
                           </linearGradient>
                         </defs>
-                        <polygon points="250,95 10,35 18,145" fill="url(#beam-landsat)" />
-                        <line x1="250" y1="95" x2="18" y2="90" stroke="#00D9F5" strokeOpacity="0.34" strokeWidth="1" strokeDasharray="4 5" />
+                        <polygon points="250,140 8,25 22,125" fill="url(#beam-landsat)" />
+                        <line x1="250" y1="140" x2="18" y2="75" stroke="#00D9F5" strokeOpacity="0.34" strokeWidth="1" strokeDasharray="4 5" />
                       </svg>
 
                       <div className="mb-sat-float-a relative">
@@ -1073,7 +1068,7 @@ export function MissionBriefingLanding({
                             width={900}
                             height={399}
                             priority
-                            sizes="(max-width: 640px) 260px, (max-width: 1024px) 390px, 530px"
+                            sizes="(max-width: 640px) 240px, (max-width: 1024px) 340px, 450px"
                             className="h-auto w-full object-contain brightness-[1.08] contrast-[1.05] saturate-[0.95] drop-shadow-[0_28px_48px_rgba(0,0,0,0.92)]"
                           />
                           <div
@@ -1093,7 +1088,7 @@ export function MissionBriefingLanding({
                         </div>
                       </div>
 
-                      {/* Leader-line callout (no box, right-aligned to clear centered CTA buttons) */}
+                      {/* Leader-line callout (no box, right-aligned) */}
                       <span className="mt-2 flex w-full items-center justify-end gap-2 pr-2 font-mono text-[10px] font-semibold tracking-[0.16em] text-[#F1F5F9] drop-shadow-[0_2px_8px_rgba(0,0,0,0.95)] transition-colors group-hover:text-[#00D9F5] sm:pr-6 sm:text-[11px]">
                         <span className="h-1.5 w-1.5 rounded-full bg-[#00D9F5] shadow-[0_0_8px_#00D9F5]" aria-hidden="true" />
                         <span className="h-px w-8 bg-gradient-to-r from-[#00D9F5] to-[#00D9F5]/25 transition-all duration-300 group-hover:w-11" aria-hidden="true" />
@@ -1102,36 +1097,36 @@ export function MissionBriefingLanding({
                     </button>
                   </div>
 
-                  {/* CHAPTER 1 EDITORIAL CONTENT (Fades out upward as camera advances toward Earth) */}
+                  {/* CHAPTER 1 EDITORIAL CONTENT (Bottom-center over Earth horizon, fades out upward on scroll) */}
                   <div
                     style={{
                       opacity: ch1Opacity,
                       transform: `translate3d(0, ${ch1TranslateY}px, 0)`,
                       pointerEvents: ch1Opacity < 0.15 ? "none" : "auto",
                     }}
-                    className="relative z-20 mx-auto flex h-full max-w-[1440px] flex-col justify-between px-6 pt-28 pb-8 will-change-transform sm:px-10 lg:px-16 lg:pt-32 lg:pb-10"
+                    className="relative z-20 mx-auto flex h-full max-w-[1440px] flex-col justify-end px-6 pt-24 pb-6 will-change-transform sm:px-10 lg:px-16 lg:pb-8"
                   >
-                    <div className="my-auto max-w-2xl">
-                      <p className="font-mono text-xs font-semibold tracking-[0.24em] text-[#C5A36D] uppercase sm:text-sm">
+                    <div className="mx-auto mb-6 max-w-3xl text-center">
+                      <p className="font-mono text-[11px] font-semibold tracking-[0.24em] text-[#C5A36D] uppercase sm:text-xs">
                         NASA SPACE APPS CHALLENGE · OBSERVATORIO PLANETARIO
                       </p>
 
-                      <h1 className="atlania-hero-title mt-4 text-6xl font-normal tracking-[0.06em] sm:text-7xl lg:text-[6.75rem] lg:leading-[0.95]">
+                      <h1 className="atlania-hero-title mt-3 text-6xl font-normal tracking-[0.06em] sm:text-7xl lg:text-[6.25rem] lg:leading-[0.95]">
                         ATLANIA
                       </h1>
 
-                      <p className="mt-3 font-display italic text-lg tracking-wide text-[#C5A36D] sm:text-xl">
+                      <p className="mt-2 font-display italic text-base tracking-wide text-[#C5A36D] sm:text-lg">
                         Somewhere between Earth and the stars.
                       </p>
 
-                      <p className="mt-5 max-w-xl text-xl font-medium leading-snug text-slate-100 sm:text-2xl">
+                      <p className="mx-auto mt-3 max-w-xl text-base font-medium leading-snug text-slate-100 drop-shadow-[0_2px_10px_rgba(0,0,0,0.9)] sm:text-xl">
                         ¿Y si para comprender otros planetas primero tuviéramos que volver a descubrir el nuestro?
                       </p>
                     </div>
 
                     {/* Primary CTAs centered at bottom above telemetry bar */}
                     <div className="w-full">
-                      <div className="mb-5 flex flex-wrap items-center justify-center gap-4">
+                      <div className="mb-4 flex flex-wrap items-center justify-center gap-4">
                         <Link
                           href="/explorer"
                           className="inline-flex min-h-12 items-center gap-3 rounded-full bg-[#C5A36D] px-7 py-3.5 text-sm font-bold text-[#101321] shadow-lg transition-all hover:bg-[#E4DFD5]"

@@ -171,18 +171,16 @@ export function PlanetScene({
 
     // 2. Load NASA Textures
     const textureLoader = new THREE.TextureLoader();
-    const earthTexture = textureLoader.load("/nasa/earth-blue-marble.jpg");
+    const earthTexture = textureLoader.load("/nasa/earth-equirectangular.jpg");
     earthTexture.colorSpace = THREE.SRGBColorSpace;
-
     const moonTexture = textureLoader.load("/nasa/moon-orb.jpg");
     moonTexture.colorSpace = THREE.SRGBColorSpace;
-
     const marsTexture = textureLoader.load("/nasa/mars-orb.jpg");
     marsTexture.colorSpace = THREE.SRGBColorSpace;
 
     // 3. Dominant 3D Earth Group with Fresnel Atmosphere Shader
     const earthGroup = new THREE.Group();
-    earthGroup.position.set(0.45, -3.15, 0.2);
+    earthGroup.position.set(0, -1.65, 0.2);
     scene.add(earthGroup);
 
     const sphereSegments = isLowPowerDevice ? 48 : 72;
@@ -194,21 +192,22 @@ export function PlanetScene({
     );
     const earthMat = new THREE.MeshStandardMaterial({
       map: earthTexture,
-      roughness: 0.58,
-      metalness: 0.1,
+      roughness: 0.62,
+      metalness: 0.08,
     });
     const earthMesh = new THREE.Mesh(earthGeo, earthMat);
     earthMesh.rotation.z = 0.18;
+    earthMesh.rotation.y = -1.35;
     earthGroup.add(earthMesh);
 
-    // Custom Fresnel Atmospheric Scattering Shader
+    // Custom Fresnel Atmospheric Scattering Shader (FrontSide hugging Earth limb cleanly)
     const atmoUniforms = {
       uAtmosphereColor: { value: new THREE.Color(0x00d9f5) },
       uHorizonColor: { value: new THREE.Color(0x38bdf8) },
       uIntensity: { value: 1.05 },
     };
     const atmoGeo = new THREE.SphereGeometry(
-      earthRadius * 1.038,
+      earthRadius * 1.022,
       sphereSegments,
       sphereSegments
     );
@@ -232,14 +231,15 @@ export function PlanetScene({
         varying vec3 vViewPosition;
         void main() {
           vec3 viewDir = normalize(vViewPosition);
-          float fresnel = pow(1.0 - abs(dot(vNormal, viewDir)), 2.6);
+          float ndotv = max(dot(normalize(vNormal), viewDir), 0.0);
+          float fresnel = pow(1.0 - ndotv, 3.4);
           vec3 col = mix(uHorizonColor, uAtmosphereColor, fresnel);
-          gl_FragColor = vec4(col, fresnel * 0.68 * uIntensity);
+          gl_FragColor = vec4(col, fresnel * 0.72 * uIntensity);
         }
       `,
       transparent: true,
       blending: THREE.AdditiveBlending,
-      side: THREE.BackSide,
+      side: THREE.FrontSide,
       depthWrite: false,
     });
     const atmoMesh = new THREE.Mesh(atmoGeo, atmoMat);
@@ -486,11 +486,11 @@ export function PlanetScene({
         // Chapters 1 & 2 shared continuous orbital approach:
         const t = Math.max(0, Math.min(1, introP));
         targetCamPos.set(0.18 * t, 0.35 - t * 0.55, 9.2 - t * 4.25);
-        targetLookAt.set(0.25 * t, -0.55 - t * 0.35, 0);
+        targetLookAt.set(0.25 * t, -0.35 - t * 0.55, 0);
 
         targetEarthPos.set(
-          THREE.MathUtils.lerp(0.35, 0.75, t),
-          THREE.MathUtils.lerp(-3.15, -2.05, t),
+          THREE.MathUtils.lerp(0, 0.75, t),
+          THREE.MathUtils.lerp(-1.65, -2.05, t),
           THREE.MathUtils.lerp(0.2, 0.75, t)
         );
         targetAtmoIntensity = 1.05 + t * 0.65;
