@@ -19,6 +19,7 @@ import { ExplorerTransition } from "@/components/briefing/ExplorerTransition";
 import {
   ArrowDown,
   ArrowUpRight,
+  ChevronDown,
   Compass,
   ExternalLink,
   Menu,
@@ -363,7 +364,7 @@ export function MissionBriefingLanding({
   dataset,
 }: MissionBriefingLandingProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [activeChallengeIdx, setActiveChallengeIdx] = useState<number>(0);
+  const [activeChallengeIdx, setActiveChallengeIdx] = useState<number>(-1);
   const [activeBodyTab, setActiveBodyTab] = useState<"Moon" | "Mars">("Moon");
   const [activeExampleId, setActiveExampleId] =
     useState<string>("moon-lava-tubes");
@@ -780,7 +781,7 @@ export function MissionBriefingLanding({
               =============================================================== */}
               <div
                 id="intro-scroll-track"
-                className="relative h-[250vh] w-full"
+                className="relative mb-24 h-[250vh] w-full"
               >
                 {/* Invisible anchor at 55% of the track so clicking "02 · La Tierra" scrolls into Chapter 2 */}
                 <div
@@ -791,7 +792,7 @@ export function MissionBriefingLanding({
 
                 <div
                   id="capitulo-1"
-                  className="sticky top-0 h-screen w-full overflow-hidden"
+                  className="sticky top-0 min-h-screen w-full overflow-x-hidden"
                 >
                   {/* Subtle left-side vignette strictly for editorial text legibility over space */}
                   <div
@@ -906,7 +907,7 @@ export function MissionBriefingLanding({
                       transform: `translate3d(0, ${ch2TranslateY}px, 0)`,
                       pointerEvents: ch2Opacity < 0.25 ? "none" : "auto",
                     }}
-                    className="absolute inset-0 z-20 mx-auto flex h-full max-w-[1440px] flex-col justify-between px-6 pt-24 pb-10 will-change-transform sm:px-10 lg:px-16 lg:pt-28 lg:pb-12"
+                    className="absolute inset-x-0 top-0 z-20 mx-auto flex min-h-full max-w-[1440px] flex-col justify-between px-6 pt-24 pb-12 will-change-transform sm:px-10 lg:px-16 lg:pt-28 lg:pb-16"
                   >
                     {/* Subtle contrast scrim behind Chapter 2 typography so bright Earth clouds never reduce legibility */}
                     <div
@@ -929,56 +930,68 @@ export function MissionBriefingLanding({
                         </p>
                       </div>
 
-                      {/* Three Minimalist Translucent Cards */}
-                      <div className="mt-8 grid grid-cols-1 gap-5 lg:grid-cols-3 lg:gap-6">
+                      {/* Three Expandable Interactive Glassmorphism Cards */}
+                      <div className="mt-8 grid grid-cols-1 items-start gap-5 lg:grid-cols-3 lg:gap-6">
                         {challengeCards.map((item, idx) => {
                           const isSelected = activeChallengeIdx === idx;
                           return (
-                            <div
+                            <button
                               key={item.id}
-                              className="group flex flex-col justify-between rounded-2xl border border-white/10 bg-[#060d18]/75 p-6 backdrop-blur-md transition-colors hover:border-white/20 sm:p-7"
+                              type="button"
+                              aria-expanded={isSelected}
+                              onClick={() =>
+                                setActiveChallengeIdx(isSelected ? -1 : idx)
+                              }
+                              className={`group flex w-full cursor-pointer flex-col justify-between overflow-visible rounded-xl border bg-[#060d18]/80 p-6 text-left backdrop-blur-md transition-all duration-300 ${
+                                isSelected
+                                  ? "border-[#00D9F5]/45 shadow-[0_12px_36px_rgba(0,0,0,0.45)]"
+                                  : "border-white/10 hover:border-white/25"
+                              }`}
                             >
                               <div>
                                 <div className="flex items-center justify-between gap-2">
-                                  <span className="font-mono text-xs font-medium tracking-wider text-[#00D9F5] uppercase">
+                                  <span className="font-mono text-[11px] font-medium tracking-wider text-[#00D9F5] uppercase">
                                     0{idx + 1} · {item.tag}
                                   </span>
                                   <ScientificIcon
                                     concept={item.concept}
-                                    className="h-4 w-4 text-slate-400"
+                                    className="h-4 w-4 shrink-0 text-slate-400 transition-colors group-hover:text-slate-200"
                                   />
                                 </div>
                                 <h3 className="mt-3.5 text-lg font-semibold leading-snug text-[#F8FAFC] sm:text-xl">
                                   {item.question}
                                 </h3>
-                                <p className="mt-3 text-sm leading-relaxed text-slate-300">
-                                  {isSelected ? item.detail : item.shortAnswer}
-                                </p>
+
+                                {isSelected && (
+                                  <div className="mt-4 space-y-3 overflow-visible transition-all duration-300">
+                                    <p className="text-sm leading-relaxed text-slate-200">
+                                      {item.detail}
+                                    </p>
+                                    <p className="font-mono text-xs text-slate-400 tabular-nums">
+                                      {item.metricValue}
+                                    </p>
+                                  </div>
+                                )}
                               </div>
 
-                              <div className="mt-6 flex flex-wrap items-center justify-between gap-2 border-t border-white/10 pt-4">
-                                <span className="font-mono text-xs text-slate-300 tabular-nums">
-                                  {item.metricValue}
+                              <div className="mt-5 flex items-center justify-between border-t border-white/10 pt-3.5 font-mono text-xs text-[#00D9F5]">
+                                <span>
+                                  {isSelected ? "Ocultar detalles" : "Ver detalles"}
                                 </span>
-                                <button
-                                  type="button"
-                                  onClick={() =>
-                                    setActiveChallengeIdx(
-                                      isSelected ? -1 : idx
-                                    )
-                                  }
-                                  className="font-mono text-xs font-medium text-[#00D9F5] underline-offset-4 hover:underline"
-                                >
-                                  {isSelected ? "Sintetizar" : "Profundizar"}
-                                </button>
+                                <ChevronDown
+                                  aria-hidden="true"
+                                  className={`h-4 w-4 transition-transform duration-300 ${
+                                    isSelected ? "rotate-180" : "rotate-0"
+                                  }`}
+                                />
                               </div>
-                            </div>
+                            </button>
                           );
                         })}
                       </div>
                     </div>
 
-                    <div className="flex items-center justify-end pt-3 font-mono text-[11px] text-[#94A3B8]">
+                    <div className="mt-6 flex items-center justify-end pt-3 font-mono text-[11px] text-[#94A3B8]">
                       <a
                         href="#capas-del-terreno"
                         className="text-[#00D9F5] hover:underline"
