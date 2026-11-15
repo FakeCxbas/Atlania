@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type MouseEvent } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import type { AnalogDataset, DimensionScores } from "@/types/analog";
@@ -370,6 +370,34 @@ export function MissionBriefingLanding({
   const [activePipelineStep, setActivePipelineStep] = useState<number>(0);
   const [focusedLayer, setFocusedLayer] = useState<0 | 1 | 2 | 3 | 4>(0);
 
+  // Always start at the top (01 · El comienzo) on page load/reload without residual #hash
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if ("scrollRestoration" in window.history) {
+      window.history.scrollRestoration = "manual";
+    }
+    if (window.location.hash) {
+      window.history.replaceState(
+        null,
+        "",
+        window.location.pathname + window.location.search
+      );
+    }
+    window.scrollTo(0, 0);
+  }, []);
+
+  const handleAnchorNavigation = (e: MouseEvent<HTMLDivElement>) => {
+    const target = (e.target as HTMLElement | null)?.closest("a[href^='#']");
+    if (!target) return;
+    const href = target.getAttribute("href");
+    if (!href || href.length <= 1) return;
+    const section = document.getElementById(href.slice(1));
+    if (section) {
+      e.preventDefault();
+      section.scrollIntoView({ behavior: "smooth" });
+    }
+  };
+
   // Real ASI inspection state (strictly reading precalculated dataset values)
   const [selectedAsiSiteId, setSelectedAsiSiteId] = useState<string>(
     dataset.sites[0]?.id ?? "galapagos-lava-tubes"
@@ -572,7 +600,10 @@ export function MissionBriefingLanding({
   const isSelectedTargetMars = selectedAsiTarget?.body === "Mars";
 
   return (
-    <div className="min-h-screen bg-[#03070D] text-[#F1F5F9] selection:bg-[#00D9F5]/30 selection:text-[#F1F5F9]">
+    <div
+      onClickCapture={handleAnchorNavigation}
+      className="min-h-screen bg-[#03070D] text-[#F1F5F9] selection:bg-[#00D9F5]/30 selection:text-[#F1F5F9]"
+    >
       {/* Accessibility Skip Link */}
       <a
         href="#capitulo-1"

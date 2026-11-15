@@ -122,6 +122,138 @@ export function evalTerrainHeight(
   return h;
 }
 
+export interface CachedLayerGeometry {
+  topGeo: THREE.PlaneGeometry;
+  skirtGeo: THREE.BufferGeometry;
+}
+
+export interface CachedStrataGeometries {
+  layer1: CachedLayerGeometry;
+  layer2: CachedLayerGeometry;
+  layer3: CachedLayerGeometry;
+  layer4: CachedLayerGeometry;
+}
+
+const cachedGeometriesBySegs = new Map<number, CachedStrataGeometries>();
+
+function buildWatertightSkirtGeometry(
+  size: number,
+  segs: number,
+  heightScale: number,
+  phase: number,
+  bottomZ: number,
+  carveGrottos = false
+): THREE.BufferGeometry {
+  const halfSize = size * 0.5;
+  const vSegs = carveGrottos ? 14 : 1;
+  const positions: number[] = [];
+  const uvs: number[] = [];
+  const indices: number[] = [];
+  let vertOffset = 0;
+
+  const addWall = (
+    getCoord: (t: number) => [number, number],
+    inwardDir: [number, number],
+    uOffset: number,
+    wallIndex: number
+  ) => {
+    for (let row = 0; row <= vSegs; row++) {
+      const v = row / vSegs;
+      for (let i = 0; i <= segs; i++) {
+        const t = i / segs;
+        let [wx, wy] = getCoord(t);
+        const topZ = evalTerrainHeight(wx, wy, heightScale, phase);
+        const wz = bottomZ + (topZ - bottomZ) * v;
+
+        if (carveGrottos && (wallIndex === 0 || wallIndex === 1)) {
+          const grottoCenterT = wallIndex === 0 ? 0.38 : 0.6;
+          const archSpan = Math.exp(-Math.pow((t - grottoCenterT) * 7.2, 2));
+          const archHeight =
+            Math.sin(Math.min(1, v / 0.72) * Math.PI) * (v < 0.72 ? 1 : 0);
+          const recess = archSpan * archHeight * 0.28;
+          wx += inwardDir[0] * recess;
+          wy += inwardDir[1] * recess;
+        }
+
+        const u = uOffset + t;
+        positions.push(wx, wy, wz);
+        uvs.push(u, v);
+      }
+    }
+    const stride = segs + 1;
+    for (let row = 0; row < vSegs; row++) {
+      for (let i = 0; i < segs; i++) {
+        const a = vertOffset + row * stride + i;
+        const b = a + 1;
+        const c = a + stride;
+        const d = c + 1;
+        indices.push(a, c, b, b, c, d);
+      }
+    }
+    vertOffset += (vSegs + 1) * stride;
+  };
+
+  addWall((t) => [-halfSize + t * size, -halfSize], [0, 1], 0, 0);
+  addWall((t) => [halfSize, -halfSize + t * size], [-1, 0], 1, 1);
+  addWall((t) => [halfSize - t * size, halfSize], [0, -1], 2, 2);
+  addWall((t) => [-halfSize, halfSize - t * size], [1, 0], 3, 3);
+
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
+  geo.setAttribute("uv", new THREE.Float32BufferAttribute(uvs, 2));
+  geo.setIndex(indices);
+  geo.computeVertexNormals();
+  return geo;
+}
+
+function buildLayerGeometryPair(
+  slabSize: number,
+  gridSegs: number,
+  heightScale: number,
+  phase: number,
+  slabThickness: number,
+  carveGrottos = false
+): CachedLayerGeometry {
+  const topGeo = new THREE.PlaneGeometry(slabSize, slabSize, gridSegs, gridSegs);
+  const pos = topGeo.attributes.position;
+  for (let i = 0; i < pos.count; i++) {
+    const x = pos.getX(i);
+    const y = pos.getY(i);
+    pos.setZ(i, evalTerrainHeight(x, y, heightScale, phase));
+  }
+  topGeo.computeVertexNormals();
+  const skirtGeo = buildWatertightSkirtGeometry(
+    slabSize,
+    gridSegs,
+    heightScale,
+    phase,
+    -slabThickness,
+    carveGrottos
+  );
+  return { topGeo, skirtGeo };
+}
+
+/**
+ * Module-level memoized terrain geometries (128x128 default) with precomputed vertex normals.
+ * Built once per session and reused across remounts so initial page load is never blocked.
+ */
+export function getOrCreateStrataGeometries(
+  gridSegs = 128,
+  slabSize = 2.0
+): CachedStrataGeometries {
+  const existing = cachedGeometriesBySegs.get(gridSegs);
+  if (existing) return existing;
+
+  const built: CachedStrataGeometries = {
+    layer1: buildLayerGeometryPair(slabSize, gridSegs, 0.45, 0.0, 0.09, false),
+    layer2: buildLayerGeometryPair(slabSize, gridSegs, 1.32, 0.35, 0.16, false),
+    layer3: buildLayerGeometryPair(slabSize, gridSegs, 0.68, 1.15, 0.28, false),
+    layer4: buildLayerGeometryPair(slabSize, gridSegs, 0.56, 2.05, 0.36, true),
+  };
+  cachedGeometriesBySegs.set(gridSegs, built);
+  return built;
+}
+
 function clampByte(v: number): number {
   return v < 0 ? 0 : v > 255 ? 255 : v | 0;
 }
