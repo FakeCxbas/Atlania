@@ -32,6 +32,8 @@ const COUNTRY_TRANSLATIONS: Record<string, string> = {
   Norway: "Noruega",
   Namibia: "Namibia",
   Russia: "Rusia",
+  India: "India",
+  Australia: "Australia",
 };
 
 export const SITE_TRANSLATIONS: Record<string, SiteTranslation> = {
@@ -274,6 +276,46 @@ export const SITE_TRANSLATIONS: Record<string, SiteTranslation> = {
       "Extensas planicies de escoria basáltica suelta y tubos de lava colapsados donde se ensayaron los chasis y trenes de rodaje de los rovers Lunokhod y Marsokhod.",
     caveat:
       "La densa cobertura de nieve invernal y las lluvias subárticas difieren de los mares basálticos lunares.",
+  },
+  "lonar-crater": {
+    name: "Cráter de Meteorito Lonar (Basaltos del Decán)",
+    country: "India",
+    rationale:
+      "Uno de los únicos cráteres de impacto de meteorito en roca basáltica pura de la Tierra; análogo directo e insustituible para el estudio de impactos y eyecciones en los mares lunares y planicies de Marte.",
+    caveat:
+      "El fondo del cráter alberga un lago salino alcalino y vegetación tropical que no existen en la Luna; el régimen monzónico altera la meteorización.",
+  },
+  "pilbara-craton": {
+    name: "Cratón de Pilbara (Formaciones Arcaicas de 3.5 Ga)",
+    country: "Australia",
+    rationale:
+      "Basaltos primitivos, formaciones de hierro bandeado y estromatolitos de 3,500 millones de años; análogo de referencia para el equipo de Perseverance en la búsqueda de biofirmas en Jezero.",
+    caveat:
+      "El cratón ha experimentado meteorización e hidrotermalismo terrestre prolongado durante miles de millones de años.",
+  },
+  "cono-de-arita": {
+    name: "Cono de Arita y Salar de Arizaro (Puna)",
+    country: "Argentina",
+    rationale:
+      "Estructura cónica de arenisca en medio de un salar hiperárido a 3,750 m s.n.m.; análogo para el transporte eólico de sedimentos, evaporitas y dunas en Marte.",
+    caveat:
+      "La colina es de origen sedimentario según la NASA, no un cono volcánico activo; la presión atmosférica sigue siendo superior a la marciana.",
+  },
+  "danakil-erta-ale": {
+    name: "Erta Ale y Cuenca Hidrotermal de Danakil",
+    country: "Etiopía",
+    rationale:
+      "Lago de lava basáltica activa continua y manantiales hidrotermales hiperácidos; análogo para estudiar procesos volcánicos tempranos y extremófilos en Marte.",
+    caveat:
+      "Las temperaturas extremas y emanaciones de gases sulfurosos imponen severos límites operacionales para ensayos de campo.",
+  },
+  "mojave-pisgah": {
+    name: "Cráter y Tubos de Lava Pisgah (Mojave)",
+    country: "Estados Unidos",
+    rationale:
+      "Tubos de lava basáltica cuaternarios y conos de escoria utilizados por NASA JPL para la calibración de movilidad, ruedas y visión de rovers marcianos.",
+    caveat:
+      "El basalto reciente carece de la gruesa capa de regolito lunar; el polvo terrestre posee distinta composición electrostática.",
   },
 };
 

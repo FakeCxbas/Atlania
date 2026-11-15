@@ -25,6 +25,8 @@ export interface RegionPointFeatureProperties {
   best_target_name: string;
   body: 'Moon' | 'Mars';
   rationale: string;
+  is_qualified: boolean;
+  status_label: string;
 }
 
 export interface RegionGeoJsonFeature {
@@ -135,13 +137,16 @@ export function getPointTargetScore(
 }
 
 export function buildSiteRationale(site: AnalogSite, targetId?: string | null): string {
-  const { strengths } = getPointTargetScore(site, targetId);
+  const { asi, strengths } = getPointTargetScore(site, targetId);
+  if (asi < 45) {
+    return `Sin correlación análoga (${asi.toFixed(1)}% ASI) · Ruido orográfico o biosfera activa`;
+  }
   if (strengths.length > 0) {
     return strengths.slice(0, 2).join(' · ');
   }
   const slope = site.dem_telemetry.dem_slope_deg.toFixed(1);
   const meanTemp = ((site.climatology.tmax_c + site.climatology.tmin_c) / 2).toFixed(1);
-  return `Elevation ${Math.round(site.elevation_m)} m, ${slope} deg slope, ${meanTemp} C mean`;
+  return `Candidato exploratorio: ${Math.round(site.elevation_m)} m, ${slope}° pend, ${meanTemp}°C`;
 }
 
 export function buildRegionGeoJson(
@@ -154,6 +159,13 @@ export function buildRegionGeoJson(
 
   const features: RegionGeoJsonFeature[] = sortedPoints.map((site, idx) => {
     const scored = getPointTargetScore(site, targetId);
+    const isQualified = scored.asi >= 45;
+    const statusLabel = scored.asi >= 65
+      ? "Análogo Viable"
+      : scored.asi >= 45
+      ? "Candidato Exploratorio"
+      : "Sin Correlación (Ruido)";
+
     return {
       type: 'Feature',
       geometry: {
@@ -170,6 +182,8 @@ export function buildRegionGeoJson(
         best_target_name: scored.targetName,
         body: scored.body,
         rationale: buildSiteRationale(site, targetId),
+        is_qualified: isQualified,
+        status_label: statusLabel,
       },
     };
   });
