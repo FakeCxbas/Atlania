@@ -131,11 +131,18 @@ export function PlanetScene({
     );
     camera.position.set(0, 0.35, 9.2);
 
-    // Clean, balanced illumination: soft AmbientLight + lateral DirectionalLight
-    const ambientLight = new THREE.AmbientLight(0x93c5fd, 0.35);
+    // Balanced planetary & terrain illumination: atmospheric ambient/hemisphere + frontal fill + solar key
+    const ambientLight = new THREE.AmbientLight(0x4a7ab5, 0.55);
     scene.add(ambientLight);
 
-    const sunLight = new THREE.DirectionalLight(0xfffbeb, 3.0);
+    const hemiLight = new THREE.HemisphereLight(0x7dd3fc, 0x1e3a5f, 0.45);
+    scene.add(hemiLight);
+
+    const frontalFillLight = new THREE.DirectionalLight(0xe0f2fe, 0.45);
+    frontalFillLight.position.set(0, 1.5, 8);
+    scene.add(frontalFillLight);
+
+    const sunLight = new THREE.DirectionalLight(0xfffbeb, 2.8);
     sunLight.position.set(8, 6, 7);
     if (!isLowPowerDevice) {
       sunLight.castShadow = true;
@@ -212,8 +219,8 @@ export function PlanetScene({
     );
     const earthMat = new THREE.MeshStandardMaterial({
       map: earthTexture,
-      roughness: 0.65,
-      metalness: 0.05,
+      roughness: 0.75,
+      metalness: 0.0,
     });
     const earthMesh = new THREE.Mesh(earthGeo, earthMat);
     earthMesh.rotation.z = 0.18;
@@ -629,16 +636,21 @@ export function PlanetScene({
         marsMesh.rotation.y = elapsed * 0.045 + p * 1.6;
       }
 
-      // Chapter 3 Volumetric 3D Terrain Layers separation, scroll-out upward exit & rotation
+      // Chapter 3 Volumetric 3D Terrain Layers: crisp 100% solid entry, scroll separation & upward exit
       const showTerrain = ch === 3 && terrP < 0.995;
       terrainGroup.visible = showTerrain;
       if (showTerrain) {
-        // Scroll the 3D block upward out of frame as the user scrolls past #terrain-3d-track
-        // into "De los datos terrestres a la exploración planetaria"
+        const enterRaw = Math.max(0, Math.min(1, terrP / 0.14));
+        const enterT = enterRaw * enterRaw * (3 - 2 * enterRaw);
         const exitT = Math.max(0, Math.min(1, (terrP - 0.72) / 0.28));
-        terrainGroup.position.set(1.52, -0.06 + exitT * 5.2, 1.45);
+        const entryOffsetY = (1 - enterT) * -1.35;
+        const entryOffsetX = (1 - enterT) * 0.45;
+        terrainGroup.position.set(
+          1.52 + entryOffsetX,
+          -0.06 + entryOffsetY + exitT * 5.2,
+          1.45
+        );
         terrainGroup.scale.setScalar(0.84);
-        const revealProgress = Math.max(0, Math.min(1, terrP));
         const effectiveSep = Math.max(0, Math.min(1, sep));
 
         // Clamped vertical spacing (~48% tighter max gap so all 4 layers stay framed in viewport)
@@ -680,18 +692,13 @@ export function PlanetScene({
           },
           idx: 1 | 2 | 3 | 4
         ) => {
-          const staggerStart = (idx - 1) * 0.12;
-          const staggerFade = Math.max(
-            0,
-            Math.min(1, (revealProgress - staggerStart) / 0.22)
-          );
           const active = fLayer === 0 || fLayer === idx;
-          const targetAlpha = (active ? 0.98 : 0.14) * staggerFade;
-          stratum.surfaceMat.opacity = targetAlpha;
-          stratum.sideMat.opacity = (active ? 0.98 : 0.12) * staggerFade;
+          stratum.surfaceMat.transparent = !active;
+          stratum.surfaceMat.opacity = active ? 1.0 : 0.16;
+          stratum.sideMat.transparent = !active;
+          stratum.sideMat.opacity = active ? 1.0 : 0.14;
           if (stratum.atmoVeilUniforms) {
-            stratum.atmoVeilUniforms.uOpacity.value =
-              (active ? 0.22 : 0.03) * staggerFade;
+            stratum.atmoVeilUniforms.uOpacity.value = active ? 0.22 : 0.03;
           }
         };
 
@@ -701,8 +708,7 @@ export function PlanetScene({
         applyFocusOpacity(layer4Subsurface, 4);
 
         const layer4Active = fLayer === 0 || fLayer === 4;
-        const layer4Fade = Math.max(0, Math.min(1, (revealProgress - 0.36) / 0.22));
-        lavaGlowLight.intensity = (layer4Active ? 0.45 : 0.06) * layer4Fade;
+        lavaGlowLight.intensity = layer4Active ? 0.45 : 0.06;
       }
 
       renderer.render(scene, camera);
