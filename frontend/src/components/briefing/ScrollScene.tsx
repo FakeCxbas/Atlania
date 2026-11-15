@@ -92,7 +92,7 @@ export function ScrollScene({
       if (terrainTrackEl) {
         ScrollTrigger.create({
           trigger: terrainTrackEl,
-          start: "top top",
+          start: "top 15%",
           end: "bottom bottom",
           scrub: 0.4,
           onEnter: () =>
