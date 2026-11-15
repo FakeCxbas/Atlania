@@ -899,17 +899,17 @@ export function MissionBriefingLanding({
                       <svg
                         viewBox="0 0 220 220"
                         aria-hidden="true"
-                        className="pointer-events-none absolute top-[46%] right-[44%] -z-10 h-[150px] w-[150px] origin-top-right opacity-65 transition-opacity duration-300 group-hover:opacity-95 sm:h-[210px] sm:w-[210px]"
+                        className="pointer-events-none absolute top-[46%] right-[44%] -z-10 h-[155px] w-[155px] origin-top-right opacity-70 transition-opacity duration-300 group-hover:opacity-100 sm:h-[220px] sm:w-[220px]"
                       >
                         <defs>
                           <linearGradient id="beam-sentinel" x1="100%" y1="0%" x2="10%" y2="95%">
-                            <stop offset="0%" stopColor="#00D9F5" stopOpacity="0.48" />
-                            <stop offset="45%" stopColor="#38BDF8" stopOpacity="0.16" />
+                            <stop offset="0%" stopColor="#00D9F5" stopOpacity="0.52" />
+                            <stop offset="45%" stopColor="#38BDF8" stopOpacity="0.18" />
                             <stop offset="100%" stopColor="#00D9F5" stopOpacity="0" />
                           </linearGradient>
                         </defs>
-                        <polygon points="210,10 15,150 95,215" fill="url(#beam-sentinel)" />
-                        <line x1="210" y1="10" x2="52" y2="185" stroke="#00D9F5" strokeOpacity="0.32" strokeWidth="1" strokeDasharray="4 5" />
+                        <polygon points="210,10 10,155 95,215" fill="url(#beam-sentinel)" />
+                        <line x1="210" y1="10" x2="50" y2="188" stroke="#00D9F5" strokeOpacity="0.34" strokeWidth="1" strokeDasharray="4 5" />
                       </svg>
 
                       <div
@@ -948,21 +948,23 @@ export function MissionBriefingLanding({
                         </div>
                       </div>
 
-                      <span className="mt-1 inline-flex items-center gap-1.5 rounded-full border border-[#00D9F5]/35 bg-[#060913]/85 px-2.5 py-1 font-mono text-[10px] font-semibold tracking-wider text-slate-200 backdrop-blur-md transition-colors group-hover:border-[#00D9F5] group-hover:text-[#00D9F5] sm:text-[11px]">
-                        <span className="h-1.5 w-1.5 rounded-full bg-[#00D9F5] animate-pulse" aria-hidden="true" />
+                      {/* Leader-line callout (no box) */}
+                      <span className="mt-1 inline-flex items-center gap-2 font-mono text-[10px] font-semibold tracking-[0.16em] text-slate-100 drop-shadow-[0_2px_8px_rgba(0,0,0,0.95)] transition-colors group-hover:text-[#00D9F5] sm:text-[11px]">
+                        <span className="h-1.5 w-1.5 rounded-full bg-[#00D9F5] shadow-[0_0_8px_#00D9F5]" aria-hidden="true" />
+                        <span className="h-px w-7 bg-gradient-to-r from-[#00D9F5] to-[#00D9F5]/25 transition-all duration-300 group-hover:w-10" aria-hidden="true" />
                         SENTINEL-1 · C-SAR
                       </span>
                     </button>
                   </div>
 
-                  {/* 2. Suomi NPP (VIIRS / NASA GIBS) — Mid-orbit, pointing down-right toward Earth */}
+                  {/* 2. Suomi NPP (VIIRS / NASA GIBS) — Mid-orbit, pointing down-left toward Earth */}
                   <div
                     style={{
                       opacity: satOpacity * 0.94,
                       transform: `translate3d(${suomiX}px, ${suomiY}px, 0) scale(${suomiScale})`,
                       pointerEvents: satOpacity < 0.15 ? "none" : "auto",
                     }}
-                    className="hidden sm:absolute sm:right-[27%] sm:bottom-[39%] sm:z-30 sm:block sm:w-[190px] lg:right-[30%] lg:bottom-[41%] lg:w-[230px] xl:w-[255px]"
+                    className="hidden sm:absolute sm:right-[26%] sm:bottom-[41%] sm:z-30 sm:block sm:w-[190px] lg:right-[29%] lg:bottom-[43%] lg:w-[230px] xl:w-[255px]"
                   >
                     <button
                       type="button"
@@ -970,25 +972,25 @@ export function MissionBriefingLanding({
                       aria-label="Inspeccionar telemetría del satélite NASA/NOAA Suomi NPP"
                       className="group relative block w-full cursor-pointer rounded-2xl text-left transition-transform duration-300 hover:scale-[1.04] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00D9F5] focus-visible:ring-offset-4 focus-visible:ring-offset-[#03070D]"
                     >
-                      {/* Nadir Reflector / VIIRS Scan Cone pointing down toward Earth */}
+                      {/* Nadir Reflector / VIIRS Scan Cone pointing down-left onto Earth */}
                       <svg
-                        viewBox="0 0 200 200"
+                        viewBox="0 0 210 210"
                         aria-hidden="true"
-                        className="pointer-events-none absolute top-[62%] left-[38%] -z-10 h-[145px] w-[145px] opacity-65 transition-opacity duration-300 group-hover:opacity-95 lg:h-[175px] lg:w-[175px]"
+                        className="pointer-events-none absolute top-[58%] right-[20%] -z-10 h-[150px] w-[150px] opacity-70 transition-opacity duration-300 group-hover:opacity-100 lg:h-[180px] lg:w-[180px]"
                       >
                         <defs>
-                          <linearGradient id="beam-suomi" x1="30%" y1="0%" x2="70%" y2="100%">
-                            <stop offset="0%" stopColor="#00D9F5" stopOpacity="0.45" />
-                            <stop offset="50%" stopColor="#38BDF8" stopOpacity="0.14" />
+                          <linearGradient id="beam-suomi" x1="85%" y1="5%" x2="20%" y2="95%">
+                            <stop offset="0%" stopColor="#00D9F5" stopOpacity="0.48" />
+                            <stop offset="50%" stopColor="#38BDF8" stopOpacity="0.15" />
                             <stop offset="100%" stopColor="#00D9F5" stopOpacity="0" />
                           </linearGradient>
                         </defs>
-                        <polygon points="75,5 25,185 155,165" fill="url(#beam-suomi)" />
-                        <line x1="75" y1="5" x2="90" y2="175" stroke="#00D9F5" strokeOpacity="0.28" strokeWidth="1" strokeDasharray="4 5" />
+                        <polygon points="175,8 15,155 105,198" fill="url(#beam-suomi)" />
+                        <line x1="175" y1="8" x2="60" y2="178" stroke="#00D9F5" strokeOpacity="0.3" strokeWidth="1" strokeDasharray="4 5" />
                       </svg>
 
                       <div className="mb-sat-float-c relative">
-                        <div className="relative rotate-[10deg]">
+                        <div className="relative rotate-[26deg]">
                           <div
                             className="absolute inset-6 -z-10 rounded-full bg-[radial-gradient(circle_at_35%_35%,rgba(56,189,248,0.2),transparent_70%)] blur-2xl"
                             aria-hidden="true"
@@ -1018,21 +1020,23 @@ export function MissionBriefingLanding({
                         </div>
                       </div>
 
-                      <span className="mt-1 inline-flex items-center gap-1.5 rounded-full border border-[#00D9F5]/35 bg-[#060913]/85 px-2.5 py-1 font-mono text-[10px] font-semibold tracking-wider text-slate-200 backdrop-blur-md transition-colors group-hover:border-[#00D9F5] group-hover:text-[#00D9F5]">
-                        <span className="h-1.5 w-1.5 rounded-full bg-[#00D9F5] animate-pulse" aria-hidden="true" />
+                      {/* Leader-line callout (no box) */}
+                      <span className="mt-2 inline-flex items-center gap-2 font-mono text-[10px] font-semibold tracking-[0.16em] text-slate-100 drop-shadow-[0_2px_8px_rgba(0,0,0,0.95)] transition-colors group-hover:text-[#00D9F5] sm:text-[11px]">
+                        <span className="h-1.5 w-1.5 rounded-full bg-[#00D9F5] shadow-[0_0_8px_#00D9F5]" aria-hidden="true" />
+                        <span className="h-px w-7 bg-gradient-to-r from-[#00D9F5] to-[#00D9F5]/25 transition-all duration-300 group-hover:w-10" aria-hidden="true" />
                         SUOMI NPP · VIIRS
                       </span>
                     </button>
                   </div>
 
-                  {/* 3. Landsat 9 (OLI-2 / TIRS-2) — Primary foreground satellite, pointing up-left toward Earth */}
+                  {/* 3. Landsat 9 (OLI-2 / TIRS-2) — Primary foreground satellite, pointing left onto Earth */}
                   <div
                     style={{
                       opacity: satOpacity,
                       transform: `translate3d(${landsatX}px, ${landsatY}px, 0) scale(${landsatScale})`,
                       pointerEvents: satOpacity < 0.15 ? "none" : "auto",
                     }}
-                    className="absolute right-[-3%] bottom-[16%] z-30 w-[260px] select-none will-change-transform sm:right-[3%] sm:bottom-[12%] sm:w-[390px] lg:right-[4%] lg:bottom-[12%] lg:w-[480px] xl:w-[530px]"
+                    className="absolute right-[-3%] bottom-[17%] z-30 w-[260px] select-none will-change-transform sm:right-[3%] sm:bottom-[14%] sm:w-[390px] lg:right-[4%] lg:bottom-[14%] lg:w-[480px] xl:w-[530px]"
                   >
                     <button
                       type="button"
@@ -1040,25 +1044,25 @@ export function MissionBriefingLanding({
                       aria-label="Inspeccionar telemetría del satélite NASA/USGS Landsat 9"
                       className="group relative block w-full cursor-pointer rounded-2xl text-left transition-transform duration-300 hover:scale-[1.03] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00D9F5] focus-visible:ring-offset-4 focus-visible:ring-offset-[#03070D]"
                     >
-                      {/* Nadir Reflector / OLI-2 + TIRS-2 Scan Cone pointing up-left toward Earth */}
+                      {/* Nadir Reflector / OLI-2 + TIRS-2 Scan Cone pointing left onto Earth's globe */}
                       <svg
-                        viewBox="0 0 240 200"
+                        viewBox="0 0 260 180"
                         aria-hidden="true"
-                        className="pointer-events-none absolute -top-[28%] -left-[18%] -z-10 h-[150px] w-[180px] opacity-70 transition-opacity duration-300 group-hover:opacity-100 sm:h-[200px] sm:w-[240px]"
+                        className="pointer-events-none absolute top-[18%] -left-[32%] -z-10 h-[145px] w-[200px] opacity-75 transition-opacity duration-300 group-hover:opacity-100 sm:h-[190px] sm:w-[260px]"
                       >
                         <defs>
-                          <linearGradient id="beam-landsat" x1="85%" y1="90%" x2="10%" y2="10%">
-                            <stop offset="0%" stopColor="#00D9F5" stopOpacity="0.52" />
+                          <linearGradient id="beam-landsat" x1="95%" y1="55%" x2="5%" y2="45%">
+                            <stop offset="0%" stopColor="#00D9F5" stopOpacity="0.54" />
                             <stop offset="45%" stopColor="#38BDF8" stopOpacity="0.18" />
                             <stop offset="100%" stopColor="#00D9F5" stopOpacity="0" />
                           </linearGradient>
                         </defs>
-                        <polygon points="225,180 10,75 85,10" fill="url(#beam-landsat)" />
-                        <line x1="225" y1="180" x2="45" y2="40" stroke="#00D9F5" strokeOpacity="0.34" strokeWidth="1" strokeDasharray="4 5" />
+                        <polygon points="250,95 10,35 18,145" fill="url(#beam-landsat)" />
+                        <line x1="250" y1="95" x2="18" y2="90" stroke="#00D9F5" strokeOpacity="0.34" strokeWidth="1" strokeDasharray="4 5" />
                       </svg>
 
                       <div className="mb-sat-float-a relative">
-                        <div className="relative rotate-[8deg]">
+                        <div className="relative rotate-[18deg]">
                           <div
                             className="absolute inset-6 -z-10 rounded-full bg-[radial-gradient(circle_at_35%_35%,rgba(56,189,248,0.24),transparent_68%)] blur-2xl"
                             aria-hidden="true"
@@ -1089,8 +1093,10 @@ export function MissionBriefingLanding({
                         </div>
                       </div>
 
-                      <span className="mt-1 inline-flex items-center gap-1.5 rounded-full border border-[#00D9F5]/45 bg-[#060913]/88 px-3 py-1 font-mono text-[10px] font-semibold tracking-wider text-[#F1F5F9] backdrop-blur-md transition-colors group-hover:border-[#00D9F5] group-hover:text-[#00D9F5] sm:text-[11px]">
-                        <span className="h-1.5 w-1.5 rounded-full bg-[#00D9F5] animate-pulse" aria-hidden="true" />
+                      {/* Leader-line callout (no box, right-aligned to clear centered CTA buttons) */}
+                      <span className="mt-2 flex w-full items-center justify-end gap-2 pr-2 font-mono text-[10px] font-semibold tracking-[0.16em] text-[#F1F5F9] drop-shadow-[0_2px_8px_rgba(0,0,0,0.95)] transition-colors group-hover:text-[#00D9F5] sm:pr-6 sm:text-[11px]">
+                        <span className="h-1.5 w-1.5 rounded-full bg-[#00D9F5] shadow-[0_0_8px_#00D9F5]" aria-hidden="true" />
+                        <span className="h-px w-8 bg-gradient-to-r from-[#00D9F5] to-[#00D9F5]/25 transition-all duration-300 group-hover:w-11" aria-hidden="true" />
                         LANDSAT 9 · OLI-2 / TIRS-2
                       </span>
                     </button>
@@ -1110,7 +1116,7 @@ export function MissionBriefingLanding({
                         NASA SPACE APPS CHALLENGE · OBSERVATORIO PLANETARIO
                       </p>
 
-                      <h1 className="mt-4 font-serif text-6xl font-normal tracking-wide text-[#E4DFD5] sm:text-7xl lg:text-[6.5rem] lg:leading-[0.96]">
+                      <h1 className="atlania-hero-title mt-4 text-6xl font-normal tracking-[0.06em] sm:text-7xl lg:text-[6.75rem] lg:leading-[0.95]">
                         ATLANIA
                       </h1>
 
@@ -1121,22 +1127,11 @@ export function MissionBriefingLanding({
                       <p className="mt-5 max-w-xl text-xl font-medium leading-snug text-slate-100 sm:text-2xl">
                         ¿Y si para comprender otros planetas primero tuviéramos que volver a descubrir el nuestro?
                       </p>
+                    </div>
 
-                      {/* Palabras clave claras de alto contraste (UX) */}
-                      <div className="mt-6 flex flex-wrap items-center gap-2.5">
-                        <span className="rounded-full border border-[#00D9F5]/45 bg-[#03070D]/80 px-4 py-1.5 text-xs font-semibold tracking-wide text-[#00D9F5] backdrop-blur-md sm:text-sm">
-                          Teledetección Satelital
-                        </span>
-                        <span className="rounded-full border border-[#C5A36D]/50 bg-[#03070D]/80 px-4 py-1.5 text-xs font-semibold tracking-wide text-[#E4DFD5] backdrop-blur-md sm:text-sm">
-                          Índice Científico ASI
-                        </span>
-                        <span className="rounded-full border border-[#E07A5F]/45 bg-[#03070D]/80 px-4 py-1.5 text-xs font-semibold tracking-wide text-[#E07A5F] backdrop-blur-md sm:text-sm">
-                          Análogos Luna y Marte
-                        </span>
-                      </div>
-
-                      {/* Primary CTAs */}
-                      <div className="mt-8 flex flex-wrap items-center gap-4">
+                    {/* Primary CTAs centered at bottom above telemetry bar */}
+                    <div className="w-full">
+                      <div className="mb-5 flex flex-wrap items-center justify-center gap-4">
                         <Link
                           href="/explorer"
                           className="inline-flex min-h-12 items-center gap-3 rounded-full bg-[#C5A36D] px-7 py-3.5 text-sm font-bold text-[#101321] shadow-lg transition-all hover:bg-[#E4DFD5]"
@@ -1156,10 +1151,9 @@ export function MissionBriefingLanding({
                           />
                         </a>
                       </div>
-                    </div>
 
-                    {/* High-contrast frosted bottom telemetry bar */}
-                    <div className="flex flex-wrap items-center justify-between gap-4 rounded-xl border border-white/15 bg-[#03070D]/80 px-4 py-3 text-xs text-slate-200 backdrop-blur-md sm:text-sm">
+                      {/* High-contrast frosted bottom telemetry bar */}
+                      <div className="flex flex-wrap items-center justify-between gap-4 rounded-xl border border-white/15 bg-[#03070D]/80 px-4 py-3 text-xs text-slate-200 backdrop-blur-md sm:text-sm">
                       <div className="flex flex-wrap items-center gap-6 font-mono">
                         <span>
                           CATÁLOGO:{" "}
@@ -1178,6 +1172,7 @@ export function MissionBriefingLanding({
                       <span className="font-mono text-xs font-semibold tracking-[0.16em] text-slate-200 uppercase">
                         Desplaza para aproximarte a la Tierra ↓
                       </span>
+                      </div>
                     </div>
                   </div>
 

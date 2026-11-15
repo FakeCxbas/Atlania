@@ -27,6 +27,24 @@
   scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
 }
 
+@font-face {
+  font-family: "Hello Paris";
+  src: url("/fonts/HelloParis.woff2") format("woff2"),
+       url("/fonts/HelloParisSerif.ttf") format("truetype");
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+.atlania-hero-title {
+  font-family: "Hello Paris", var(--font-cormorant), Georgia, serif !important;
+  color: #f8fafc;
+  text-shadow:
+    0 0 12px rgba(255, 255, 255, 0.72),
+    0 0 32px rgba(224, 247, 255, 0.45),
+    0 0 64px rgba(56, 189, 248, 0.28);
+}
+
 @theme inline {
   --color-background: var(--bg-space);
   --color-foreground: var(--text-primary);
