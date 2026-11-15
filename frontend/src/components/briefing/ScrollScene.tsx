@@ -15,7 +15,7 @@ export interface ScrollState {
 
 interface ScrollSceneProps {
   comparisonBody: "Moon" | "Mars";
-  focusedLayer: 0 | 1 | 2 | 3 | 4;
+  focusedLayer: -1 | 0 | 1 | 2 | 3 | 4;
   children: (state: ScrollState) => React.ReactNode;
 }
 
@@ -92,9 +92,9 @@ export function ScrollScene({
       if (terrainTrackEl) {
         ScrollTrigger.create({
           trigger: terrainTrackEl,
-          start: "top 65%",
-          end: "bottom 35%",
-          scrub: 0.55,
+          start: "top top",
+          end: "bottom bottom",
+          scrub: 0.4,
           onToggle: (self) => {
             if (self.isActive) {
               setScrollState((prev) => ({ ...prev, activeChapter: 3 }));
@@ -105,7 +105,7 @@ export function ScrollScene({
               ...prev,
               activeChapter: 3,
               terrainProgress: self.progress,
-              layerSeparation: Math.min(1, Math.max(0, (self.progress - 0.12) * 1.35)),
+              layerSeparation: Math.min(1, Math.max(0.15, 0.15 + self.progress * 0.85)),
             }));
           },
         });
@@ -144,6 +144,22 @@ export function ScrollScene({
     };
   }, []);
 
+  const scrollActiveStratum: 1 | 2 | 3 | 4 =
+    scrollState.layerSeparation < 0.28
+      ? 1
+      : scrollState.layerSeparation < 0.56
+      ? 2
+      : scrollState.layerSeparation < 0.84
+      ? 3
+      : 4;
+
+  const effectiveFocusedLayer: 0 | 1 | 2 | 3 | 4 =
+    focusedLayer === -1
+      ? 0
+      : focusedLayer === 0
+      ? scrollActiveStratum
+      : focusedLayer;
+
   return (
     <div ref={rootRef} className="relative min-h-screen">
       {/* Continuous 3D WebGL Planetary & Stratified Terrain Stage */}
@@ -154,7 +170,7 @@ export function ScrollScene({
         activeChapter={scrollState.activeChapter}
         layerSeparation={scrollState.layerSeparation}
         comparisonBody={comparisonBody}
-        focusedLayer={focusedLayer}
+        focusedLayer={effectiveFocusedLayer}
       />
 
       {/* Minimalist Editorial 5-Chapter Progress Rail (Desktop) */}

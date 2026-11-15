@@ -813,15 +813,30 @@ export function PlanetScene({
           stratum: BuiltStratum,
           idx: 1 | 2 | 3 | 4
         ) => {
-          stratum.surfaceMat.transparent = false;
-          stratum.surfaceMat.opacity = 1.0;
-          stratum.sideMat.transparent = false;
-          stratum.sideMat.opacity = 1.0;
+          const isAllMode = fLayer <= 0;
+          const isActive = isAllMode || fLayer === idx;
+          const targetOpacity = isActive ? 1.0 : 0.18;
+          const nextOpacity = THREE.MathUtils.lerp(
+            stratum.surfaceMat.opacity,
+            targetOpacity,
+            stratumDamp
+          );
+          const needsTransparency = nextOpacity < 0.99;
+
+          stratum.surfaceMat.transparent = needsTransparency;
+          stratum.surfaceMat.opacity = nextOpacity;
+          stratum.surfaceMat.depthWrite = !needsTransparency;
+          stratum.sideMat.transparent = needsTransparency;
+          stratum.sideMat.opacity = nextOpacity;
+          stratum.sideMat.depthWrite = !needsTransparency;
+
           if (stratum.atmoVeilUniforms) {
-            stratum.atmoVeilUniforms.uOpacity.value = 0.22 * easedPresence;
+            const atmoFactor = fLayer > 0 ? (fLayer === 1 ? 1.55 : 0.2) : 1.0;
+            stratum.atmoVeilUniforms.uOpacity.value =
+              0.22 * easedPresence * atmoFactor;
           }
-          const active = fLayer === 0 || fLayer === idx;
-          const targetStratumScale = active && fLayer !== 0 ? 1.05 : 1.0;
+
+          const targetStratumScale = fLayer > 0 ? (isActive ? 1.08 : 0.92) : 1.0;
           const nextScale = THREE.MathUtils.lerp(
             stratum.group.scale.x,
             targetStratumScale,
@@ -835,7 +850,8 @@ export function PlanetScene({
         applyLayerFocus(layer2Relief, 2);
         applyLayerFocus(layer3Geology, 3);
         applyLayerFocus(layer4Subsurface, 4);
-        lavaGlowLight.intensity = 0.95 * easedPresence;
+        const lavaFocusFactor = fLayer > 0 ? (fLayer === 4 ? 1.45 : 0.22) : 1.0;
+        lavaGlowLight.intensity = 0.95 * easedPresence * lavaFocusFactor;
       }
 
       renderer.render(scene, camera);
