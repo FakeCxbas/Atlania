@@ -7,8 +7,10 @@ interface MissionChapterProps {
   chapterNumber: string;
   chapterTitle: string;
   eyebrow: string;
-  headline: string;
+  headline?: string;
+  title?: string;
   lead?: string;
+  subtitle?: string;
   rightSlot?: React.ReactNode;
   children: React.ReactNode;
   className?: string;
@@ -16,7 +18,7 @@ interface MissionChapterProps {
 
 /**
  * Editorial chapter layout wrapper designed for Awwwards-grade negative space,
- * typographic hierarchy, and restrained aerospace framing without excessive borders or glow.
+ * typographic hierarchy, and clean hairline dividers without boxy wrappers or glow.
  */
 export function MissionChapter({
   id,
@@ -24,38 +26,44 @@ export function MissionChapter({
   chapterTitle,
   eyebrow,
   headline,
+  title,
   lead,
+  subtitle,
   rightSlot,
   children,
   className = "",
 }: MissionChapterProps) {
+  const resolvedHeadline = headline ?? title ?? "";
+  const resolvedLead = lead ?? subtitle;
+
   return (
     <section
       id={id}
       data-chapter-id={id}
       aria-labelledby={`${id}-heading`}
-      className={`relative z-10 mx-auto max-w-7xl px-4 py-24 sm:px-6 sm:py-32 lg:px-8 ${className}`}
+      className={`relative z-10 mx-auto max-w-7xl px-6 py-28 sm:px-12 sm:py-36 lg:px-16 ${className}`}
     >
       {/* Editorial Chapter Header */}
-      <div className="flex flex-col justify-between gap-8 border-b border-slate-800/70 pb-10 lg:flex-row lg:items-end">
+      <div className="flex flex-col justify-between gap-8 border-b border-white/10 pb-12 lg:flex-row lg:items-end">
         <div className="max-w-3xl">
-          <div className="flex flex-wrap items-center gap-3 font-mono text-xs tracking-[0.18em]">
-            <span className="inline-flex items-center rounded-full border border-[#00D9F5]/35 bg-[#0A1624]/80 px-3 py-1 font-semibold text-[#00D9F5]">
-              CAPÍTULO {chapterNumber} — {chapterTitle.toUpperCase()}
+          <div className="flex flex-wrap items-center gap-3 font-mono text-xs tracking-[0.2em] uppercase">
+            <span className="font-semibold text-[#00D9F5]">
+              {chapterNumber} · {chapterTitle}
             </span>
-            <span className="text-[#94A3B8] uppercase">{eyebrow}</span>
+            <span className="h-px w-6 bg-white/25" />
+            <span className="text-[#94A3B8]">{eyebrow}</span>
           </div>
 
           <h2
             id={`${id}-heading`}
-            className="mt-5 text-3xl font-bold tracking-tight text-[#F1F5F9] sm:text-5xl sm:leading-[1.1]"
+            className="mt-5 text-3xl font-bold tracking-tight text-[#F1F5F9] sm:text-5xl sm:leading-[1.06]"
           >
-            {headline}
+            {resolvedHeadline}
           </h2>
 
-          {lead && (
+          {resolvedLead && (
             <p className="mt-5 text-base leading-relaxed text-[#94A3B8] sm:text-lg">
-              {lead}
+              {resolvedLead}
             </p>
           )}
         </div>
@@ -63,7 +71,7 @@ export function MissionChapter({
         {rightSlot && <div className="shrink-0">{rightSlot}</div>}
       </div>
 
-      <div className="mt-12">{children}</div>
+      <div className="mt-14">{children}</div>
     </section>
   );
 }
