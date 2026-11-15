@@ -46,6 +46,46 @@ export function MethodologyDialog({ dataset }: { dataset: AnalogDataset }) {
           </button>
         </div>
         <div className="mt-4 space-y-5 text-sm leading-relaxed">
+          <section className="rounded-lg border border-slate-700/80 bg-[#060913]/70 p-4">
+            <h3 className="font-semibold text-[#D4AF37]">
+              Metodología de Desarrollo y Diseño
+            </h3>
+            <div className="mt-3 grid gap-2.5 sm:grid-cols-2">
+              <div className="rounded border border-slate-800 bg-[#0D1424]/80 p-2.5">
+                <span className="block font-mono text-xs font-semibold text-cyan-300">
+                  01 · Design Thinking
+                </span>
+                <p className="mt-1 text-xs text-slate-300">
+                  Ideación centrada en investigadores espaciales para identificar análogos terrestres en minutos sin procesar hojas de cálculo manuales.
+                </p>
+              </div>
+              <div className="rounded border border-slate-800 bg-[#0D1424]/80 p-2.5">
+                <span className="block font-mono text-xs font-semibold text-[#F5B82E]">
+                  02 · Scrum / Entregas Ágiles
+                </span>
+                <p className="mt-1 text-xs text-slate-300">
+                  Desarrollo iterativo por sprints cortos: calibración del motor ASI, catálogo global, visor 3D interactivo y exportación GIS.
+                </p>
+              </div>
+              <div className="rounded border border-slate-800 bg-[#0D1424]/80 p-2.5">
+                <span className="block font-mono text-xs font-semibold text-emerald-300">
+                  03 · Metodología Científica ASI
+                </span>
+                <p className="mt-1 text-xs text-slate-300">
+                  Cruce cuantitativo de telemetría satelital NASA POWER y modelos digitales de elevación frente a archivos PDS de Luna y Marte.
+                </p>
+              </div>
+              <div className="rounded border border-slate-800 bg-[#0D1424]/80 p-2.5">
+                <span className="block font-mono text-xs font-semibold text-slate-200">
+                  04 · Usabilidad UX / HCI
+                </span>
+                <p className="mt-1 text-xs text-slate-300">
+                  Navegación con breadcrumbs, alto contraste WCAG AA, métricas clave y retroalimentación continua de ubicación al usuario.
+                </p>
+              </div>
+            </div>
+          </section>
+
           <section>
             <h3 className="font-semibold text-cyan-300">
               ASI Exploratorio de 5 Ejes

@@ -11,7 +11,6 @@ import { downloadDossier } from "@/lib/dossier";
 import { SideBySideComparison } from "@/components/SideBySideComparison";
 import { AsiRadarChart } from "@/components/AsiRadarChart";
 import {
-  Compass,
   X,
   Thermometer,
   Wind,
@@ -83,7 +82,11 @@ export function TelemetryDrawer({
         aria-label="Ficha de telemetría de sitio"
         className="flex h-full flex-col items-center justify-center p-6 text-center"
       >
-        <Compass className="mb-3 h-8 w-8 text-[#F5B82E]" aria-hidden="true" />
+        <img
+          src="/brand/atlania-isotipo-3d.png"
+          alt="ATLANIA"
+          className="mb-3 h-14 w-14 rounded-full object-contain drop-shadow-[0_0_16px_rgba(247,238,215,0.2)]"
+        />
         <h2 className="text-base font-semibold text-[#F1F5F9]">
           Selecciona un Sitio Análogo
         </h2>

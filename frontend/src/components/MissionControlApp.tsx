@@ -12,6 +12,7 @@ import {
   type RegionEvaluationResult,
 } from "@/lib/evaluateRegion";
 import { AnalogMap, type CameraTarget } from "@/components/AnalogMap";
+import { AtlaniaIsotipo } from "@/components/AtlaniaBrand";
 import { SiteDirectory } from "@/components/SiteDirectory";
 import { TelemetryDrawer } from "@/components/TelemetryDrawer";
 import { MethodologyDialog } from "@/components/MethodologyDialog";
@@ -24,7 +25,6 @@ import {
   ChevronLeft,
   ChevronRight,
   ChevronUp,
-  Compass,
   Download,
   Globe2,
   Home,
@@ -537,9 +537,7 @@ export function MissionControlApp({ dataset }: MissionControlAppProps) {
               title="Volver a ATLANIA — Observatorio Planetario"
               className="group flex items-center gap-2.5 rounded-lg pr-1 transition-opacity hover:opacity-90"
             >
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg border border-[#C5A36D]/60 bg-[#C5A36D]/15 text-[#C5A36D] shadow-[0_0_15px_rgba(197,163,109,0.3)]">
-                <Compass className="h-4 w-4" aria-hidden="true" />
-              </div>
+              <AtlaniaIsotipo className="h-9 w-9 shrink-0 drop-shadow-[0_0_12px_rgba(247,238,215,0.22)]" />
               <div>
                 <span className="block font-serif text-sm font-semibold tracking-widest text-[#E4DFD5] uppercase sm:text-base">
                   ATLANIA

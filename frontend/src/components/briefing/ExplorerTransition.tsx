@@ -3,7 +3,8 @@
 import React, { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowUpRight, Compass, Download, ExternalLink } from "lucide-react";
+import { AtlaniaIsotipo } from "@/components/AtlaniaBrand";
+import { ArrowUpRight, Download, ExternalLink } from "lucide-react";
 import type { AnalogSite } from "@/types/analog";
 import { BrandLogo } from "./BrandLogo";
 
@@ -174,10 +175,7 @@ export function ExplorerTransition({ sites }: ExplorerTransitionProps) {
             {/* Top HUD Bar */}
             <div className="flex flex-wrap items-center justify-between gap-2 border-b border-white/10 bg-[#050B13]/95 px-4 py-3 text-[11px]">
               <div className="flex items-center gap-2">
-                <Compass
-                  className="h-3.5 w-3.5 text-[#F5B82E]"
-                  aria-hidden="true"
-                />
+                <AtlaniaIsotipo className="h-5 w-5 shrink-0" />
                 <span className="font-bold tracking-wider text-[#F1F5F9]">
                   ATLANIA // PLANETARY OBSERVATORY
                 </span>
