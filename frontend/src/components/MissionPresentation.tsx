@@ -72,7 +72,7 @@ export function MissionPresentation({
                 NASA SPACE APPS CHALLENGE · GUAYAQUIL
               </span>
               <span className="text-sm font-semibold text-slate-100">
-                TERR-ANALOG // Dossier Ejecutivo y Científico
+                ATLANIA // Observatorio Planetario &amp; Dossier Científico
               </span>
             </div>
           </div>
@@ -84,7 +84,7 @@ export function MissionPresentation({
               className="inline-flex items-center gap-2 rounded-lg border border-[#D4AF37] bg-[#D4AF37]/20 px-4 py-2 text-xs font-bold text-[#D4AF37] shadow-[0_0_20px_rgba(212,175,55,0.25)] transition-all hover:bg-[#D4AF37]/30 focus:outline-none focus:ring-2 focus:ring-[#D4AF37]"
             >
               <Globe2 className="h-4 w-4 text-cyan-400" aria-hidden="true" />
-              <span>Abrir Mapa de Control de Misión</span>
+              <span>Abrir Observatorio Planetario</span>
               <ArrowRight className="h-4 w-4" aria-hidden="true" />
             </button>
             <button
@@ -121,7 +121,7 @@ export function MissionPresentation({
               Antes de enviar hábitats presurizados, perforadoras criogénicas ISRU o
               rovers autónomos al Polo Sur Lunar (Artemis) y al Cráter Jezero en Marte,
               las agencias espaciales necesitan validarlos en la Tierra.{" "}
-              <strong className="text-slate-100">TERR-ANALOG</strong> cruza
+              <strong className="text-slate-100">ATLANIA</strong> cruza
               climatología satelital de <strong className="text-cyan-300">NASA POWER</strong>,
               modelos digitales de elevación (<strong className="text-cyan-300">Copernicus GLO-90</strong>)
               y archivos del <strong className="text-cyan-300">Planetary Data System (PDS)</strong>{" "}

@@ -4,9 +4,9 @@ import { MissionControlApp } from "@/components/MissionControlApp";
 import analogsData from "../../../public/data/analogs.json";
 
 export const metadata: Metadata = {
-  title: "TERR-ANALOG // Explorador Geoespacial y Telemetría ASI",
+  title: "ATLANIA // Observatorio Planetario & Explorador de Análogos",
   description:
-    "Consola interactiva de exploración geoespacial 3D, comparación Tierra vs. Luna/Marte, sondeo satelital NASA POWER + Copernicus DEM y exportación QGIS.",
+    "Observatorio planetario y atlas interactivo 3D para contemplar la Tierra, explorar territorios análogos extraordinarios, telemetría de satélites ópticos/SAR/térmicos y comparación planetaria con la Luna y Marte.",
 };
 
 export default function ExplorerPage() {

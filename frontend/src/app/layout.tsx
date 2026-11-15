@@ -1,30 +1,29 @@
 import type { Metadata } from "next";
-import { Space_Grotesk, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 
-const spaceGrotesk = Space_Grotesk({
-  variable: "--font-space-grotesk",
-  subsets: ["latin"],
-});
-
-const jetbrainsMono = JetBrains_Mono({
-  variable: "--font-jetbrains-mono",
-  subsets: ["latin"],
-});
-
 export const metadata: Metadata = {
-  title: "TERR-ANALOG // Planetary Analog Discovery & ASI Telemetry",
+  title: "ATLANIA // Observatorio Planetario & Atlas de Análogos Espaciales",
   description:
-    "Identify and characterize Earth analogs for permanent Moon base locations and Mars exploration sites using open NASA, ESA, CSA, and JAXA datasets.",
+    "Atlas y observatorio planetario para explorar territorios terrestres extraordinarios y sus analogías con la Luna y Marte mediante teledetección satelital e índice de similitud ASI.",
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
     <html
       lang="es"
-      className={`${spaceGrotesk.variable} ${jetbrainsMono.variable} h-full antialiased dark`}
+      className="h-full antialiased dark font-sans"
     >
       <head>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link
+          rel="stylesheet"
+          href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Playfair+Display:wght@500;600;700&family=DM+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap"
+        />
         <link rel="preconnect" href="https://services.arcgisonline.com" crossOrigin="anonymous" />
         <link rel="preconnect" href="https://server.arcgisonline.com" crossOrigin="anonymous" />
         <link rel="preconnect" href="https://s3.amazonaws.com" crossOrigin="anonymous" />
@@ -32,7 +31,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <link rel="dns-prefetch" href="https://tiles.openfreemap.org" />
         <link rel="preload" href="/maplibre-gl-worker.mjs" as="script" crossOrigin="anonymous" />
       </head>
-      <body className="min-h-full flex flex-col bg-[#060913] text-slate-100 selection:bg-cyan-500/30 selection:text-cyan-100">
+      <body className="min-h-full flex flex-col bg-[#101321] text-[#E4DFD5] selection:bg-[#C5A36D]/30 selection:text-[#E4DFD5]">
         {children}
       </body>
     </html>

@@ -1,20 +1,21 @@
 <p align="center">
-  <img src="docs/assets/hero_banner.jpg" alt="TERR-ANALOG Planetary Analog Telemetry Banner" width="100%" />
+  <img src="docs/assets/hero_banner.jpg" alt="ATLANIA Planetary Observatory Banner" width="100%" />
 </p>
 
-<h1 align="center">TERR-ANALOG // NASA Space Apps Challenge 2026</h1>
+<h1 align="center">ATLANIA // Planetary Observatory &amp; Earth-Space Analog Atlas</h1>
 
 <p align="center">
-  Planetary analog discovery and Analog Similarity Index (ASI) telemetry platform for <strong>Identify Earth Locations that Analog the Permanent Moon Base Locations and Mars</strong>.
+  <em>&ldquo;Somewhere between Earth and the stars. Discover the extraordinary in the familiar.&rdquo;</em><br />
+  Plataforma de descubrimiento de análogos planetarios e Índice de Similitud Análoga (ASI) para el desafío <strong>Identify Earth Locations that Analog the Permanent Moon Base Locations and Mars</strong> (NASA Space Apps Challenge).
 </p>
 
 <p align="center">
   <a href="https://github.com/FakeCxbas/nasa-space-apps-2026/actions/workflows/ci.yml">
     <img src="https://github.com/FakeCxbas/nasa-space-apps-2026/actions/workflows/ci.yml/badge.svg" alt="CI Status" />
   </a>
-  <img src="https://img.shields.io/badge/Python-3.11%2B-06B6D4?style=flat-square&logo=python&logoColor=white" alt="Python 3.11+" />
-  <img src="https://img.shields.io/badge/Next.js-16-0D1424?style=flat-square&logo=nextdotjs&logoColor=white" alt="Next.js 16" />
-  <img src="https://img.shields.io/badge/Data-NASA%20POWER%20%2B%20Copernicus%20DEM-E07A5F?style=flat-square" alt="NASA POWER + Copernicus DEM" />
+  <img src="https://img.shields.io/badge/Python-3.11%2B-C5A36D?style=flat-square&logo=python&logoColor=white" alt="Python 3.11+" />
+  <img src="https://img.shields.io/badge/Next.js-16-101321?style=flat-square&logo=nextdotjs&logoColor=white" alt="Next.js 16" />
+  <img src="https://img.shields.io/badge/Data-NASA%20POWER%20%2B%20Copernicus%20DEM-38BDF8?style=flat-square" alt="NASA POWER + Copernicus DEM" />
 </p>
 
 ---
@@ -27,7 +28,7 @@ flowchart LR
     B["Open-Meteo / Copernicus DEM GLO-90<br/>(5-Point Slope & Relief Sampling)"] --> C
     C --> D["5-Axis Similarity Scoring<br/>(Topo, Geo, Thermal, Hydro/Ice, Subsurface)"]
     D --> E["analogs.json & analogs.geojson<br/>(30 Live Sites / 6 Targets)"]
-    E --> F["Mission Briefing (/) & Explorer HUD (/explorer)<br/>(Next.js 16 + MapLibre GL)"]
+    E --> F["Planetary Observatory (/) & Terra Explorer (/explorer)<br/>(Next.js 16 + MapLibre GL)"]
 ```
 
 ## Extraterrestrial Reference Targets
@@ -54,8 +55,8 @@ cd frontend
 npm install
 npm run dev
 ```
-- `http://localhost:3000/` — **TERR-ANALOG — Mission Briefing** (interactive scientific presentation, comparative Earth vs. Moon/Mars panels, live ASI breakdown, and planetary destination catalog).
-- `http://localhost:3000/explorer` — **Geospatial Explorer HUD** (interactive 3D terrain map, live coordinate probing `/api/evaluate`, regional grid prospecting `/api/evaluate-region`, side-by-side comparison, and Markdown/JSON/GeoJSON export). Supports deep-linking via `?target=<id>` and `?site=<id>`.
+- `http://localhost:3000/` — **ATLANIA — Observatorio Planetario & Briefing** (presentación científica interactiva, paneles comparativos Tierra vs. Luna/Marte, desglose ASI en vivo y catálogo de destinos planetarios).
+- `http://localhost:3000/explorer` — **ATLANIA — Terra Explorer & Satellite Observatory** (mapa de terreno 3D interactivo, sondeo de coordenadas en vivo `/api/evaluate`, prospección regional en grilla `/api/evaluate-region`, perfil satelital de 3 sensores y exportación Markdown/JSON/GeoJSON). Admite enlaces directos mediante `?target=<id>` y `?site=<id>`.
 
 ### 2. Scientific ASI Engine (Python / uv)
 ```bash

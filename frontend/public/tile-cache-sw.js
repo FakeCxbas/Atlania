@@ -1,4 +1,4 @@
-const CACHE_NAME = "terr-analog-map-tiles-v1";
+const CACHE_NAME = "atlania-map-tiles-v1";
 
 const TILE_HOSTS = new Set([
   "services.arcgisonline.com",
@@ -19,7 +19,7 @@ self.addEventListener("activate", (event) => {
       .then((keys) =>
         Promise.all(
           keys
-            .filter((k) => k.startsWith("terr-analog-map-tiles-") && k !== CACHE_NAME)
+            .filter((k) => (k.startsWith("atlania-map-tiles-") || k.startsWith("terr-analog-map-tiles-")) && k !== CACHE_NAME)
             .map((k) => caches.delete(k))
         )
       )

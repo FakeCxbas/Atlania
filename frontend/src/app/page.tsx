@@ -4,9 +4,9 @@ import { MissionBriefingLanding } from "@/components/MissionBriefingLanding";
 import analogsData from "../../public/data/analogs.json";
 
 export const metadata: Metadata = {
-  title: "TERR-ANALOG — Mission Briefing // NASA Space Apps Challenge 2026",
+  title: "ATLANIA — Observatorio Planetario & Atlas de Análogos // NASA Space Apps Challenge",
   description:
-    "La Tierra como laboratorio para explorar otros mundos. Compara datos científicos de NASA POWER, Copernicus DEM y NASA PDS para descubrir análogos terrestres de la Luna y Marte.",
+    "Existe una belleza particular en los lugares que no podemos encontrar. ATLANIA es un atlas dedicado a explorar los territorios extraordinarios de la Tierra y descubrir sus semejanzas con los paisajes de la Luna y Marte.",
 };
 
 export default function HomePage() {
