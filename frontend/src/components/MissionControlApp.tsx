@@ -17,6 +17,7 @@ import { SiteDirectory } from "@/components/SiteDirectory";
 import { TelemetryDrawer } from "@/components/TelemetryDrawer";
 import { MethodologyDialog } from "@/components/MethodologyDialog";
 import { MissionPresentation } from "@/components/MissionPresentation";
+import { AtlaniaIsotipo } from "@/components/AtlaniaBrand";
 import { downloadQgisGeoJson } from "@/lib/dossier";
 import { translateSite, translateTarget } from "@/lib/spanishTranslations";
 import {
@@ -566,9 +567,7 @@ export function MissionControlApp({ dataset }: MissionControlAppProps) {
           title="Volver a la portada de ATLANIA"
           className="flex items-center gap-2.5 rounded-lg pr-1 transition-opacity hover:opacity-85 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C5A36D]"
         >
-          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-[#C5A36D]/45 bg-[#181B2C] text-[#C5A36D]">
-            <Compass className="h-4 w-4" aria-hidden="true" />
-          </span>
+          <AtlaniaIsotipo className="h-9 w-9 shrink-0 drop-shadow-[0_0_12px_rgba(247,238,215,0.22)]" />
           <div className="leading-tight">
             <span className="block font-serif text-base font-semibold tracking-[0.18em] text-[#E4DFD5] uppercase">
               ATLANIA

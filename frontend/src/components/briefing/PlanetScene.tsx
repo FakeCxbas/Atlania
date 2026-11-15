@@ -2,6 +2,15 @@
 
 import React, { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
+import {
+  applyStratumPbrShader,
+  createTerrainStrataTextures,
+  getOrCreateStrataGeometries,
+  type CachedLayerGeometry,
+  type StratumShaderMode,
+  type StratumTextureSet,
+  type TerrainStrataTextureBundle,
+} from "./terrainStrataTextures";
 
 export interface PlanetSceneProps {
   /** Normalized scroll progress across the entire page [0..1] */
@@ -332,170 +341,194 @@ export function PlanetScene({
     );
     scene.add(marsMesh);
 
-    // 5. Chapter 3 Volumetric 4-Layer 3D Terrain Block (Surface/Climate, Relief/DEM, Geology, Subsurface)
+    // 5. Chapter 3 High-Density Photorealistic 4-Layer 3D Terrain Block (deferred for instant Earth first paint)
     const terrainGroup = new THREE.Group();
-    terrainGroup.position.set(1.18, 0.02, 2.25);
+    terrainGroup.position.set(1.52, -0.06, 1.45);
+    terrainGroup.scale.setScalar(0.84);
     terrainGroup.rotation.x = -1.16;
     terrainGroup.rotation.z = 0.58;
     terrainGroup.visible = false;
     scene.add(terrainGroup);
 
-    const gridSegs = isLowPowerDevice ? 28 : 44;
+    const gridSegs = isLowPowerDevice ? 96 : 128;
     const slabSize = 2.0;
+    const terrainDisposables: Array<{ dispose: () => void }> = [];
+    let deferredTextures: TerrainStrataTextureBundle | null = null;
+    let disposed = false;
 
-    // Shared procedural terrain elevation function (volcanic ridge + crater depression)
-    const evalHeight = (x: number, y: number, scale: number, phase: number) => {
-      const r = Math.sqrt(x * x + y * y);
-      const craterRing = Math.exp(-Math.pow(r - 0.72, 2) * 4.5) * 0.32;
-      const ridge =
-        Math.sin(x * 1.85 + phase) * Math.cos(y * 1.75 + phase) * 0.18;
-      return (craterRing + ridge) * scale;
+    interface BuiltStratum {
+      group: THREE.Group;
+      surfaceMat: THREE.MeshStandardMaterial;
+      atmoVeilUniforms: { uOpacity: { value: number } } | null;
+      sideMat: THREE.MeshStandardMaterial;
+    }
+
+    interface TerrainBlockRefs {
+      layer1Surface: BuiltStratum;
+      layer2Relief: BuiltStratum;
+      layer3Geology: BuiltStratum;
+      layer4Subsurface: BuiltStratum;
+      lavaGlowLight: THREE.PointLight;
+    }
+
+    let terrainRefs: TerrainBlockRefs | null = null;
+
+    const ensureTerrainBuilt = () => {
+      if (terrainRefs || disposed) return;
+
+      const textures = createTerrainStrataTextures(isLowPowerDevice ? 384 : 512);
+      deferredTextures = textures;
+      const geos = getOrCreateStrataGeometries(gridSegs, slabSize);
+
+      const createRealisticStratum = (options: {
+        geoPair: CachedLayerGeometry;
+        roughness: number;
+        normalScale: number;
+        shaderMode: StratumShaderMode;
+        topTextures: StratumTextureSet;
+        sideTextures: StratumTextureSet;
+        atmosphereVeil?: boolean;
+      }): BuiltStratum => {
+        const group = new THREE.Group();
+
+        const surfaceMat = new THREE.MeshStandardMaterial({
+          color: 0xffffff,
+          map: options.topTextures.map,
+          normalMap: options.topTextures.normalMap,
+          normalScale: new THREE.Vector2(options.normalScale, options.normalScale),
+          roughnessMap: options.topTextures.roughnessMap,
+          roughness: options.roughness,
+          metalness: 0.04,
+          transparent: false,
+          opacity: 1.0,
+          side: THREE.DoubleSide,
+        });
+        applyStratumPbrShader(surfaceMat, options.shaderMode);
+        terrainDisposables.push(surfaceMat);
+
+        const surfaceMesh = new THREE.Mesh(options.geoPair.topGeo, surfaceMat);
+        surfaceMesh.castShadow = !isLowPowerDevice;
+        surfaceMesh.receiveShadow = !isLowPowerDevice;
+        group.add(surfaceMesh);
+
+        let atmoVeilUniforms: { uOpacity: { value: number } } | null = null;
+        if (options.atmosphereVeil) {
+          const veilGeo = new THREE.PlaneGeometry(slabSize * 1.04, slabSize * 1.04, 1, 1);
+          atmoVeilUniforms = { uOpacity: { value: 0.22 } };
+          const veilMat = new THREE.ShaderMaterial({
+            uniforms: atmoVeilUniforms,
+            vertexShader: /* glsl */ `
+              varying vec2 vUv;
+              void main() {
+                vUv = uv;
+                gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+              }
+            `,
+            fragmentShader: /* glsl */ `
+              uniform float uOpacity;
+              varying vec2 vUv;
+              void main() {
+                vec2 d = abs(vUv - 0.5) * 2.0;
+                float edge = max(d.x, d.y);
+                float rim = smoothstep(0.55, 0.96, edge) * (1.0 - smoothstep(0.95, 1.0, edge));
+                float haze = 0.28 + rim * 0.72;
+                vec3 col = mix(vec3(0.22, 0.74, 0.97), vec3(0.68, 0.90, 1.0), rim);
+                gl_FragColor = vec4(col, haze * uOpacity);
+              }
+            `,
+            transparent: true,
+            depthWrite: false,
+            side: THREE.DoubleSide,
+          });
+          terrainDisposables.push(veilGeo, veilMat);
+          const veilMesh = new THREE.Mesh(veilGeo, veilMat);
+          veilMesh.position.z = 0.22;
+          group.add(veilMesh);
+        }
+
+        const sideMat = new THREE.MeshStandardMaterial({
+          color: 0xffffff,
+          map: options.sideTextures.map,
+          normalMap: options.sideTextures.normalMap,
+          normalScale: new THREE.Vector2(
+            options.normalScale * 0.85,
+            options.normalScale * 0.85
+          ),
+          roughnessMap: options.sideTextures.roughnessMap,
+          roughness: 0.86,
+          metalness: 0.04,
+          transparent: false,
+          opacity: 1.0,
+          side: THREE.DoubleSide,
+        });
+        applyStratumPbrShader(
+          sideMat,
+          options.shaderMode === "subsurface" ? "subsurface" : "geology"
+        );
+        terrainDisposables.push(sideMat);
+
+        const skirtMesh = new THREE.Mesh(options.geoPair.skirtGeo, sideMat);
+        skirtMesh.castShadow = !isLowPowerDevice;
+        skirtMesh.receiveShadow = !isLowPowerDevice;
+        group.add(skirtMesh);
+
+        return { group, surfaceMat, atmoVeilUniforms, sideMat };
+      };
+
+      const layer1Surface = createRealisticStratum({
+        geoPair: geos.layer1,
+        roughness: 0.86,
+        normalScale: 1.15,
+        shaderMode: "surface",
+        topTextures: textures.layer1,
+        sideTextures: textures.layer3,
+        atmosphereVeil: true,
+      });
+
+      const layer2Relief = createRealisticStratum({
+        geoPair: geos.layer2,
+        roughness: 0.88,
+        normalScale: 1.65,
+        shaderMode: "relief",
+        topTextures: textures.layer2,
+        sideTextures: textures.layer3,
+      });
+
+      const layer3Geology = createRealisticStratum({
+        geoPair: geos.layer3,
+        roughness: 0.84,
+        normalScale: 1.45,
+        shaderMode: "geology",
+        topTextures: textures.layer3,
+        sideTextures: textures.layer3,
+      });
+
+      const layer4Subsurface = createRealisticStratum({
+        geoPair: geos.layer4,
+        roughness: 0.92,
+        normalScale: 1.75,
+        shaderMode: "subsurface",
+        topTextures: textures.layer4,
+        sideTextures: textures.layer4,
+      });
+
+      const lavaGlowLight = new THREE.PointLight(0xf97316, 0.95, 1.8, 2);
+      lavaGlowLight.position.set(-0.22, -0.82, -0.18);
+      layer4Subsurface.group.add(lavaGlowLight);
+
+      terrainGroup.add(layer1Surface.group);
+      terrainGroup.add(layer2Relief.group);
+      terrainGroup.add(layer3Geology.group);
+      terrainGroup.add(layer4Subsurface.group);
+
+      terrainRefs = {
+        layer1Surface,
+        layer2Relief,
+        layer3Geology,
+        layer4Subsurface,
+        lavaGlowLight,
+      };
     };
-
-    const createVolumetricStratum = (
-      colorHex: number,
-      wireColorHex: number,
-      heightScale: number,
-      slabThickness: number,
-      phase: number
-    ) => {
-      const group = new THREE.Group();
-
-      // Top displaced surface
-      const topGeo = new THREE.PlaneGeometry(
-        slabSize,
-        slabSize,
-        gridSegs,
-        gridSegs
-      );
-      const pos = topGeo.attributes.position;
-      for (let i = 0; i < pos.count; i++) {
-        const x = pos.getX(i);
-        const y = pos.getY(i);
-        pos.setZ(i, evalHeight(x, y, heightScale, phase));
-      }
-      topGeo.computeVertexNormals();
-
-      const surfaceMat = new THREE.MeshStandardMaterial({
-        color: colorHex,
-        roughness: 0.52,
-        metalness: 0.14,
-        transparent: true,
-        opacity: 0.86,
-        side: THREE.DoubleSide,
-      });
-      const surfaceMesh = new THREE.Mesh(topGeo, surfaceMat);
-      surfaceMesh.castShadow = !isLowPowerDevice;
-      surfaceMesh.receiveShadow = !isLowPowerDevice;
-      group.add(surfaceMesh);
-
-      // Contour / wireframe overlay
-      const wireMat = new THREE.MeshBasicMaterial({
-        color: wireColorHex,
-        wireframe: true,
-        transparent: true,
-        opacity: 0.38,
-      });
-      const wireMesh = new THREE.Mesh(topGeo, wireMat);
-      wireMesh.position.z = 0.008;
-      group.add(wireMesh);
-
-      // 3D Volumetric Side Block (gives real slab thickness & depth)
-      const boxGeo = new THREE.BoxGeometry(
-        slabSize,
-        slabSize,
-        slabThickness,
-        4,
-        4,
-        1
-      );
-      const sideMat = new THREE.MeshStandardMaterial({
-        color: colorHex,
-        roughness: 0.75,
-        metalness: 0.08,
-        transparent: true,
-        opacity: 0.42,
-      });
-      const sideBox = new THREE.Mesh(boxGeo, sideMat);
-      sideBox.position.z = -slabThickness * 0.55;
-      sideBox.castShadow = !isLowPowerDevice;
-      sideBox.receiveShadow = !isLowPowerDevice;
-      group.add(sideBox);
-
-      return { group, surfaceMat, wireMat, sideMat };
-    };
-
-    // Layer 1 (Top): Superficie y Atmósfera / Clima NASA POWER (#38BDF8)
-    const layer1Surface = createVolumetricStratum(
-      0x0ea5e9,
-      0x38bdf8,
-      0.35,
-      0.04,
-      0.0
-    );
-    // Layer 2: Relieve y Topografía DEM Copernicus GLO-90 (#00D9F5)
-    const layer2Relief = createVolumetricStratum(
-      0x00d9f5,
-      0xe0f2fe,
-      1.15,
-      0.11,
-      0.4
-    );
-    // Layer 3: Geología y Litología (#F5B82E)
-    const layer3Geology = createVolumetricStratum(
-      0xd97706,
-      0xf5b82e,
-      0.65,
-      0.16,
-      1.2
-    );
-    // Layer 4 (Bottom): Subsuelo, Criósfera y Tubos de Lava (#E07A5F)
-    const layer4Subsurface = createVolumetricStratum(
-      0x9a3412,
-      0xe07a5f,
-      0.35,
-      0.22,
-      2.1
-    );
-
-    // Add schematic subterranean lava tube cylinder inside Layer 4
-    const tubeGeo = new THREE.CylinderGeometry(0.11, 0.11, slabSize * 0.92, 20);
-    const tubeMat = new THREE.MeshStandardMaterial({
-      color: 0x00d9f5,
-      emissive: 0x00d9f5,
-      emissiveIntensity: 0.35,
-      wireframe: true,
-    });
-    const tubeMesh = new THREE.Mesh(tubeGeo, tubeMat);
-    tubeMesh.rotation.z = Math.PI / 4;
-    tubeMesh.position.z = -0.08;
-    layer4Subsurface.group.add(tubeMesh);
-
-    // Vertical corner guide pillars connecting the 4 strata in 3D
-    const pillarGeo = new THREE.BufferGeometry();
-    const half = slabSize * 0.49;
-    const pillarVerts = new Float32Array([
-      -half, -half, -1.2, -half, -half, 1.2,
-       half, -half, -1.2,  half, -half, 1.2,
-       half,  half, -1.2,  half,  half, 1.2,
-      -half,  half, -1.2, -half,  half, 1.2,
-    ]);
-    pillarGeo.setAttribute(
-      "position",
-      new THREE.BufferAttribute(pillarVerts, 3)
-    );
-    const pillarMat = new THREE.LineBasicMaterial({
-      color: 0x00d9f5,
-      transparent: true,
-      opacity: 0.28,
-    });
-    const pillarLines = new THREE.LineSegments(pillarGeo, pillarMat);
-    terrainGroup.add(pillarLines);
-
-    terrainGroup.add(layer1Surface.group);
-    terrainGroup.add(layer2Relief.group);
-    terrainGroup.add(layer3Geology.group);
-    terrainGroup.add(layer4Subsurface.group);
 
     // Smooth camera & object interpolation vectors
     const currentCamPos = new THREE.Vector3(0, 0.35, 9.2);
@@ -677,7 +710,7 @@ export function PlanetScene({
         marsMesh.rotation.y = elapsed * 0.045 + p * 1.6;
       }
 
-      // Chapter 3 Volumetric 3D Terrain Layers smooth enter / exit & separation
+      // Chapter 3 High-Density Photorealistic 3D Terrain Strata
       const targetPresence = ch === 3 ? 1 : 0;
       const terrainDamp = dampFactor(dt, ch === 3 ? 4.2 : 5.5);
       terrainPresence = THREE.MathUtils.lerp(
@@ -687,9 +720,20 @@ export function PlanetScene({
       );
 
       const isTerrainVisible = terrainPresence > 0.008;
-      terrainGroup.visible = isTerrainVisible;
+      if (isTerrainVisible && !terrainRefs) {
+        ensureTerrainBuilt();
+      }
+      terrainGroup.visible = isTerrainVisible && terrainRefs !== null;
 
-      if (isTerrainVisible) {
+      if (isTerrainVisible && terrainRefs) {
+        const {
+          layer1Surface,
+          layer2Relief,
+          layer3Geology,
+          layer4Subsurface,
+          lavaGlowLight,
+        } = terrainRefs;
+
         const easedPresence = easeOutCubic(
           Math.max(0, Math.min(1, terrainPresence))
         );
@@ -699,81 +743,90 @@ export function PlanetScene({
           dampFactor(dt, 5.2)
         );
 
-        terrainGroup.scale.setScalar(0.62 + 0.38 * easedPresence);
-        terrainGroup.position.set(
-          1.18 + (1 - easedPresence) * 1.25,
-          0.02 - (1 - easedPresence) * 0.35,
-          2.25 - (1 - easedPresence) * 1.4
-        );
-
-        // Vertical spacing between adjacent strata in 3D space: from 0.22 (compact) to 0.78 (expanded)
-        const stepZ = 0.22 + currentSep * 0.56;
+        const maxGap = 0.62;
+        const targetGap = currentSep * maxGap;
+        const deployRatio = targetGap / maxGap;
         const stratumDamp = dampFactor(dt, 6.0);
 
+        terrainGroup.scale.setScalar(0.62 + 0.24 * easedPresence);
+        terrainGroup.position.set(
+          1.45 + (1 - easedPresence) * 1.15,
+          -0.06 - (1 - easedPresence) * 0.45,
+          1.45 - (1 - easedPresence) * 1.2
+        );
+
+        const reliefScaleZ = 0.14 + deployRatio * 0.86;
+        layer2Relief.group.scale.z = THREE.MathUtils.lerp(
+          layer2Relief.group.scale.z,
+          reliefScaleZ,
+          stratumDamp
+        );
+        layer3Geology.group.scale.z = THREE.MathUtils.lerp(
+          layer3Geology.group.scale.z,
+          reliefScaleZ,
+          stratumDamp
+        );
+        layer4Subsurface.group.scale.z = THREE.MathUtils.lerp(
+          layer4Subsurface.group.scale.z,
+          reliefScaleZ,
+          stratumDamp
+        );
+
+        const compactStep = 0.05 + targetGap;
         layer1Surface.group.position.z = THREE.MathUtils.lerp(
           layer1Surface.group.position.z,
-          stepZ * 1.5,
+          0.08 + targetGap * 1.45,
           stratumDamp
         );
         layer2Relief.group.position.z = THREE.MathUtils.lerp(
           layer2Relief.group.position.z,
-          stepZ * 0.5,
+          0.01 + compactStep * 0.45,
           stratumDamp
         );
         layer3Geology.group.position.z = THREE.MathUtils.lerp(
           layer3Geology.group.position.z,
-          -stepZ * 0.5,
+          -0.06 - compactStep * 0.52,
           stratumDamp
         );
         layer4Subsurface.group.position.z = THREE.MathUtils.lerp(
           layer4Subsurface.group.position.z,
-          -stepZ * 1.5,
+          -0.13 - targetGap * 1.48,
           stratumDamp
         );
 
-        // Rotate terrain block gently with scroll + time to reveal 3D relief & thickness
         terrainGroup.rotation.z =
           0.52 +
-          currentSep * 0.38 +
+          deployRatio * 0.42 +
           (1 - easedPresence) * 0.22 +
-          (prefersReducedMotion ? 0 : Math.sin(elapsed * 0.35) * 0.06);
+          (prefersReducedMotion ? 0 : Math.sin(elapsed * 0.35) * 0.04);
 
-        pillarMat.opacity = 0.28 * easedPresence;
-
-        const applyFocusOpacity = (
-          stratum: {
-            group: THREE.Group;
-            surfaceMat: THREE.MeshStandardMaterial;
-            wireMat: THREE.MeshBasicMaterial;
-            sideMat: THREE.MeshStandardMaterial;
-          },
+        const applyLayerFocus = (
+          stratum: BuiltStratum,
           idx: 1 | 2 | 3 | 4
         ) => {
+          stratum.surfaceMat.transparent = false;
+          stratum.surfaceMat.opacity = 1.0;
+          stratum.sideMat.transparent = false;
+          stratum.sideMat.opacity = 1.0;
+          if (stratum.atmoVeilUniforms) {
+            stratum.atmoVeilUniforms.uOpacity.value = 0.22 * easedPresence;
+          }
           const active = fLayer === 0 || fLayer === idx;
-          const targetFocus = active ? 1 : 0.16;
-          stratumFocusOpacity[idx] = THREE.MathUtils.lerp(
-            stratumFocusOpacity[idx],
-            targetFocus,
-            stratumDamp
-          );
-          const fAlpha = stratumFocusOpacity[idx] * easedPresence;
-          stratum.surfaceMat.opacity = 0.88 * fAlpha;
-          stratum.wireMat.opacity = 0.45 * fAlpha;
-          stratum.sideMat.opacity = 0.46 * fAlpha;
-
-          const targetStratumScale = active && fLayer !== 0 ? 1.04 : 1.0;
+          const targetStratumScale = active && fLayer !== 0 ? 1.05 : 1.0;
           const nextScale = THREE.MathUtils.lerp(
             stratum.group.scale.x,
             targetStratumScale,
             stratumDamp
           );
-          stratum.group.scale.setScalar(nextScale);
+          stratum.group.scale.x = nextScale;
+          stratum.group.scale.y = nextScale;
         };
 
-        applyFocusOpacity(layer1Surface, 1);
-        applyFocusOpacity(layer2Relief, 2);
-        applyFocusOpacity(layer3Geology, 3);
-        applyFocusOpacity(layer4Subsurface, 4);
+        applyLayerFocus(layer1Surface, 1);
+        applyLayerFocus(layer2Relief, 2);
+        applyLayerFocus(layer3Geology, 3);
+        applyLayerFocus(layer4Subsurface, 4);
+        lavaGlowLight.intensity = 0.95 * easedPresence;
       }
 
       renderer.render(scene, camera);
@@ -793,6 +846,7 @@ export function PlanetScene({
     window.addEventListener("resize", handleResize);
 
     return () => {
+      disposed = true;
       window.removeEventListener("resize", handleResize);
       window.cancelAnimationFrame(animationFrameId);
       starGeo.dispose();
@@ -805,10 +859,10 @@ export function PlanetScene({
       moonMat.dispose();
       marsGeo.dispose();
       marsMat.dispose();
-      tubeGeo.dispose();
-      tubeMat.dispose();
-      pillarGeo.dispose();
-      pillarMat.dispose();
+      for (const item of terrainDisposables) {
+        item.dispose();
+      }
+      deferredTextures?.dispose();
       earthTexture.dispose();
       moonTexture.dispose();
       marsTexture.dispose();
