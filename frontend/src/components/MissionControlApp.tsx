@@ -4,8 +4,10 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import type { AnalogDataset, AnalogSite } from "@/types/analog";
+import { evaluateCoordinate } from "@/lib/evaluateCoordinate";
 import {
   buildSiteRationale,
+  evaluateRegion,
   getPointTargetScore,
   rankRegionResult,
   summarizeRegionScan,
@@ -323,24 +325,35 @@ export function MissionControlApp({ dataset }: MissionControlAppProps) {
     async (lat: number, lon: number) => {
       setIsProbing(true);
       try {
-        const res = await fetch(
-          `/api/evaluate?lat=${encodeURIComponent(lat.toFixed(4))}&lon=${encodeURIComponent(lon.toFixed(4))}`
-        );
-        if (!res.ok) {
-          notifyUser("No se pudo evaluar la coordenada seleccionada.");
-          return;
+        let evaluatedSite: AnalogSite | undefined;
+        try {
+          const res = await fetch(
+            `/api/evaluate?lat=${encodeURIComponent(lat.toFixed(4))}&lon=${encodeURIComponent(lon.toFixed(4))}`
+          );
+          if (res.ok) {
+            const payload = (await res.json()) as { site?: AnalogSite };
+            evaluatedSite = payload.site;
+          }
+        } catch {
+          // Fallback to direct client-side telemetry evaluation below
         }
-        const payload = (await res.json()) as { site?: AnalogSite };
-        if (payload.site) {
-          setProbeSite(payload.site);
-          setSelectedSiteId(payload.site.id);
-          setActiveTargetId(payload.site.best_target);
+
+        if (!evaluatedSite) {
+          evaluatedSite = await evaluateCoordinate(lat, lon);
+        }
+
+        if (evaluatedSite) {
+          setProbeSite(evaluatedSite);
+          setSelectedSiteId(evaluatedSite.id);
+          setActiveTargetId(evaluatedSite.best_target);
           setProbeMode(false);
           setShowDirectory(false);
           notifyUser(
-            `Sondeo completado (${lat.toFixed(2)}°, ${lon.toFixed(2)}°): ${payload.site.overall_asi.toFixed(1)}% ASI`
+            `Sondeo completado (${lat.toFixed(2)}°, ${lon.toFixed(2)}°): ${evaluatedSite.overall_asi.toFixed(1)}% ASI`
           );
         }
+      } catch {
+        notifyUser("No se pudo evaluar la coordenada seleccionada.");
       } finally {
         setIsProbing(false);
       }
@@ -353,22 +366,33 @@ export function MissionControlApp({ dataset }: MissionControlAppProps) {
       setIsProbingRegion(true);
       setRegionError(null);
       try {
-        const params = new URLSearchParams({
-          minLat: bounds.minLat.toString(),
-          maxLat: bounds.maxLat.toString(),
-          minLon: bounds.minLon.toString(),
-          maxLon: bounds.maxLon.toString(),
-          gridSize: regionGridSize.toString(),
-        });
-        if (regionRankByActiveTarget && activeTargetId) {
-          params.set("targetId", activeTargetId);
+        const targetParam =
+          regionRankByActiveTarget && activeTargetId ? activeTargetId : null;
+        let payload: (RegionEvaluationResult & { error?: string }) | null = null;
+
+        try {
+          const params = new URLSearchParams({
+            minLat: bounds.minLat.toString(),
+            maxLat: bounds.maxLat.toString(),
+            minLon: bounds.minLon.toString(),
+            maxLon: bounds.maxLon.toString(),
+            gridSize: regionGridSize.toString(),
+          });
+          if (targetParam) {
+            params.set("targetId", targetParam);
+          }
+          const res = await fetch(`/api/evaluate-region?${params.toString()}`);
+          if (res.ok) {
+            payload = (await res.json()) as RegionEvaluationResult & { error?: string };
+          }
+        } catch {
+          // Fallback to direct client-side regional evaluation below
         }
-        const res = await fetch(`/api/evaluate-region?${params.toString()}`);
-        const payload = (await res.json()) as RegionEvaluationResult & { error?: string };
-        if (!res.ok) {
-          setRegionError(payload.error ?? "Error al evaluar la región.");
-          return;
+
+        if (!payload) {
+          payload = await evaluateRegion(bounds, regionGridSize, targetParam);
         }
+
         setRegionResult(payload);
         setRegionProbeMode(false);
         if (payload.points[0]) {
@@ -380,8 +404,12 @@ export function MissionControlApp({ dataset }: MissionControlAppProps) {
         notifyUser(
           `Prospección ${payload.grid_size}×${payload.grid_size} completada (${payload.evaluated_count} sectores)`
         );
-      } catch {
-        setRegionError("No se pudo conectar con el servicio de evaluación regional.");
+      } catch (err) {
+        setRegionError(
+          err instanceof Error
+            ? err.message
+            : "No se pudo conectar con el servicio de evaluación regional."
+        );
       } finally {
         setIsProbingRegion(false);
       }
