@@ -95,6 +95,14 @@ export function ScrollScene({
           start: "top top",
           end: "bottom bottom",
           scrub: 0.4,
+          onEnter: () =>
+            setScrollState((prev) => ({ ...prev, activeChapter: 3 })),
+          onEnterBack: () =>
+            setScrollState((prev) => ({ ...prev, activeChapter: 3 })),
+          onLeave: () =>
+            setScrollState((prev) => ({ ...prev, activeChapter: 4 })),
+          onLeaveBack: () =>
+            setScrollState((prev) => ({ ...prev, activeChapter: 2 })),
           onToggle: (self) => {
             if (self.isActive) {
               setScrollState((prev) => ({ ...prev, activeChapter: 3 }));
