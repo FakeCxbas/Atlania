@@ -6,17 +6,12 @@ import {
   Box,
   ChevronDown,
   ChevronUp,
-  Mountain,
   RotateCcw,
   RotateCw,
   Square,
 } from "lucide-react";
 import type { AnalogSite, TargetProfile } from "@/types/analog";
 import type { RegionBounds, RegionEvaluationResult } from "@/lib/evaluateRegion";
-import {
-  TerrainDioramaModal,
-  type TerrainDioramaTarget,
-} from "@/components/TerrainDioramaModal";
 
 if (typeof window !== "undefined") {
   maplibregl.setWorkerUrl("/maplibre-gl-worker.mjs");
@@ -86,13 +81,20 @@ function getBasemapStyle(mode: BasemapMode): string | maplibregl.StyleSpecificat
       },
       layers: [
         {
+          id: "ocean-background",
+          type: "background",
+          paint: {
+            "background-color": "#071426",
+          },
+        },
+        {
           id: "nasa-gibs-layer",
           type: "raster",
           source: "nasa-gibs",
           minzoom: 0,
           maxzoom: 18,
           paint: {
-            "raster-fade-duration": 120,
+            "raster-fade-duration": 250,
           },
         },
         {
@@ -100,7 +102,7 @@ function getBasemapStyle(mode: BasemapMode): string | maplibregl.StyleSpecificat
           type: "raster",
           source: "esri-labels",
           minzoom: 6,
-          maxzoom: 13.5,
+          maxzoom: 18,
           paint: {
             "raster-fade-duration": 100,
             "raster-opacity": [
@@ -110,11 +112,9 @@ function getBasemapStyle(mode: BasemapMode): string | maplibregl.StyleSpecificat
               6,
               0.35,
               9,
-              0.8,
-              11.5,
-              0.7,
-              13.2,
-              0,
+              0.85,
+              14,
+              0.95,
             ],
           },
         },
@@ -126,6 +126,16 @@ function getBasemapStyle(mode: BasemapMode): string | maplibregl.StyleSpecificat
     version: 8,
     name: "Esri World Imagery",
     sources: {
+      "esri-satellite-lowres": {
+        type: "raster",
+        tiles: [
+          "https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+          "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+        ],
+        tileSize: 256,
+        maxzoom: 6,
+        attribution: "Esri, Maxar, Earthstar Geographics",
+      },
       "esri-satellite": {
         type: "raster",
         tiles: [
@@ -149,13 +159,32 @@ function getBasemapStyle(mode: BasemapMode): string | maplibregl.StyleSpecificat
     },
     layers: [
       {
+        id: "ocean-background",
+        type: "background",
+        paint: {
+          "background-color": "#071426",
+        },
+      },
+      {
+        id: "esri-satellite-lowres-layer",
+        type: "raster",
+        source: "esri-satellite-lowres",
+        minzoom: 0,
+        maxzoom: 18,
+        paint: {
+          "raster-fade-duration": 0,
+        },
+      },
+      {
         id: "esri-satellite-layer",
         type: "raster",
         source: "esri-satellite",
         minzoom: 0,
         maxzoom: 18,
         paint: {
-          "raster-fade-duration": 120,
+          "raster-fade-duration": 300,
+          "raster-contrast": 0.12,
+          "raster-saturation": 0.08,
         },
       },
       {
@@ -163,7 +192,7 @@ function getBasemapStyle(mode: BasemapMode): string | maplibregl.StyleSpecificat
         type: "raster",
         source: "esri-labels",
         minzoom: 6,
-        maxzoom: 13.5,
+        maxzoom: 18,
         paint: {
           "raster-fade-duration": 100,
           "raster-opacity": [
@@ -173,11 +202,9 @@ function getBasemapStyle(mode: BasemapMode): string | maplibregl.StyleSpecificat
             6,
             0.35,
             9,
-            0.8,
-            11.5,
-            0.7,
-            13.2,
-            0,
+            0.85,
+            14,
+            0.95,
           ],
         },
       },
@@ -230,7 +257,6 @@ export function AnalogMap({
 
   const [basemap, setBasemap] = useState<BasemapMode>("satellite");
   const [terrain3d, setTerrain3d] = useState(true);
-  const [dioramaTarget, setDioramaTarget] = useState<TerrainDioramaTarget | null>(null);
   const [cameraView, setCameraView] = useState<{ pitch: number; bearing: number }>({
     pitch: selectedSiteId ? 45 : 0,
     bearing: 0,
@@ -241,31 +267,6 @@ export function AnalogMap({
     curX: number;
     curY: number;
   } | null>(null);
-
-  const handleOpenDiorama = useCallback(() => {
-    const activeSite = selectedSiteId
-      ? sites.find((s) => s.id === selectedSiteId) ?? null
-      : null;
-
-    if (activeSite) {
-      setDioramaTarget({
-        name: activeSite.name,
-        country: activeSite.country,
-        latitude: activeSite.latitude,
-        longitude: activeSite.longitude,
-        asiScore: activeSite.overall_asi,
-      });
-      return;
-    }
-
-    const map = mapRef.current;
-    const center = map ? map.getCenter() : { lat: 29.02, lng: -13.75 };
-    setDioramaTarget({
-      name: "Sector Central del Mapa",
-      latitude: center.lat,
-      longitude: center.lng,
-    });
-  }, [selectedSiteId, sites]);
 
   const getFlyDuration = useCallback((ms: number) => {
     if (typeof window === "undefined") return ms;
@@ -329,13 +330,73 @@ export function AnalogMap({
     [getFlyDuration]
   );
 
+  const ensureTerrainSynced = useCallback(
+    (forceEnable = false) => {
+      const map = mapRef.current;
+      if (!map || !map.getStyle()) return;
+
+      const shouldEnableDem = terrain3d && (forceEnable || map.getZoom() >= TERRAIN_MIN_ZOOM);
+
+      if (!shouldEnableDem) {
+        if (map.getTerrain()) {
+          map.setTerrain(null);
+        }
+        if (map.getLayer("terrain-hillshade")) {
+          map.removeLayer("terrain-hillshade");
+        }
+        return;
+      }
+
+      if (!map.getSource("terrain-dem")) {
+        map.addSource("terrain-dem", {
+          type: "raster-dem",
+          tiles: [
+            "https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png",
+          ],
+          tileSize: 256,
+          minzoom: 0,
+          maxzoom: 14,
+          encoding: "terrarium",
+        });
+      }
+
+      if (!map.getLayer("terrain-hillshade")) {
+        map.addLayer(
+          {
+            id: "terrain-hillshade",
+            type: "hillshade",
+            source: "terrain-dem",
+            minzoom: TERRAIN_MIN_ZOOM,
+            paint: {
+              "hillshade-illumination-direction": 315,
+              "hillshade-illumination-anchor": "map",
+              "hillshade-exaggeration": 0.45,
+              "hillshade-shadow-color": "#060c18",
+              "hillshade-highlight-color": "#fff7e6",
+            },
+          },
+          map.getLayer("esri-labels-layer") ? "esri-labels-layer" : undefined
+        );
+      }
+
+      if (!map.getTerrain()) {
+        map.setTerrain({ source: "terrain-dem", exaggeration: 1.6 });
+      }
+    },
+    [terrain3d]
+  );
+
   const flyToSiteCinematographically = useCallback(
     (site: AnalogSite, requestedZoom?: number) => {
       const map = mapRef.current;
       if (!map) return;
 
       const isPolar = Math.abs(site.latitude) > 60;
-      const targetZoom = isPolar ? 7.5 : (requestedZoom ?? 9.8);
+      const targetZoom = isPolar ? 7.5 : (requestedZoom ?? 12.2);
+      const targetPitch = terrain3d ? 60 : map.getPitch();
+
+      ensureTerrainSynced(targetZoom >= TERRAIN_MIN_ZOOM);
+
       const prefersReducedMotion =
         typeof window !== "undefined" &&
         window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -344,23 +405,24 @@ export function AnalogMap({
         map.jumpTo({
           center: [site.longitude, site.latitude],
           zoom: targetZoom,
-          pitch: terrain3d ? Math.max(map.getPitch(), 45) : map.getPitch(),
+          pitch: targetPitch,
           bearing: 0,
         });
+        ensureTerrainSynced(targetZoom >= TERRAIN_MIN_ZOOM);
         return;
       }
 
       map.flyTo({
         center: [site.longitude, site.latitude],
         zoom: targetZoom,
-        pitch: terrain3d ? Math.max(map.getPitch(), 45) : map.getPitch(),
+        pitch: targetPitch,
         bearing: 0,
-        speed: 0.85,
-        curve: 1.35,
+        speed: 0.75,
+        curve: 1.0,
         essential: true,
       });
     },
-    [terrain3d]
+    [ensureTerrainSynced, terrain3d]
   );
 
   // Register tile cache Service Worker once on client
@@ -392,7 +454,7 @@ export function AnalogMap({
       pitch: startPitch,
       bearing: 0,
       fadeDuration: 100,
-      maxTileCacheSize: 500,
+      maxTileCacheSize: 800,
       refreshExpiredTiles: false,
       cancelPendingTileRequestsWhileZooming: true,
     });
@@ -469,61 +531,25 @@ export function AnalogMap({
     const map = mapRef.current;
     if (!map) return;
 
-    const syncTerrain = () => {
-      if (!map.getStyle()) return;
-
-      const shouldEnableDem = terrain3d && map.getZoom() >= TERRAIN_MIN_ZOOM;
-
-      if (!shouldEnableDem) {
-        if (map.getTerrain()) {
-          map.setTerrain(null);
-        }
-        return;
-      }
-
-      if (!map.getSource("terrain-dem")) {
-        map.addSource("terrain-dem", {
-          type: "raster-dem",
-          tiles: [
-            "https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png",
-          ],
-          tileSize: 256,
-          minzoom: 0,
-          maxzoom: 13,
-          encoding: "terrarium",
-        });
-      }
-
-      if (!map.getTerrain()) {
-        map.setTerrain({ source: "terrain-dem", exaggeration: 1.25 });
-      }
-
-      if (typeof map.setSky === "function") {
-        map.setSky({
-          "sky-color": "#060913",
-          "sky-horizon-blend": 0.45,
-          "horizon-color": "#111C33",
-          "horizon-fog-blend": 0.65,
-          "fog-color": "#080D1A",
-          "fog-ground-blend": 0.25,
-          "atmosphere-blend": 0.7,
-        });
-      }
+    const handleSync = () => {
+      ensureTerrainSynced();
     };
 
     if (map.isStyleLoaded()) {
-      syncTerrain();
+      handleSync();
     }
-    map.on("style.load", syncTerrain);
-    map.on("load", syncTerrain);
-    map.on("zoomend", syncTerrain);
+    map.on("style.load", handleSync);
+    map.on("styledata", handleSync);
+    map.on("load", handleSync);
+    map.on("zoomend", handleSync);
 
     return () => {
-      map.off("style.load", syncTerrain);
-      map.off("load", syncTerrain);
-      map.off("zoomend", syncTerrain);
+      map.off("style.load", handleSync);
+      map.off("styledata", handleSync);
+      map.off("load", handleSync);
+      map.off("zoomend", handleSync);
     };
-  }, [terrain3d]);
+  }, [ensureTerrainSynced]);
 
   // Synchronize site markers without destroying/recreating unchanged DOM elements
   useEffect(() => {
@@ -1145,7 +1171,7 @@ export function AnalogMap({
   }, [cameraTarget, sites, flyToSiteCinematographically]);
 
   return (
-    <div className="relative h-full w-full bg-[#060913]">
+    <div className="relative h-full w-full bg-[#071426]">
       <div
         ref={containerRef}
         className="h-full w-full"
@@ -1154,7 +1180,7 @@ export function AnalogMap({
       />
 
       {/* Selector de capa de mapa base y modos de prospección */}
-      <div className="absolute right-14 top-[138px] z-10 flex flex-col items-end gap-2">
+      <div className="absolute right-14 top-[112px] z-10 flex flex-col items-end gap-2">
         <div
           className="flex items-center gap-1 rounded-lg border border-slate-800/80 bg-[#060913]/90 p-1 shadow-xl backdrop-blur-md"
           role="group"
@@ -1197,15 +1223,6 @@ export function AnalogMap({
             }`}
           >
             Relieve 3D
-          </button>
-          <button
-            type="button"
-            onClick={handleOpenDiorama}
-            title="Abrir Gemelo Topográfico 3D HD (Three.js + Simulador Solar)"
-            className="inline-flex items-center gap-1 rounded border border-amber-400/50 bg-amber-500/15 px-2.5 py-1 text-xs font-semibold text-amber-200 transition-colors hover:border-amber-400 hover:bg-amber-500/25 hover:text-white"
-          >
-            <Mountain className="h-3.5 w-3.5" aria-hidden="true" />
-            <span>Gemelo 3D HD</span>
           </button>
         </div>
 
@@ -1394,15 +1411,6 @@ export function AnalogMap({
             <Box className="h-3 w-3" aria-hidden="true" />
             <span>3D</span>
           </button>
-          <button
-            type="button"
-            onClick={handleOpenDiorama}
-            title="Abrir Gemelo Topográfico 3D HD (Three.js + Simulador Solar)"
-            className="flex flex-1 items-center justify-center gap-1 rounded border border-amber-400/50 bg-amber-500/15 px-2 py-1 text-[11px] font-semibold text-amber-200 transition-colors hover:border-amber-400 hover:bg-amber-500/25 hover:text-white"
-          >
-            <Mountain className="h-3 w-3" aria-hidden="true" />
-            <span>HD</span>
-          </button>
         </div>
 
         <div className="flex items-center justify-between gap-1.5 border-t border-slate-800/80 pt-1">
@@ -1468,11 +1476,6 @@ export function AnalogMap({
           </div>
         </div>
       </div>
-
-      <TerrainDioramaModal
-        target={dioramaTarget}
-        onClose={() => setDioramaTarget(null)}
-      />
     </div>
   );
 }

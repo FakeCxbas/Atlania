@@ -410,7 +410,7 @@ export function MissionControlApp({ dataset }: MissionControlAppProps) {
     setShowDirectory(false);
     setSelectedSiteId(site.id);
     setActiveTargetId(site.best_target);
-    setCameraTarget({ type: "site", siteId: site.id, zoom: 9.8 });
+    setCameraTarget({ type: "site", siteId: site.id, zoom: 12.2 });
   }, []);
 
   // Toggle directory: ensure site detail panel is closed to prevent overlap

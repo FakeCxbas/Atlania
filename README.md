@@ -1,21 +1,33 @@
 <p align="center">
-  <img src="docs/assets/hero_banner.jpg" alt="ATLANIA Planetary Observatory Banner" width="100%" />
+  <img src="docs/assets/branding/atlania_banner_horizontal.png" alt="ATLANIA — Planetary Observatory & Earth-Space Analog Atlas" width="100%" />
 </p>
 
 <h1 align="center">ATLANIA // Planetary Observatory &amp; Earth-Space Analog Atlas</h1>
 
 <p align="center">
-  <em>&ldquo;Somewhere between Earth and the stars. Discover the extraordinary in the familiar.&rdquo;</em><br />
-  Plataforma de descubrimiento de análogos planetarios e Índice de Similitud Análoga (ASI) para el desafío <strong>Identify Earth Locations that Analog the Permanent Moon Base Locations and Mars</strong> (NASA Space Apps Challenge).
+  <strong>NASA International Space Apps Challenge 2026</strong><br />
+  Desafío: <em>Identify Earth Locations that Analog the Permanent Moon Base Locations and Mars</em>
 </p>
 
+<blockquote align="center">
+  <em>
+    &ldquo;Existe una belleza particular en los lugares que no podemos encontrar.<br />
+    Hace siglos, los cartógrafos dibujaban territorios que todavía no habían explorado. Hoy levantamos la mirada al cielo y reconocemos cráteres, cañones y llanuras que parecen pertenecer a mundos completamente distintos.<br /><br />
+    <strong>¿Y si para comprender otros planetas primero tuviéramos que volver a descubrir el nuestro?</strong><br /><br />
+    ATLANIA nace de esa pregunta. No busca inventar territorios perdidos; busca revelar lo extraordinario que ya existe en la Tierra para abrir una ventana hacia la Luna y Marte.<br />
+    Porque quizá lo desconocido siempre estuvo aquí, esperando a que volviéramos a mirar.&rdquo;
+  </em>
+</blockquote>
+
 <p align="center">
-  <a href="https://github.com/FakeCxbas/nasa-space-apps-2026/actions/workflows/ci.yml">
-    <img src="https://github.com/FakeCxbas/nasa-space-apps-2026/actions/workflows/ci.yml/badge.svg" alt="CI Status" />
+  <a href="https://github.com/FakeCxbas/Atlania/actions/workflows/ci.yml">
+    <img src="https://github.com/FakeCxbas/Atlania/actions/workflows/ci.yml/badge.svg" alt="CI Status" />
   </a>
   <img src="https://img.shields.io/badge/Python-3.11%2B-C5A36D?style=flat-square&logo=python&logoColor=white" alt="Python 3.11+" />
   <img src="https://img.shields.io/badge/Next.js-16-101321?style=flat-square&logo=nextdotjs&logoColor=white" alt="Next.js 16" />
+  <img src="https://img.shields.io/badge/MapLibre_GL-4.7-06B6D4?style=flat-square&logo=maplibre&logoColor=white" alt="MapLibre GL" />
   <img src="https://img.shields.io/badge/Data-NASA%20POWER%20%2B%20Copernicus%20DEM-38BDF8?style=flat-square" alt="NASA POWER + Copernicus DEM" />
+  <img src="https://img.shields.io/badge/License-MIT-94A3B8?style=flat-square" alt="License MIT" />
 </p>
 
 ---
@@ -42,8 +54,20 @@ flowchart LR
 | `olympus-mons-flank` | Olympus Mons Flank | Mars | High-elevation volcanic shield & lava tube operations |
 | `valles-marineris` | Valles Marineris | Mars | Deep tectonic canyon stratigraphy, sulfates & talus slopes |
 
-> [!NOTE]
-> Every analog evaluation explicitly reports both **where the analogy holds** and **where it breaks down** (Earth gravity `9.81 m/s²` vs `1.62` / `3.71 m/s²`, vacuum/thin CO2 atmosphere, ionizing radiation, and terrestrial biological weathering).
+## Scientific Evaluation Methodology (ASI)
+
+El **Índice de Similitud Análoga (ASI)** desarrollado para ATLANIA calcula una correlación cuantitativa multidimensional ($0.00$ a $1.00$) normalizada a través de 5 vectores clave:
+1. **Topografía & Relieve:** Pendiente media y rugosidad local calculada con muestreo en 5 puntos sobre el modelo de elevación global Copernicus DEM GLO-90.
+2. **Geología & Mineralogía:** Sustrato basáltico, regolito fino, arcillas filizadas, sulfatos y análogos de impacto.
+3. **Condiciones Térmicas Extremas:** Amplitud térmica diurna, medias extremas y radiación solar superficial incidente (NASA POWER API).
+4. **Hidrología & Aridez / Hielo:** Tasa de precipitación anual, humedad relativa y persistencia de permafrost / campos glaciares.
+5. **Entorno Subterráneo:** Presencia de tubos de lava basáltica como refugio térmico y blindaje contra radiación ionizante para hábitats Artemis.
+
+### Análogos Regionales Clave de Sudamérica
+
+- **Galápagos Lava Tubes (Ecuador):** Tubos de lava basáltica prístinos con estabilidad térmica constante ($\sim 22^\circ\text{C}$), análogo de primer orden para bases subterráneas en *Mare Tranquillitatis*.
+- **Chimborazo High-Altitude Paramó (Ecuador):** Terreno volcánico peri-glaciar sobre los 4.800 msnm con baja presión atmosférica, alta radiación UV y regolito andesítico.
+- **Desierto de Atacama / Yungay (Chile):** El límite seco de la Tierra para pruebas de instrumentación hiper-árida marciana (*Jezero Crater*).
 
 ---
 
