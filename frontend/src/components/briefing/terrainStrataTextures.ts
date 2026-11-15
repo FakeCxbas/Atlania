@@ -292,18 +292,20 @@ export function createTerrainStrataTextures(
     };
   });
 
-  // Layer 4: Deep rough volcanic basaltic crust with subtle crystalline cryosphere veins
-  const layer4 = makeLayerMaps(5.0, (u, v) => {
-    const rock = fbm(u * 12, v * 12, 401, 5);
-    const fracture = ridgedMultifractal(u * 9.0, v * 9.0, 419, 5);
-    let rgb = mixRgb([16, 18, 23], [38, 41, 49], rock);
-    let rough = 0.9;
-    if (fracture > 0.78) {
-      const crystal = Math.min(1, (fracture - 0.78) * 4.2);
-      rgb = mixRgb(rgb, [112, 168, 204], crystal * 0.55);
-      rough = lerp(0.9, 0.34, crystal);
+  // Layer 4: Fractured black volcanic basaltic rock with incandescent magma cracks
+  const layer4 = makeLayerMaps(5.6, (u, v) => {
+    const rock = fbm(u * 14, v * 14, 401, 5);
+    const fracture = ridgedMultifractal(u * 6.5, v * 6.5, 419, 5);
+    let rgb = mixRgb([12, 13, 16], [34, 36, 42], rock);
+    let rough = 0.92;
+    let h = rock * 0.65 + (1 - fracture) * 0.35;
+    if (fracture > 0.72) {
+      const magma = Math.min(1, (fracture - 0.72) * 3.6);
+      rgb = mixRgb([155, 28, 10], [251, 146, 36], magma);
+      rough = lerp(0.92, 0.38, magma);
+      h *= 1 - magma * 0.45;
     }
-    return { rgb, height: rock * 0.62 + fracture * 0.38, roughness: rough };
+    return { rgb, height: h, roughness: rough };
   });
 
   const allTextures: THREE.CanvasTexture[] = [
@@ -404,6 +406,7 @@ vStrataLocalNormal = normal;`
 
     let colorInjection = "";
     let roughnessInjection = "";
+    let emissiveInjection = "";
 
     if (mode === "surface") {
       colorInjection = /* glsl */ `
@@ -471,31 +474,39 @@ float bandRough = strataFbm(vec3(0.0, 0.0, vStrataLocalPos.z * 16.0));
 roughnessFactor = clamp(mix(0.45, 0.94, bandRough), 0.4, 0.96);
 `;
     } else {
-      // subsurface: deep rough volcanic basalt + subtle crystalline cryosphere mineral veins + faint geothermal grotto glow
+      // subsurface: fractured black volcanic basalt with glowing incandescent magma cracks & conduits
       colorInjection = /* glsl */ `
-float rockGrain = strataFbm(vStrataLocalPos * 32.0);
-float microPit = strataFbm(vStrataLocalPos * 64.0);
-float iceNoise = 1.0 - abs(strataNoise3D(vStrataLocalPos * 10.5 + vec3(1.7)) * 2.0 - 1.0);
-float iceVein = smoothstep(0.87, 0.98, iceNoise);
-vec3 deepBasalt = vec3(0.065, 0.072, 0.088) * (0.68 + 0.62 * rockGrain) * (0.85 + 0.3 * microPit);
-vec3 cryoCrystal = vec3(0.42, 0.68, 0.84);
-vec3 subCol = mix(deepBasalt, cryoCrystal, iceVein * 0.52);
-
-// Subtle warm geothermal glow inside sculpted cross-section grottos
-float frontWall = smoothstep(0.72, 0.98, -vStrataLocalPos.y);
-float rightWall = smoothstep(0.72, 0.98, vStrataLocalPos.x);
-float grottoA = exp(-pow((vStrataLocalPos.x + 0.25) * 4.2, 2.0) - pow((vStrataLocalPos.z + 0.16) * 8.5, 2.0)) * frontWall;
-float grottoB = exp(-pow((vStrataLocalPos.y - 0.18) * 4.5, 2.0) - pow((vStrataLocalPos.z + 0.17) * 8.5, 2.0)) * rightWall;
-float grottoMask = clamp(grottoA + grottoB, 0.0, 1.0);
-subCol = mix(subCol, vec3(0.03, 0.02, 0.02), grottoMask * 0.72);
-subCol += vec3(0.55, 0.18, 0.04) * pow(grottoMask, 1.8) * 0.65;
-
-diffuseColor.rgb = mix(diffuseColor.rgb, subCol, 0.84);
+float rockGrain = strataFbm(vStrataLocalPos * 34.0);
+float microScoria = strataFbm(vStrataLocalPos * 68.0);
+float warp = strataFbm(vStrataLocalPos * 4.2) * 0.85;
+float n1 = 1.0 - abs(strataNoise3D(vStrataLocalPos * 4.8 + vec3(warp)) * 2.0 - 1.0);
+float n2 = 1.0 - abs(strataNoise3D(vStrataLocalPos * 9.6 + vec3(3.1 - warp)) * 2.0 - 1.0);
+float crackField = pow(n1, 2.2) * 0.68 + pow(n2, 2.6) * 0.32;
+float lavaMask = smoothstep(0.68, 0.93, crackField);
+vec3 blackBasalt = vec3(0.045, 0.048, 0.056) * (0.65 + 0.65 * rockGrain) * (0.82 + 0.36 * microScoria);
+vec3 magmaCrust = mix(vec3(0.55, 0.07, 0.02), vec3(0.96, 0.34, 0.04), smoothstep(0.68, 0.88, crackField));
+vec3 subCol = mix(blackBasalt, magmaCrust, lavaMask);
+diffuseColor.rgb = mix(diffuseColor.rgb, subCol, 0.88);
 `;
       roughnessInjection = /* glsl */ `
-float iceN = 1.0 - abs(strataNoise3D(vStrataLocalPos * 10.5 + vec3(1.7)) * 2.0 - 1.0);
-float iceV = smoothstep(0.87, 0.98, iceN);
-roughnessFactor = mix(clamp(roughnessFactor, 0.78, 0.97), 0.28, iceV * 0.75);
+float wR = strataFbm(vStrataLocalPos * 4.2) * 0.85;
+float cR = 1.0 - abs(strataNoise3D(vStrataLocalPos * 4.8 + vec3(wR)) * 2.0 - 1.0);
+float lMask = smoothstep(0.68, 0.93, pow(cR, 2.2));
+roughnessFactor = mix(0.92, 0.36, lMask);
+`;
+      emissiveInjection = /* glsl */ `
+float wE = strataFbm(vStrataLocalPos * 4.2) * 0.85;
+float c1 = 1.0 - abs(strataNoise3D(vStrataLocalPos * 4.8 + vec3(wE)) * 2.0 - 1.0);
+float c2 = 1.0 - abs(strataNoise3D(vStrataLocalPos * 9.6 + vec3(3.1 - wE)) * 2.0 - 1.0);
+float crackE = pow(c1, 2.2) * 0.68 + pow(c2, 2.6) * 0.32;
+float redEdge = smoothstep(0.64, 0.80, crackE);
+float orangeMid = smoothstep(0.76, 0.89, crackE);
+float yellowCore = smoothstep(0.86, 0.96, crackE);
+vec3 lavaGlow = vec3(0.75, 0.08, 0.01) * redEdge
+              + vec3(0.98, 0.35, 0.03) * orangeMid * 1.25
+              + vec3(1.0, 0.84, 0.24) * yellowCore * 1.65;
+float sideBoost = 1.0 + smoothstep(0.75, 0.99, max(abs(vStrataLocalPos.x), abs(vStrataLocalPos.y))) * 0.45;
+totalEmissiveRadiance += lavaGlow * 1.8 * sideBoost;
 `;
     }
 
@@ -505,6 +516,10 @@ roughnessFactor = mix(clamp(roughnessFactor, 0.78, 0.97), 0.28, iceV * 0.75);
       .replace(
         "#include <roughnessmap_fragment>",
         `#include <roughnessmap_fragment>\n${roughnessInjection}`
+      )
+      .replace(
+        "#include <emissivemap_fragment>",
+        `#include <emissivemap_fragment>\n${emissiveInjection}`
       );
   };
 }

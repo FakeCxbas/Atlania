@@ -506,22 +506,22 @@ export function PlanetScene({
       sideTextures: strataTextures?.layer3,
     });
 
-    // Layer 4 (Bottom): Subsuelo, Criósfera y Cavidades Basálticas Esculpidas
+    // Layer 4 (Bottom): Subsuelo Basáltico Fracturado & Lava Incandescente
     const layer4Subsurface = createRealisticStratum({
-      fallbackColor: 0x1a1d24,
-      heightScale: 0.34,
+      fallbackColor: 0x121316,
+      heightScale: 0.56,
       slabThickness: 0.36,
       phase: 2.05,
-      roughness: 0.9,
-      normalScale: 1.6,
+      roughness: 0.92,
+      normalScale: 1.75,
       shaderMode: "subsurface",
       topTextures: strataTextures?.layer4,
       sideTextures: strataTextures?.layer4,
       carveGrottos: true,
     });
 
-    // Very subtle warm geothermal glow inside Layer 4's sculpted cross-section grottos
-    const lavaGlowLight = new THREE.PointLight(0xea580c, 0.45, 1.5, 2);
+    // Warm magma glow inside Layer 4's fractured basaltic cavities
+    const lavaGlowLight = new THREE.PointLight(0xf97316, 0.95, 1.8, 2);
     lavaGlowLight.position.set(-0.22, -0.82, -0.18);
     layer4Subsurface.group.add(lavaGlowLight);
 
@@ -549,7 +549,6 @@ export function PlanetScene({
         introProgress: introP,
         terrainProgress: terrP,
         activeChapter: ch,
-        layerSeparation: sep,
         comparisonBody: body,
         focusedLayer: fLayer,
       } = stateRef.current;
@@ -636,53 +635,93 @@ export function PlanetScene({
         marsMesh.rotation.y = elapsed * 0.045 + p * 1.6;
       }
 
-      // Chapter 3 Volumetric 3D Terrain Layers: crisp 100% solid entry, scroll separation & upward exit
-      const showTerrain = ch === 3 && terrP < 0.995;
+      // Chapter 3 Volumetric 3D Terrain Layers: 100% deterministic reversible f(t) scroll cycle
+      const tTerr = ch === 3 ? Math.max(0, Math.min(1, terrP)) : ch < 3 ? 0 : 1;
+      const showTerrain = ch === 3 && tTerr > 0.002 && tTerr < 0.998;
       terrainGroup.visible = showTerrain;
+
+      const smooth01 = (v: number) => {
+        const c = Math.max(0, Math.min(1, v));
+        return c * c * (3 - 2 * c);
+      };
+
+      // Pure deterministic f(t):
+      // t <= 0.0: off-screen below (-4.8), gap = 0
+      // 0.0 -> 0.25: organic entry to center-right (-0.06), gap = 0 (compact single block)
+      // 0.25 -> 0.75: vertical deployment (gap 0 -> 0.62)
+      // 0.75 -> 1.0: smooth upward exit off-screen (+5.2)
+      const maxGap = 0.62;
+      let targetY = -4.8;
+      let targetGap = 0;
+      if (tTerr <= 0.25) {
+        const u = smooth01(tTerr / 0.25);
+        targetY = THREE.MathUtils.lerp(-4.8, -0.06, u);
+        targetGap = 0;
+      } else if (tTerr <= 0.75) {
+        const u = smooth01((tTerr - 0.25) / 0.5);
+        targetY = -0.06;
+        targetGap = u * maxGap;
+      } else {
+        const u = smooth01((tTerr - 0.75) / 0.25);
+        targetY = THREE.MathUtils.lerp(-0.06, 5.2, u);
+        targetGap = maxGap;
+      }
+
+      terrainGroup.position.x = 1.52;
+      terrainGroup.position.z = 1.45;
+      terrainGroup.position.y = THREE.MathUtils.lerp(
+        terrainGroup.position.y,
+        targetY,
+        0.25
+      );
+      terrainGroup.scale.setScalar(0.84);
+
       if (showTerrain) {
-        const enterRaw = Math.max(0, Math.min(1, terrP / 0.14));
-        const enterT = enterRaw * enterRaw * (3 - 2 * enterRaw);
-        const exitT = Math.max(0, Math.min(1, (terrP - 0.72) / 0.28));
-        const entryOffsetY = (1 - enterT) * -1.35;
-        const entryOffsetX = (1 - enterT) * 0.45;
-        terrainGroup.position.set(
-          1.52 + entryOffsetX,
-          -0.06 + entryOffsetY + exitT * 5.2,
-          1.45
+        const deployRatio = targetGap / maxGap;
+        const reliefScaleZ = 0.14 + deployRatio * 0.86;
+        layer2Relief.group.scale.z = THREE.MathUtils.lerp(
+          layer2Relief.group.scale.z,
+          reliefScaleZ,
+          0.25
         );
-        terrainGroup.scale.setScalar(0.84);
-        const effectiveSep = Math.max(0, Math.min(1, sep));
+        layer3Geology.group.scale.z = THREE.MathUtils.lerp(
+          layer3Geology.group.scale.z,
+          reliefScaleZ,
+          0.25
+        );
+        layer4Subsurface.group.scale.z = THREE.MathUtils.lerp(
+          layer4Subsurface.group.scale.z,
+          reliefScaleZ,
+          0.25
+        );
 
-        // Clamped vertical spacing (~48% tighter max gap so all 4 layers stay framed in viewport)
-        const maxLayerGap = 0.64;
-        const stepZ = Math.min(maxLayerGap, 0.24 + effectiveSep * 0.40);
-
+        const compactStep = 0.05 + targetGap;
         layer1Surface.group.position.z = THREE.MathUtils.lerp(
           layer1Surface.group.position.z,
-          stepZ * 1.45,
-          0.12
+          0.08 + targetGap * 1.45,
+          0.25
         );
         layer2Relief.group.position.z = THREE.MathUtils.lerp(
           layer2Relief.group.position.z,
-          stepZ * 0.48,
-          0.12
+          0.01 + compactStep * 0.45,
+          0.25
         );
         layer3Geology.group.position.z = THREE.MathUtils.lerp(
           layer3Geology.group.position.z,
-          -stepZ * 0.48,
-          0.12
+          -0.06 - compactStep * 0.52,
+          0.25
         );
         layer4Subsurface.group.position.z = THREE.MathUtils.lerp(
           layer4Subsurface.group.position.z,
-          -stepZ * 1.45,
-          0.12
+          -0.13 - targetGap * 1.48,
+          0.25
         );
 
-        // Rotate terrain block gently with scroll + time to reveal 3D relief & thickness
+        // Rotate terrain block deterministically with tTerr (+ subtle ambient breathing)
         terrainGroup.rotation.z =
           0.52 +
-          effectiveSep * 0.42 +
-          (prefersReducedMotion ? 0 : Math.sin(elapsed * 0.35) * 0.05);
+          deployRatio * 0.42 +
+          (prefersReducedMotion ? 0 : Math.sin(elapsed * 0.35) * 0.04);
 
         const applyFocusOpacity = (
           stratum: {
@@ -708,7 +747,7 @@ export function PlanetScene({
         applyFocusOpacity(layer4Subsurface, 4);
 
         const layer4Active = fLayer === 0 || fLayer === 4;
-        lavaGlowLight.intensity = layer4Active ? 0.45 : 0.06;
+        lavaGlowLight.intensity = layer4Active ? 0.95 : 0.12;
       }
 
       renderer.render(scene, camera);

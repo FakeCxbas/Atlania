@@ -92,20 +92,34 @@ export function ScrollScene({
       if (terrainTrackEl) {
         ScrollTrigger.create({
           trigger: terrainTrackEl,
-          start: "top 32%",
-          end: "bottom 15%",
-          scrub: 0.25,
+          start: "top 65%",
+          end: "bottom 10%",
+          scrub: 0.2,
           onToggle: (self) => {
             if (self.isActive) {
               setScrollState((prev) => ({ ...prev, activeChapter: 3 }));
             }
+          },
+          onLeaveBack: () => {
+            setScrollState((prev) => ({
+              ...prev,
+              terrainProgress: 0,
+              layerSeparation: 0,
+            }));
+          },
+          onLeave: () => {
+            setScrollState((prev) => ({
+              ...prev,
+              terrainProgress: 1,
+              layerSeparation: 1,
+            }));
           },
           onUpdate: (self) => {
             setScrollState((prev) => ({
               ...prev,
               activeChapter: 3,
               terrainProgress: self.progress,
-              layerSeparation: Math.min(1, Math.max(0, (self.progress - 0.12) / 0.56)),
+              layerSeparation: Math.min(1, Math.max(0, (self.progress - 0.25) / 0.5)),
             }));
           },
         });
