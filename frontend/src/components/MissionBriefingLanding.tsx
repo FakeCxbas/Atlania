@@ -735,10 +735,18 @@ export function MissionBriefingLanding({
           const ch1Opacity = Math.max(0, 1 - p * 2.5);
           const ch1TranslateY = -p * 110;
 
-          const astronautOpacity = Math.max(0, 1 - p * 2.15);
-          const astronautTranslateX = p * 190;
-          const astronautTranslateY = -p * 135;
-          const astronautScale = 1 + p * 0.28;
+          const satOpacity = Math.max(0, 1 - p * 2.15);
+          const landsatX = p * 210;
+          const landsatY = -p * 125;
+          const landsatScale = 1 + p * 0.26;
+
+          const sentinelX = p * 145;
+          const sentinelY = -p * 185;
+          const sentinelScale = 1 + p * 0.18;
+
+          const suomiX = -p * 95;
+          const suomiY = -p * 95;
+          const suomiScale = 1 + p * 0.14;
 
           const ch2Opacity = Math.max(0, Math.min(1, (p - 0.36) * 2.35));
           const ch2TranslateY = Math.max(
@@ -777,27 +785,72 @@ export function MissionBriefingLanding({
                     aria-hidden="true"
                   />
 
-                  {/* INTEGRATED TRANSPARENT ASTRONAUT LAYER (Cutout PNG + Parallax + Coherent Rim Lighting) */}
+                  {/* INTEGRATED FLOATING SATELLITE CONSTELLATION (Cutout PNGs + Multi-Depth Parallax + Rim Lighting) */}
+                  {/* 1. Sentinel-1 (C-SAR Radar) — Upper-right orbital track */}
                   <div
                     style={{
-                      opacity: astronautOpacity,
-                      transform: `translate3d(${astronautTranslateX}px, ${astronautTranslateY}px, 0) scale(${astronautScale})`,
+                      opacity: satOpacity,
+                      transform: `translate3d(${sentinelX}px, ${sentinelY}px, 0) scale(${sentinelScale})`,
                     }}
-                    className="pointer-events-none absolute right-[-4%] bottom-[17%] z-10 w-[195px] select-none will-change-transform sm:right-[5%] sm:bottom-[7%] sm:w-[320px] lg:right-[7%] lg:bottom-[6%] lg:w-[430px] xl:w-[480px]"
+                    className="pointer-events-none absolute top-[13%] right-[2%] z-10 w-[165px] select-none will-change-transform sm:top-[14%] sm:right-[5%] sm:w-[245px] lg:right-[7%] lg:w-[300px] xl:w-[340px]"
                   >
-                    {/* Subtle directional atmospheric rim glow behind astronaut matching Earth's horizon */}
                     <div
-                      className="absolute inset-8 -z-10 rounded-full bg-[radial-gradient(circle_at_35%_40%,rgba(56,189,248,0.22),transparent_68%)] blur-2xl"
+                      className="absolute inset-6 -z-10 rounded-full bg-[radial-gradient(circle_at_45%_45%,rgba(56,189,248,0.18),transparent_70%)] blur-2xl"
                       aria-hidden="true"
                     />
                     <Image
-                      src="/nasa/astronaut-cutout.png"
-                      alt="Astronauta de la NASA Bruce McCandless II flotando libremente en el espacio con la Unidad de Maniobra Tripulada (NASA ID S84-27017)"
-                      width={624}
-                      height={701}
+                      src="/nasa/sentinel1-cutout.png"
+                      alt="Satélite Copernicus Sentinel-1 con antena radar C-SAR observando la superficie terrestre"
+                      width={900}
+                      height={731}
                       priority
-                      sizes="(max-width: 640px) 230px, (max-width: 1024px) 320px, 480px"
-                      className="h-auto w-full object-contain drop-shadow-[0_28px_48px_rgba(0,0,0,0.9)]"
+                      sizes="(max-width: 640px) 165px, (max-width: 1024px) 245px, 340px"
+                      className="mb-sat-float-b h-auto w-full object-contain drop-shadow-[0_24px_42px_rgba(0,0,0,0.88)]"
+                    />
+                  </div>
+
+                  {/* 2. Suomi NPP (VIIRS / NASA GIBS) — Mid-orbit secondary depth */}
+                  <div
+                    style={{
+                      opacity: satOpacity * 0.92,
+                      transform: `translate3d(${suomiX}px, ${suomiY}px, 0) scale(${suomiScale})`,
+                    }}
+                    className="pointer-events-none hidden select-none will-change-transform sm:absolute sm:right-[26%] sm:bottom-[37%] sm:z-10 sm:block sm:w-[190px] lg:right-[29%] lg:bottom-[39%] lg:w-[235px] xl:w-[260px]"
+                  >
+                    <div
+                      className="absolute inset-6 -z-10 rounded-full bg-[radial-gradient(circle_at_50%_50%,rgba(0,217,245,0.15),transparent_70%)] blur-2xl"
+                      aria-hidden="true"
+                    />
+                    <Image
+                      src="/nasa/suomi-npp-cutout.png"
+                      alt="Satélite NASA/NOAA Suomi NPP con sensor VIIRS para reflectancia verdadera"
+                      width={900}
+                      height={682}
+                      sizes="(max-width: 1024px) 190px, 260px"
+                      className="mb-sat-float-c h-auto w-full object-contain drop-shadow-[0_20px_36px_rgba(0,0,0,0.85)]"
+                    />
+                  </div>
+
+                  {/* 3. Landsat 9 (OLI-2 / TIRS-2) — Primary foreground satellite */}
+                  <div
+                    style={{
+                      opacity: satOpacity,
+                      transform: `translate3d(${landsatX}px, ${landsatY}px, 0) scale(${landsatScale})`,
+                    }}
+                    className="pointer-events-none absolute right-[-4%] bottom-[17%] z-10 w-[260px] select-none will-change-transform sm:right-[3%] sm:bottom-[12%] sm:w-[390px] lg:right-[4%] lg:bottom-[12%] lg:w-[490px] xl:w-[540px]"
+                  >
+                    <div
+                      className="absolute inset-6 -z-10 rounded-full bg-[radial-gradient(circle_at_35%_45%,rgba(56,189,248,0.22),transparent_68%)] blur-2xl"
+                      aria-hidden="true"
+                    />
+                    <Image
+                      src="/nasa/landsat9-cutout.png"
+                      alt="Satélite NASA/USGS Landsat 9 con instrumentos OLI-2 y TIRS-2 en órbita sobre el horizonte terrestre"
+                      width={900}
+                      height={399}
+                      priority
+                      sizes="(max-width: 640px) 260px, (max-width: 1024px) 390px, 540px"
+                      className="mb-sat-float-a h-auto w-full object-contain drop-shadow-[0_28px_48px_rgba(0,0,0,0.92)]"
                     />
                   </div>
 
