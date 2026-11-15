@@ -136,11 +136,6 @@ body {
 .maplibregl-ctrl-top-right {
   top: 108px !important;
   right: 4px !important;
-  transition: top 0.2s ease;
-}
-
-.submenu-open .maplibregl-ctrl-top-right {
-  top: 148px !important;
 }
 
 /* MapLibre dark HUD overrides */

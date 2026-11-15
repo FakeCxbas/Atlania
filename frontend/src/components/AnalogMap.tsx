@@ -18,7 +18,7 @@ if (typeof window !== "undefined") {
 }
 
 export type CameraTarget =
-  | { type: "site"; siteId: string }
+  | { type: "site"; siteId: string; zoom?: number }
   | {
       type: "fitBounds";
       sites: AnalogSite[];
@@ -43,7 +43,6 @@ interface AnalogMapProps {
   onProbeRegion?: (bounds: RegionBounds) => void;
   regionResult?: RegionEvaluationResult | null;
   cameraTarget?: CameraTarget | null;
-  hasExpandedSubmenu?: boolean;
 }
 
 type BasemapMode = "satellite" | "dark" | "nasa-gibs";
@@ -203,7 +202,6 @@ export function AnalogMap({
   onProbeRegion,
   regionResult = null,
   cameraTarget,
-  hasExpandedSubmenu = false,
 }: AnalogMapProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
@@ -1062,9 +1060,9 @@ export function AnalogMap({
       if (!site) return;
       map.flyTo({
         center: [site.longitude, site.latitude],
-        zoom: Math.max(map.getZoom(), 6.2),
+        zoom: Math.max(map.getZoom(), cameraTarget.zoom ?? 6.2),
         pitch: terrain3d ? Math.max(map.getPitch(), 42) : map.getPitch(),
-        duration: prefersReducedMotion ? 0 : 650,
+        duration: prefersReducedMotion ? 0 : 750,
         essential: true,
       });
     }
@@ -1080,11 +1078,7 @@ export function AnalogMap({
       />
 
       {/* Selector de capa de mapa base y modos de prospección */}
-      <div
-        className={`absolute right-14 z-10 flex flex-col items-end gap-2 transition-all duration-200 ${
-          hasExpandedSubmenu ? "top-[152px]" : "top-[112px]"
-        }`}
-      >
+      <div className="absolute right-14 top-[112px] z-10 flex flex-col items-end gap-2">
         <div
           className="flex items-center gap-1 rounded-lg border border-slate-800/80 bg-[#060913]/90 p-1 shadow-xl backdrop-blur-md"
           role="group"
@@ -1282,7 +1276,7 @@ export function AnalogMap({
 
       {/* Control compacto de perspectiva 2D / 3D y ángulos CAD */}
       <div
-        className="absolute bottom-9 right-3 z-10 flex flex-col gap-1 rounded-lg border border-slate-800/80 bg-[#060913]/90 p-1.5 shadow-xl backdrop-blur-md"
+        className="absolute bottom-14 right-3 z-10 flex flex-col gap-1 rounded-lg border border-slate-800/80 bg-[#060913]/90 p-1.5 shadow-xl backdrop-blur-md"
         role="group"
         aria-label="Control de perspectiva 2D y 3D"
       >

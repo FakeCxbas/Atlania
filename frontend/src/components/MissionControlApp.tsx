@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import type { AnalogDataset, AnalogSite } from "@/types/analog";
 import {
@@ -43,7 +43,12 @@ type MainTab = "tierra" | "luna" | "marte";
 export function MissionControlApp({ dataset }: MissionControlAppProps) {
   const [mainTab, setMainTab] = useState<MainTab>("tierra");
   const [selectedCountry, setSelectedCountry] = useState<string>("TODOS");
-  const [expandedCountry, setExpandedCountry] = useState<string | null>(null);
+  const [countryDropdown, setCountryDropdown] = useState<{
+    country: string;
+    top: number;
+    left: number;
+  } | null>(null);
+  const dropdownRef = useRef<HTMLDivElement | null>(null);
   const [selectedTargetFilter, setSelectedTargetFilter] = useState<string>("ALL");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedSiteId, setSelectedSiteId] = useState<string | null>(
@@ -97,15 +102,39 @@ export function MissionControlApp({ dataset }: MissionControlAppProps) {
     return entries;
   }, [translatedSites]);
 
-  // Sites belonging to the expanded country accordion submenu
-  const expandedCountrySites = useMemo(() => {
-    if (mainTab !== "tierra" || !expandedCountry) return [];
+  // Sites belonging to the currently open floating country dropdown
+  const dropdownSites = useMemo(() => {
+    if (mainTab !== "tierra" || !countryDropdown) return [];
     return translatedSites
-      .filter((s) => s.country === expandedCountry)
+      .filter((s) => s.country === countryDropdown.country)
       .sort((a, b) => b.overall_asi - a.overall_asi);
-  }, [mainTab, expandedCountry, translatedSites]);
+  }, [mainTab, countryDropdown, translatedSites]);
 
-  const hasExpandedSubmenu = expandedCountrySites.length > 0;
+  // Close floating country dropdown on outside click or Escape key
+  useEffect(() => {
+    if (!countryDropdown) return;
+
+    const handlePointerDown = (event: PointerEvent) => {
+      const target = event.target as HTMLElement | null;
+      if (!target) return;
+      if (dropdownRef.current?.contains(target)) return;
+      if (target.closest("[data-country-trigger]")) return;
+      setCountryDropdown(null);
+    };
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setCountryDropdown(null);
+      }
+    };
+
+    document.addEventListener("pointerdown", handlePointerDown);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("pointerdown", handlePointerDown);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [countryDropdown]);
 
   // Filter sites strictly based on the active main tab
   const filteredSites = useMemo(() => {
@@ -257,7 +286,7 @@ export function MissionControlApp({ dataset }: MissionControlAppProps) {
   const handleTabChange = (tab: MainTab) => {
     setMainTab(tab);
     setSelectedCountry("TODOS");
-    setExpandedCountry(null);
+    setCountryDropdown(null);
     setSelectedTargetFilter("ALL");
 
     if (tab === "luna") {
@@ -286,42 +315,39 @@ export function MissionControlApp({ dataset }: MissionControlAppProps) {
     }
   };
 
-  // Country filter selection with auto-camera and inline site submenu
-  const handleCountrySelect = (country: string) => {
+  // Country filter selection: opens floating vertical dropdown without auto-selecting a site
+  const handleCountrySelect = (country: string, triggerEl?: HTMLButtonElement | null) => {
     if (country === "TODOS") {
       setSelectedCountry("TODOS");
-      setExpandedCountry(null);
+      setCountryDropdown(null);
       setCameraTarget({ type: "world" });
       return;
     }
 
-    if (selectedCountry === country) {
-      setExpandedCountry((prev) => (prev === country ? null : country));
-      return;
-    }
-
     setSelectedCountry(country);
-    setExpandedCountry(country);
-    const countrySites = translatedSites.filter((s) => s.country === country);
-    const best = countrySites.sort((a, b) => b.overall_asi - a.overall_asi)[0];
-    if (best) {
-      setSelectedSiteId(best.id);
-      setActiveTargetId(best.best_target);
-      setShowDirectory(false);
-      setCameraTarget({
-        type: "fitBounds",
-        sites: countrySites,
-        padding: { left: 490, top: 160, right: 60, bottom: 60 },
-      });
-    }
+    setCountryDropdown((prev) => {
+      if (prev?.country === country) return null;
+      if (!triggerEl || typeof window === "undefined") {
+        return { country, top: 108, left: 16 };
+      }
+      const rect = triggerEl.getBoundingClientRect();
+      const menuWidth = Math.min(360, window.innerWidth - 24);
+      const clampedLeft = Math.max(12, Math.min(rect.left, window.innerWidth - menuWidth - 12));
+      return {
+        country,
+        top: Math.round(rect.bottom + 6),
+        left: Math.round(clampedLeft),
+      };
+    });
   };
 
-  // Fly directly to a site selected from the country inline submenu and open its drawer
+  // Fly directly with close-up detail zoom to a site chosen from the country dropdown
   const handleSelectSubmenuSite = useCallback((site: AnalogSite) => {
+    setCountryDropdown(null);
     setShowDirectory(false);
     setSelectedSiteId(site.id);
     setActiveTargetId(site.best_target);
-    setCameraTarget({ type: "site", siteId: site.id });
+    setCameraTarget({ type: "site", siteId: site.id, zoom: 12.5 });
   }, []);
 
   // Toggle directory: ensure site detail panel is closed to prevent overlap
@@ -408,17 +434,13 @@ export function MissionControlApp({ dataset }: MissionControlAppProps) {
       </a>
 
       {/* 1. Full-screen Protagonist Map */}
-      <div
-        id="map-region"
-        className={`absolute inset-0 z-0 ${hasExpandedSubmenu ? "submenu-open" : ""}`}
-      >
+      <div id="map-region" className="absolute inset-0 z-0">
         <AnalogMap
           sites={mapSites}
           references={translatedReferences}
           selectedSiteId={selectedSite?.id ?? null}
           onSelectSite={handleSelectSite}
           cameraTarget={cameraTarget}
-          hasExpandedSubmenu={hasExpandedSubmenu}
           probeMode={probeMode}
           isProbing={isProbing}
           onToggleProbeMode={() => {
@@ -616,14 +638,16 @@ export function MissionControlApp({ dataset }: MissionControlAppProps) {
 
               {countryList.map(([country, count]) => {
                 const active = selectedCountry === country;
-                const expanded = expandedCountry === country;
+                const expanded = countryDropdown?.country === country;
                 return (
                   <button
                     key={country}
                     type="button"
-                    onClick={() => handleCountrySelect(country)}
+                    data-country-trigger={country}
+                    onClick={(e) => handleCountrySelect(country, e.currentTarget)}
                     aria-pressed={active}
                     aria-expanded={expanded}
+                    aria-haspopup="menu"
                     className={`inline-flex shrink-0 items-center gap-1 rounded-full border px-3 py-1 text-xs font-medium transition-all ${
                       active
                         ? "border-[#D4AF37] bg-[#D4AF37]/20 text-[#D4AF37] shadow-[0_0_10px_rgba(212,175,55,0.2)]"
@@ -783,62 +807,65 @@ export function MissionControlApp({ dataset }: MissionControlAppProps) {
             </>
           )}
         </div>
+      </header>
 
-        {/* Row 3: Inline Accordion Submenu for Selected Country's Analog Sites */}
-        {hasExpandedSubmenu && (
-          <div
-            role="region"
-            aria-label={`Ubicaciones analógicas en ${expandedCountry}`}
-            className="mt-2 flex items-center gap-1.5 overflow-x-auto border-t border-slate-800/60 pt-2 no-scrollbar"
-          >
-            <span className="shrink-0 text-[11px] font-semibold tracking-wider text-cyan-400 uppercase mr-1">
-              {expandedCountry} ({expandedCountrySites.length}):
+      {/* Floating Vertical Country Sites Dropdown (Anchored below country button, overlays map) */}
+      {mainTab === "tierra" && countryDropdown && (
+        <div
+          ref={dropdownRef}
+          role="menu"
+          aria-label={`Ubicaciones analógicas en ${countryDropdown.country}`}
+          style={{ top: countryDropdown.top, left: countryDropdown.left }}
+          className="fixed z-50 w-[320px] sm:w-[360px] max-w-[calc(100vw-24px)] max-h-[60vh] overflow-y-auto rounded-xl border border-slate-700/80 bg-[#060913]/95 p-1.5 shadow-2xl backdrop-blur-md"
+        >
+          <div className="flex items-center justify-between border-b border-slate-800/80 px-2.5 py-1.5 mb-1">
+            <span className="text-[11px] font-semibold tracking-wider text-[#D4AF37] uppercase">
+              {countryDropdown.country} ({dropdownSites.length})
             </span>
+            <button
+              type="button"
+              onClick={() => setCountryDropdown(null)}
+              aria-label={`Cerrar lista de ${countryDropdown.country}`}
+              className="rounded p-0.5 text-slate-400 transition-colors hover:bg-slate-800/80 hover:text-slate-100"
+            >
+              <X className="h-3.5 w-3.5" aria-hidden="true" />
+            </button>
+          </div>
 
-            <div className="flex flex-1 items-center gap-1.5 overflow-x-auto no-scrollbar">
-              {expandedCountrySites.map((site) => {
-                const isSelected = selectedSiteId === site.id;
-                const isMars = dataset.references[site.best_target]?.body === "Mars";
-                return (
-                  <button
-                    key={site.id}
-                    type="button"
-                    onClick={() => handleSelectSubmenuSite(site)}
-                    aria-pressed={isSelected}
-                    title={`Volar a ${site.name} (${site.overall_asi.toFixed(1)}% ASI)`}
-                    className={`inline-flex shrink-0 items-center gap-1.5 rounded-lg border px-2.5 py-1 text-xs font-medium transition-all ${
-                      isSelected
-                        ? "border-cyan-400/70 bg-cyan-500/20 text-cyan-100 shadow-[0_0_10px_rgba(6,182,212,0.2)]"
-                        : "border-slate-800/90 bg-[#0D1424]/90 text-slate-300 hover:border-cyan-500/40 hover:text-slate-100"
-                    }`}
-                  >
+          <div className="flex flex-col gap-0.5">
+            {dropdownSites.map((site) => {
+              const isSelected = selectedSiteId === site.id;
+              const isMars = dataset.references[site.best_target]?.body === "Mars";
+              return (
+                <button
+                  key={site.id}
+                  type="button"
+                  role="menuitem"
+                  onClick={() => handleSelectSubmenuSite(site)}
+                  className={`flex w-full items-center justify-between gap-3 rounded-lg border px-2.5 py-2 text-left text-xs transition-colors ${
+                    isSelected
+                      ? "border-cyan-400/60 bg-cyan-500/20 text-cyan-100"
+                      : "border-transparent text-slate-200 hover:border-slate-800 hover:bg-[#0D1424]/95 hover:text-white"
+                  }`}
+                >
+                  <span className="flex items-center gap-2 min-w-0 flex-1">
                     <span
                       className={`h-2 w-2 shrink-0 rounded-full ${
                         isMars ? "bg-[#E07A5F]" : "bg-[#06B6D4]"
                       }`}
                       aria-hidden="true"
                     />
-                    <span className="truncate max-w-[200px]">{site.name}</span>
-                    <span className="font-mono text-[10px] tabular-nums text-slate-400">
-                      {site.overall_asi.toFixed(1)}%
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
-
-            <button
-              type="button"
-              onClick={() => setExpandedCountry(null)}
-              aria-label={`Cerrar submenú de ${expandedCountry}`}
-              title="Contraer lista de ubicaciones"
-              className="shrink-0 rounded-md border border-slate-800/80 bg-[#0D1424]/90 p-1 text-slate-400 transition-colors hover:border-slate-700 hover:text-slate-100"
-            >
-              <X className="h-3.5 w-3.5" aria-hidden="true" />
-            </button>
+                    <span className="leading-snug font-medium">{site.name}</span>
+                  </span>
+                  <span className="shrink-0 font-mono text-[11px] font-semibold tabular-nums text-cyan-300">
+                    {site.overall_asi.toFixed(1)}%
+                  </span>
+                </button>
+              );
+            })}
           </div>
-        )}
-      </header>
+        </div>
+      )}
 
       {/* 3. Left Analysis Panel / Expandable 3-Column Comparison Workbench */}
       {selectedSite && !showDirectory && (
@@ -846,12 +873,8 @@ export function MissionControlApp({ dataset }: MissionControlAppProps) {
           aria-label={`Detalle del sitio ${selectedSite.name}`}
           className={`fixed z-30 flex flex-col overflow-hidden rounded-2xl border border-[rgba(100,180,210,0.28)] bg-[#0D1925]/95 shadow-2xl backdrop-blur-md transition-all duration-200 ${
             comparisonExpanded
-              ? `bottom-3 left-3 right-3 sm:bottom-4 sm:left-4 sm:right-4 ${
-                  hasExpandedSubmenu ? "top-[148px] sm:top-[152px]" : "top-[108px] sm:top-[112px]"
-                }`
-              : `bottom-3 left-3 right-3 max-h-[62dvh] sm:bottom-4 sm:left-4 sm:right-auto sm:max-h-none sm:w-[400px] lg:w-[420px] ${
-                  hasExpandedSubmenu ? "top-[148px] sm:top-[152px]" : "top-[108px] sm:top-[112px]"
-                }`
+              ? "bottom-3 left-3 right-3 top-[108px] sm:bottom-4 sm:left-4 sm:right-4 sm:top-[112px]"
+              : "bottom-3 left-3 right-3 max-h-[62dvh] sm:bottom-4 sm:left-4 sm:right-auto sm:top-[112px] sm:max-h-none sm:w-[400px] lg:w-[420px]"
           }`}
         >
           <TelemetryDrawer
@@ -875,9 +898,7 @@ export function MissionControlApp({ dataset }: MissionControlAppProps) {
         <section
           id="directory-drawer"
           aria-label="Directorio completo de sitios análogos"
-          className={`fixed bottom-3 left-3 right-3 z-30 flex flex-col overflow-hidden rounded-2xl border border-[rgba(100,180,210,0.28)] bg-[#0D1925]/95 shadow-2xl backdrop-blur-md transition-all duration-200 sm:bottom-4 sm:left-4 sm:w-[380px] ${
-            hasExpandedSubmenu ? "top-[148px] sm:top-[152px]" : "top-[108px] sm:top-[112px]"
-          }`}
+          className="fixed bottom-3 left-3 right-3 top-[108px] z-30 flex flex-col overflow-hidden rounded-2xl border border-[rgba(100,180,210,0.28)] bg-[#0D1925]/95 shadow-2xl backdrop-blur-md sm:bottom-4 sm:left-4 sm:top-[112px] sm:w-[380px]"
         >
           <div className="flex items-center justify-between border-b border-[rgba(100,180,210,0.2)] bg-[#071018]/80 px-4 py-3">
             <div className="flex items-center gap-2">
