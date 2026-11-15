@@ -44,17 +44,6 @@
   --color-lunar-grey: #899095;
 }
 
-html,
-body {
-  scrollbar-width: none;
-  -ms-overflow-style: none;
-}
-
-html::-webkit-scrollbar,
-body::-webkit-scrollbar {
-  display: none;
-}
-
 html {
   @media (prefers-reduced-motion: no-preference) {
     scroll-behavior: smooth;

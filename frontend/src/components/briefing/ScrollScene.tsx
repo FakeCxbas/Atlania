@@ -19,14 +19,6 @@ interface ScrollSceneProps {
   children: (state: ScrollState) => React.ReactNode;
 }
 
-const CHAPTER_MARKERS = [
-  { index: 1, href: "#capitulo-1", label: "01 · El comienzo" },
-  { index: 2, href: "#el-desafio", label: "02 · Aproximación a la Tierra" },
-  { index: 3, href: "#capas-del-terreno", label: "03 · Capas del terreno" },
-  { index: 4, href: "#que-es-un-analogo", label: "04 · Comparación planetaria" },
-  { index: 5, href: "#acceso-al-explorador", label: "05 · Acceso al explorador" },
-];
-
 /**
  * Coordinates narrative scroll progress across the 5 chapters using GSAP ScrollTrigger
  * and feeds normalized progress into the Three.js `PlanetScene` and sticky chapter stages.
@@ -170,33 +162,6 @@ export function ScrollScene({
         comparisonBody={comparisonBody}
         focusedLayer={focusedLayer}
       />
-
-      {/* Minimalist 5-Chapter Progress Dots (Desktop, no floating labels over cards) */}
-      <aside
-        aria-label="Progreso de capítulos del viaje espacial"
-        className="fixed top-1/2 right-6 z-30 hidden -translate-y-1/2 flex-col items-end gap-3 opacity-100 lg:flex"
-      >
-        {CHAPTER_MARKERS.map((ch) => {
-          const isCurrent = scrollState.activeChapter === ch.index;
-          return (
-            <a
-              key={ch.index}
-              href={ch.href}
-              title={ch.label}
-              aria-label={ch.label}
-              className="group flex items-center justify-end p-1 transition-colors"
-            >
-              <span
-                className={`h-1.5 rounded-full transition-all duration-300 ${
-                  isCurrent
-                    ? "w-5 bg-[#00D9F5]"
-                    : "w-1.5 bg-white/30 group-hover:bg-white/70"
-                }`}
-              />
-            </a>
-          );
-        })}
-      </aside>
 
       {/* Narrative Chapters Content */}
       <div className="relative z-10">{children(scrollState)}</div>
