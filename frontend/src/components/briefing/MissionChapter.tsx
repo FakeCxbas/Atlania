@@ -41,7 +41,7 @@ export function MissionChapter({
       id={id}
       data-chapter-id={id}
       aria-labelledby={`${id}-heading`}
-      className={`relative z-10 mx-auto max-w-7xl px-6 py-28 sm:px-12 sm:py-36 lg:px-16 ${className}`}
+      className={`relative z-10 mx-auto max-w-7xl snap-start snap-always px-6 py-28 sm:px-12 sm:py-36 lg:px-16 ${className}`}
     >
       {/* Editorial Chapter Header */}
       <div className="flex flex-col justify-between gap-8 border-b border-white/10 pb-12 lg:flex-row lg:items-end">
