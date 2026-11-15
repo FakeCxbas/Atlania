@@ -1,7 +1,9 @@
 "use client";
 
+import { useState } from "react";
 import type { AnalogSite, TargetProfile, DimensionScores } from "@/types/analog";
 import { AsiRadarChart } from "@/components/AsiRadarChart";
+import { TerrainComparison3DModal } from "@/components/TerrainComparison3DModal";
 import {
   ExternalLink,
   Layers,
@@ -10,6 +12,7 @@ import {
   ChevronRight,
   Globe2,
   Moon,
+  Mountain,
   Orbit,
   Maximize2,
   Minimize2,
@@ -139,6 +142,7 @@ export function SideBySideComparison({
   expanded = false,
   onToggleExpand,
 }: SideBySideComparisonProps) {
+  const [show3DComparison, setShow3DComparison] = useState(false);
   const isMars = target.body === "Mars";
   const targetAccent = isMars ? "text-[#E07A5F]" : "text-[#00D9F5]";
   const targetBorder = isMars ? "border-[#E07A5F]/40" : "border-[#00D9F5]/40";
@@ -254,25 +258,36 @@ export function SideBySideComparison({
             </p>
           </div>
 
-          {onToggleExpand && (
+          <div className="flex flex-wrap items-center gap-2">
             <button
               type="button"
-              onClick={onToggleExpand}
-              className="inline-flex items-center gap-1.5 rounded-lg border border-[#F5B82E]/50 bg-[#F5B82E]/15 px-3 py-1.5 text-xs font-semibold text-[#F5B82E] transition-colors hover:bg-[#F5B82E]/25"
+              onClick={() => setShow3DComparison(true)}
+              className="inline-flex min-h-[36px] items-center gap-1.5 rounded-lg border border-[#7CA5B8]/55 bg-[#7CA5B8]/15 px-3 py-1.5 text-xs font-semibold text-[#E4DFD5] transition-colors hover:bg-[#7CA5B8]/25 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C5A36D]"
             >
-              {expanded ? (
-                <>
-                  <Minimize2 className="h-3.5 w-3.5" aria-hidden="true" />
-                  <span>Vista Compacta</span>
-                </>
-              ) : (
-                <>
-                  <Maximize2 className="h-3.5 w-3.5" aria-hidden="true" />
-                  <span>Expandir 3 Columnas</span>
-                </>
-              )}
+              <Mountain className="h-3.5 w-3.5 text-[#7CA5B8]" aria-hidden="true" />
+              <span>Comparar superficies en 3D</span>
             </button>
-          )}
+
+            {onToggleExpand && (
+              <button
+                type="button"
+                onClick={onToggleExpand}
+                className="inline-flex min-h-[36px] items-center gap-1.5 rounded-lg border border-[#C5A36D]/50 bg-[#C5A36D]/15 px-3 py-1.5 text-xs font-semibold text-[#C5A36D] transition-colors hover:bg-[#C5A36D]/25 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C5A36D]"
+              >
+                {expanded ? (
+                  <>
+                    <Minimize2 className="h-3.5 w-3.5" aria-hidden="true" />
+                    <span>Vista Compacta</span>
+                  </>
+                ) : (
+                  <>
+                    <Maximize2 className="h-3.5 w-3.5" aria-hidden="true" />
+                    <span>Expandir 3 Columnas</span>
+                  </>
+                )}
+              </button>
+            )}
+          </div>
         </div>
 
         {/* Target Selector Grid (All 6 Planetary Targets) */}
@@ -834,6 +849,16 @@ export function SideBySideComparison({
           </ul>
         </div>
       </section>
+
+      <TerrainComparison3DModal
+        open={show3DComparison}
+        onClose={() => setShow3DComparison(false)}
+        site={site}
+        target={target}
+        references={references}
+        overallAsi={activeScore.overall_asi}
+        onSelectTarget={onSelectTarget}
+      />
     </div>
   );
 }

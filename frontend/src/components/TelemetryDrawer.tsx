@@ -10,6 +10,11 @@ import type {
 import { downloadDossier } from "@/lib/dossier";
 import { SideBySideComparison } from "@/components/SideBySideComparison";
 import { AsiRadarChart } from "@/components/AsiRadarChart";
+import { TerrainComparison3DModal } from "@/components/TerrainComparison3DModal";
+import {
+  TerrainDioramaModal,
+  type TerrainDioramaTarget,
+} from "@/components/TerrainDioramaModal";
 import {
   ArrowLeft,
   ArrowRight,
@@ -17,6 +22,7 @@ import {
   Download,
   ExternalLink,
   FileText,
+  Mountain,
   Radio,
   Satellite,
   Thermometer,
@@ -56,6 +62,8 @@ export function TelemetryDrawer({
   onFeedback,
 }: TelemetryDrawerProps) {
   const [showComparison, setShowComparison] = useState(false);
+  const [show3DComparison, setShow3DComparison] = useState(false);
+  const [dioramaTarget, setDioramaTarget] = useState<TerrainDioramaTarget | null>(null);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -440,22 +448,56 @@ export function TelemetryDrawer({
               })}
             </select>
 
-            <button
-              type="button"
-              onClick={() => {
-                setShowComparison(true);
-                if (onToggleExpand && !expanded) {
-                  onToggleExpand();
+            <div className="grid grid-cols-1 gap-2">
+              <button
+                type="button"
+                onClick={() => setShow3DComparison(true)}
+                className="group flex min-h-11 w-full items-center justify-between rounded-lg border border-[#7CA5B8]/50 bg-[#7CA5B8]/12 px-3.5 py-2.5 text-left text-xs font-medium text-[#E4DFD5] transition-colors hover:bg-[#7CA5B8]/22 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C5A36D]"
+              >
+                <span className="flex items-center gap-2">
+                  <Mountain className="h-4 w-4 text-[#7CA5B8]" aria-hidden="true" />
+                  <span>Comparar superficies en 3D ({isMars ? "Marte" : "Luna"})</span>
+                </span>
+                <ArrowRight
+                  className="h-4 w-4 text-[#7CA5B8] transition-transform group-hover:translate-x-0.5"
+                  aria-hidden="true"
+                />
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setShowComparison(true);
+                  if (onToggleExpand && !expanded) {
+                    onToggleExpand();
+                  }
+                }}
+                className="group flex min-h-11 w-full items-center justify-between rounded-lg border border-[#C5A36D]/45 bg-[#C5A36D]/10 px-3.5 py-2.5 text-left text-xs font-medium text-[#E4DFD5] transition-colors hover:bg-[#C5A36D]/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C5A36D]"
+              >
+                <span>Comparar datos lado a lado</span>
+                <ArrowRight
+                  className="h-4 w-4 text-[#C5A36D] transition-transform group-hover:translate-x-0.5"
+                  aria-hidden="true"
+                />
+              </button>
+
+              <button
+                type="button"
+                onClick={() =>
+                  setDioramaTarget({
+                    name: site.name,
+                    country: site.country,
+                    latitude: site.latitude,
+                    longitude: site.longitude,
+                    asiScore: activeScore.overall_asi,
+                  })
                 }
-              }}
-              className="group flex min-h-11 w-full items-center justify-between rounded-lg border border-[#C5A36D]/45 bg-[#C5A36D]/10 px-3.5 py-2.5 text-left text-xs font-medium text-[#E4DFD5] transition-colors hover:bg-[#C5A36D]/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C5A36D]"
-            >
-              <span>Comparar territorios lado a lado</span>
-              <ArrowRight
-                className="h-4 w-4 text-[#C5A36D] transition-transform group-hover:translate-x-0.5"
-                aria-hidden="true"
-              />
-            </button>
+                className="flex min-h-10 w-full items-center justify-between rounded-lg border border-[#55527D]/35 bg-[#181B2C] px-3.5 py-2 text-left text-xs font-medium text-[#A3A1BD] transition-colors hover:border-[#C5A36D]/45 hover:text-[#E4DFD5] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C5A36D]"
+              >
+                <span>Explorar relieve terrestre en 3D HD</span>
+                <Mountain className="h-3.5 w-3.5 text-[#C5A36D]" aria-hidden="true" />
+              </button>
+            </div>
           </div>
         </section>
 
@@ -603,6 +645,21 @@ export function TelemetryDrawer({
           </div>
         </section>
       </div>
+
+      <TerrainComparison3DModal
+        open={show3DComparison}
+        onClose={() => setShow3DComparison(false)}
+        site={site}
+        target={activeTarget}
+        references={references}
+        overallAsi={activeScore.overall_asi}
+        onSelectTarget={onSelectTarget}
+      />
+
+      <TerrainDioramaModal
+        target={dioramaTarget}
+        onClose={() => setDioramaTarget(null)}
+      />
     </aside>
   );
 }

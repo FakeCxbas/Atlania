@@ -969,7 +969,7 @@ export function MissionControlApp({ dataset }: MissionControlAppProps) {
 
         {/* Vista expandida de comparación planetaria (3 columnas) */}
         {selectedSite && comparisonExpanded && (
-          <div className="absolute inset-0 z-30 flex flex-col bg-[#101321]">
+          <div className="absolute inset-0 z-40 flex flex-col bg-[#101321]">
             <TelemetryDrawer
               dataset={dataset}
               site={selectedSite}
@@ -988,7 +988,7 @@ export function MissionControlApp({ dataset }: MissionControlAppProps) {
         )}
 
         {/* Área central de visualización cartográfica */}
-        <div id="map-region" className="relative h-full min-w-0 flex-1">
+        <div id="map-region" className="relative isolate z-0 h-full min-w-0 flex-1">
           <AnalogMap
             sites={mapSites}
             references={translatedReferences}

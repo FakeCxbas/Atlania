@@ -6,12 +6,17 @@ import {
   Box,
   ChevronDown,
   ChevronUp,
+  Mountain,
   RotateCcw,
   RotateCw,
   Square,
 } from "lucide-react";
 import type { AnalogSite, TargetProfile } from "@/types/analog";
 import type { RegionBounds, RegionEvaluationResult } from "@/lib/evaluateRegion";
+import {
+  TerrainDioramaModal,
+  type TerrainDioramaTarget,
+} from "@/components/TerrainDioramaModal";
 
 if (typeof window !== "undefined") {
   maplibregl.setWorkerUrl("/maplibre-gl-worker.mjs");
@@ -250,6 +255,33 @@ export function AnalogMap({
   useEffect(() => {
     onSelectSiteRef.current = onSelectSite;
   }, [onSelectSite]);
+
+  const [dioramaTarget, setDioramaTarget] =
+    useState<TerrainDioramaTarget | null>(null);
+
+  const handleOpenDiorama = useCallback(() => {
+    const activeSite = selectedSiteId
+      ? sites.find((s) => s.id === selectedSiteId)
+      : null;
+    if (activeSite) {
+      setDioramaTarget({
+        name: activeSite.name,
+        country: activeSite.country,
+        latitude: activeSite.latitude,
+        longitude: activeSite.longitude,
+        asiScore: activeSite.overall_asi,
+      });
+      return;
+    }
+    const center = mapRef.current?.getCenter();
+    const lat = center?.lat ?? -0.67;
+    const lon = center?.lng ?? -78.6;
+    setDioramaTarget({
+      name: `Terreno en ${lat.toFixed(2)}°, ${lon.toFixed(2)}°`,
+      latitude: lat,
+      longitude: lon,
+    });
+  }, [selectedSiteId, sites]);
 
   const latSpanRef = useRef<HTMLSpanElement | null>(null);
   const lonSpanRef = useRef<HTMLSpanElement | null>(null);
@@ -1235,6 +1267,15 @@ export function AnalogMap({
           >
             Relieve 3D
           </button>
+          <button
+            type="button"
+            onClick={handleOpenDiorama}
+            title="Abrir Gemelo Topográfico 3D HD (Three.js + Simulador Solar)"
+            className="flex items-center gap-1 rounded-md px-2.5 py-1 text-xs font-medium text-[#C5A36D] transition-colors hover:bg-[#C5A36D]/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C5A36D]"
+          >
+            <Mountain className="h-3.5 w-3.5" aria-hidden="true" />
+            <span>3D HD</span>
+          </button>
         </div>
 
         {(onToggleProbeMode || onToggleRegionProbeMode) && (
@@ -1420,6 +1461,15 @@ export function AnalogMap({
             <Box className="h-3 w-3" aria-hidden="true" />
             <span>3D</span>
           </button>
+          <button
+            type="button"
+            onClick={handleOpenDiorama}
+            title="Abrir Gemelo Topográfico 3D HD (Three.js + Simulador Solar)"
+            className="flex flex-1 items-center justify-center gap-1 rounded px-2 py-1 text-[11px] font-semibold text-[#C5A36D] transition-colors hover:bg-[#C5A36D]/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C5A36D]"
+          >
+            <Mountain className="h-3 w-3" aria-hidden="true" />
+            <span>HD</span>
+          </button>
         </div>
 
         <div className="flex items-center justify-between gap-1.5 border-t border-[#55527D]/30 pt-1">
@@ -1485,6 +1535,11 @@ export function AnalogMap({
           </div>
         </div>
       </div>
+
+      <TerrainDioramaModal
+        target={dioramaTarget}
+        onClose={() => setDioramaTarget(null)}
+      />
     </div>
   );
 }
