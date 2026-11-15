@@ -208,37 +208,37 @@ const COMPARATIVE_EXAMPLES: ComparativeExample[] = [
       {
         label: "Topografía",
         concept: "topography",
-        earthValue: "Pendiente DEM 4.89° · Relieve volcánico suave",
-        planetaryValue: "Pendiente de escenario 5.0° en llanura de mare",
-        sourceTag: "DEM Copernicus GLO-90 + Escenario PDS",
+        earthValue: "Pendiente 4.9° · Relieve suave",
+        planetaryValue: "Pendiente 5.0° · Llanura de mare",
+        sourceTag: "DEM 90 m",
       },
       {
         label: "Geología",
         concept: "geology",
-        earthValue: "Coladas de basalto (1.0) y regolito/tefra (0.4)",
-        planetaryValue: "Basalto de mare lunar (1.0) y regolito (0.8)",
-        sourceTag: "Priors litológicos documentados",
+        earthValue: "Basalto (1.0) y regolito/tefra (0.4)",
+        planetaryValue: "Basalto lunar (1.0) y regolito (0.8)",
+        sourceTag: "Litología",
       },
       {
-        label: "Temperatura",
+        label: "Clima",
         concept: "thermal",
-        earthValue: "Aire a 2 m: 21.8°C a 24.4°C (media 23.1°C)",
-        planetaryValue: "Sombra térmica modelada en fosa: ~17°C (Δ2°C)",
-        sourceTag: "NASA POWER API vs. LRO Diviner",
+        earthValue: "Media 23.1°C (21.8°C a 24.4°C)",
+        planetaryValue: "Fosa en sombra: ~17°C (Δ2°C)",
+        sourceTag: "NASA POWER",
       },
       {
-        label: "Recursos y condiciones ambientales",
+        label: "Ambiente",
         concept: "hydrology",
-        earthValue: "Precipitación 2.33 mm/día · Humedad 82.6%",
-        planetaryValue: "Vacío anhidro (sequedad 1.0) · Sin atmósfera",
-        sourceTag: "NASA POWER PRECTOTCORR / RH2M",
+        earthValue: "2.33 mm/día · Humedad 82.6%",
+        planetaryValue: "Vacío anhidro · Sin atmósfera",
+        sourceTag: "Humedad",
       },
       {
-        label: "Características del subsuelo",
+        label: "Subsuelo",
         concept: "subsurface",
-        earthValue: "Tubos de lava basáltica (1.0) y techo natural (1.0)",
-        planetaryValue: "Fosa de colapso con posible acceso a cavidad (1.0)",
-        sourceTag: "Relevancia operativa de escenario",
+        earthValue: "Tubos de lava y techo natural (1.0)",
+        planetaryValue: "Fosa colapsada con cavidad (1.0)",
+        sourceTag: "Refugio",
       },
     ],
   },
@@ -259,37 +259,37 @@ const COMPARATIVE_EXAMPLES: ComparativeExample[] = [
       {
         label: "Topografía",
         concept: "topography",
-        earthValue: "Pendiente DEM 2.86° (prior de escarpe 12°)",
-        planetaryValue: "Taludes interiores empinados de ~20° y alta rugosidad",
-        sourceTag: "DEM Copernicus GLO-90 + LRO LOLA",
+        earthValue: "Pendiente 2.9° (escarpe 12°)",
+        planetaryValue: "Taludes interiores ~20°",
+        sourceTag: "DEM 90 m",
       },
       {
         label: "Geología",
         concept: "geology",
-        earthValue: "Brechas de impacto (1.0) y regolito polar (0.8)",
-        planetaryValue: "Regolito de tierras altas (1.0) e impacto (1.0)",
-        sourceTag: "Priors litológicos documentados",
+        earthValue: "Brechas de impacto y regolito polar",
+        planetaryValue: "Regolito polar e impacto (1.0)",
+        sourceTag: "Litología",
       },
       {
-        label: "Temperatura",
+        label: "Clima",
         concept: "thermal",
-        earthValue: "Aire ártico a 2 m: -19.2°C a -13.9°C",
-        planetaryValue: "Trampa fría en sombra permanente: -183°C (Δ10°C)",
-        sourceTag: "NASA POWER API vs. LRO Diviner",
+        earthValue: "-19.2°C a -13.9°C (Ártico)",
+        planetaryValue: "Trampa fría: -183°C (Δ10°C)",
+        sourceTag: "NASA POWER",
       },
       {
-        label: "Recursos y condiciones ambientales",
+        label: "Ambiente",
         concept: "hydrology",
-        earthValue: "Permafrost polar activo (1.0) · 0.44 mm/día precip.",
-        planetaryValue: "Potencial de volátiles e hielo atrapado (0.95)",
-        sourceTag: "NASA POWER + Escenario Artemis",
+        earthValue: "Permafrost activo · 0.44 mm/día",
+        planetaryValue: "Hielo atrapado en sombra (0.95)",
+        sourceTag: "Criósfera",
       },
       {
-        label: "Características del subsuelo",
+        label: "Subsuelo",
         concept: "subsurface",
-        earthValue: "Suelo cementado por hielo para pruebas de perforación",
-        planetaryValue: "Regolito criogénico sin tubos de lava (0.0)",
-        sourceTag: "Relevancia operativa ISRU",
+        earthValue: "Suelo helado para perforación ISRU",
+        planetaryValue: "Regolito criogénico compacto",
+        sourceTag: "ISRU",
       },
     ],
   },
@@ -310,39 +310,37 @@ const COMPARATIVE_EXAMPLES: ComparativeExample[] = [
       {
         label: "Topografía",
         concept: "topography",
-        earthValue: "Pendiente DEM 3.75° · Planicie aluvial-evaporítica",
-        planetaryValue: "Pendiente de escenario 6.0° en piso cratérico y delta",
-        sourceTag: "DEM Copernicus GLO-90 + MRO HiRISE",
+        earthValue: "Pendiente 3.8° · Planicie aluvial",
+        planetaryValue: "Pendiente 6.0° · Piso y delta",
+        sourceTag: "DEM 90 m",
       },
       {
         label: "Geología",
         concept: "geology",
-        earthValue: "Sedimentos (0.8), evaporitas/sales (0.8) y regolito (0.75)",
-        planetaryValue:
-          "Sedimentos deltaicos (1.0), basalto (0.8) y carbonatos",
-        sourceTag: "Priors litológicos + MRO CRISM",
+        earthValue: "Sedimentos, evaporitas y regolito",
+        planetaryValue: "Delta de arcillas, basalto y sales",
+        sourceTag: "Litología",
       },
       {
-        label: "Temperatura",
+        label: "Clima",
         concept: "thermal",
-        earthValue: "Aire a 2 m: 10.6°C a 24.4°C (Δ13.8°C)",
-        planetaryValue:
-          "Superficie marciana: -60°C media (-95°C a -25°C, Δ70°C)",
-        sourceTag: "NASA POWER API vs. Perseverance MEDA",
+        earthValue: "10.6°C a 24.4°C (Δ13.8°C)",
+        planetaryValue: "Media -60°C (-95°C a -25°C)",
+        sourceTag: "NASA POWER",
       },
       {
-        label: "Recursos y condiciones ambientales",
+        label: "Ambiente",
         concept: "hydrology",
-        earthValue: "Hiperaridez extrema: 0.04 mm/día · Humedad 31.6%",
-        planetaryValue: "Superficie seca actual (1.0) con historia acuosa (1.0)",
-        sourceTag: "NASA POWER PRECTOTCORR",
+        earthValue: "Hiperárido: 0.04 mm/día · 32% HR",
+        planetaryValue: "Árido actual con paleolago (1.0)",
+        sourceTag: "Aridez",
       },
       {
-        label: "Características del subsuelo",
+        label: "Subsuelo",
         concept: "subsurface",
-        earthValue: "Horizontes de sulfatos/percloratos a baja profundidad",
-        planetaryValue: "Estratigrafía lacustre para muestreo de testigos",
-        sourceTag: "Contexto astrobiológico de escenario",
+        earthValue: "Sulfatos y percloratos someros",
+        planetaryValue: "Estratos lacustres para muestreo",
+        sourceTag: "Testigos",
       },
     ],
   },
@@ -363,37 +361,37 @@ const COMPARATIVE_EXAMPLES: ComparativeExample[] = [
       {
         label: "Topografía",
         concept: "topography",
-        earthValue: "Pendiente DEM 0.87° (prior local 6.0°) · Lava rugosa",
-        planetaryValue: "Flanco volcánico de ~8.0° y alta rugosidad (0.8)",
-        sourceTag: "DEM Copernicus GLO-90 + MGS MOLA",
+        earthValue: "Pendiente 0.9° (local 6°) · Lava",
+        planetaryValue: "Flanco volcánico ~8.0° rugoso",
+        sourceTag: "DEM 90 m",
       },
       {
         label: "Geología",
         concept: "geology",
-        earthValue: "Basalto cuaternario (1.0) y regolito volcánico (0.65)",
-        planetaryValue: "Coladas basálticas (1.0) y regolito (0.7)",
-        sourceTag: "Priors litológicos documentados",
+        earthValue: "Basalto (1.0) y regolito (0.65)",
+        planetaryValue: "Coladas basálticas y regolito",
+        sourceTag: "Litología",
       },
       {
-        label: "Temperatura",
+        label: "Clima",
         concept: "thermal",
-        earthValue: "Aire a 2 m: 1.9°C a 14.4°C (media 8.2°C)",
-        planetaryValue: "Flanco marciano expuesto: -65°C media (Δ80°C)",
-        sourceTag: "NASA POWER API vs. Escenario MOLA",
+        earthValue: "Media 8.2°C (1.9°C a 14.4°C)",
+        planetaryValue: "Flanco expuesto: -65°C (Δ80°C)",
+        sourceTag: "NASA POWER",
       },
       {
-        label: "Recursos y condiciones ambientales",
+        label: "Ambiente",
         concept: "hydrology",
-        earthValue: "Precipitación 0.91 mm/día · Presión 83.2 kPa",
-        planetaryValue: "Atmósfera tenue de CO₂ (~0.65 kPa) · Sequedad 1.0",
-        sourceTag: "NASA POWER PS / PRECTOTCORR",
+        earthValue: "0.91 mm/día · Presión 83.2 kPa",
+        planetaryValue: "Atmósfera CO₂ (~0.65 kPa)",
+        sourceTag: "Presión",
       },
       {
-        label: "Características del subsuelo",
+        label: "Subsuelo",
         concept: "subsurface",
-        earthValue: "Tubos de lava extensos (1.0) y refugio (0.85)",
-        planetaryValue: "Canales de lava colapsados (1.0) y abrigo (0.9)",
-        sourceTag: "Relevancia operativa subterránea",
+        earthValue: "Tubos de lava y refugio (1.0)",
+        planetaryValue: "Canales de lava colapsados (1.0)",
+        sourceTag: "Refugio",
       },
     ],
   },
@@ -408,38 +406,43 @@ const DIMENSION_LABELS: {
   {
     key: "topography",
     concept: "topography",
-    label: "Topografía y Rugosidad",
-    formulaNote:
-      "50% similitud de pendiente (escala 30°) + 50% similitud de rugosidad",
+    label: "Topografía y pendiente",
+    formulaNote: "",
   },
   {
     key: "geology",
     concept: "geology",
-    label: "Geología y Litología",
-    formulaNote:
-      "Superposición difusa de Jaccard (Σ min / Σ max) en 5 litologías",
+    label: "Geología y litología",
+    formulaNote: "",
   },
   {
     key: "thermal",
     concept: "thermal",
-    label: "Régimen Térmico",
-    formulaNote:
-      "60% temperatura media anual + 40% amplitud térmica (escala 100°C)",
+    label: "Régimen térmico",
+    formulaNote: "",
   },
   {
     key: "hydrology_ice",
     concept: "hydrology",
-    label: "Sequedad, Hielo e Historia Acuosa",
-    formulaNote:
-      "40% aridez 1/(1+P) + 40% relevancia de hielo + 20% historia acuosa",
+    label: "Aridez y hielo",
+    formulaNote: "",
   },
   {
     key: "subsurface_ops",
     concept: "subsurface",
-    label: "Operaciones Subterráneas y Refugio",
-    formulaNote: "70% relevancia de tubos de lava + 30% potencial de refugio",
+    label: "Subsuelo y refugio",
+    formulaNote: "",
   },
 ];
+
+const SHORT_TARGET_SUMMARIES: Record<string, string> = {
+  "shackleton-crater": "Trampa fría polar (-183°C) con hielo para Artemis.",
+  "mare-tranquillitatis": "Fosa volcánica lunar (~17°C) ideal para refugio.",
+  "jezero-crater": "Antiguo paleolago con delta de arcillas y carbonatos.",
+  "olympus-mons-flank": "Escudo volcánico gigante con canales de lava.",
+  "mouton-mons": "Meseta polar plana candidata de aterrizaje Artemis III.",
+  "valles-marineris": "Cañón tectónico con taludes de basalto y sulfatos.",
+};
 
 export function MissionBriefingLanding({
   dataset,
@@ -1467,14 +1470,14 @@ export function MissionBriefingLanding({
 
                     {/* Clean Hairline Comparison Rows (Zero Card Borders) */}
                     <div className="border-t border-[#55527D]/35">
-                      <div className="hidden grid-cols-12 gap-6 border-b border-[#55527D]/30 py-3 font-mono text-[11px] tracking-[0.16em] text-[#A3A1BD] uppercase md:grid">
-                        <div className="col-span-3">Dimensión evaluada</div>
+                      <div className="hidden grid-cols-12 gap-6 border-b border-[#55527D]/30 py-2.5 font-mono text-[11px] tracking-[0.16em] text-[#A3A1BD] uppercase md:grid">
+                        <div className="col-span-3">Dimensión</div>
                         <div className="col-span-4 text-[#7CA5B8]">
-                          Condición en la Tierra ({activeComparativeSite.name})
+                          Tierra · {activeComparativeSite.name.split("-")[0].trim()}
                         </div>
                         <div className="col-span-5 text-[#C5A36D]">
-                          Condición en {activeComparativeExample.bodyLabel} (
-                          {activeComparativeTarget.name})
+                          {activeComparativeExample.bodyLabel} ·{" "}
+                          {activeComparativeTarget.name.split("/")[0].trim()}
                         </div>
                       </div>
 
@@ -1483,21 +1486,16 @@ export function MissionBriefingLanding({
                           (row) => (
                             <div
                               key={row.label}
-                              className="grid grid-cols-1 gap-3 py-5 md:grid-cols-12 md:items-baseline md:gap-6"
+                              className="grid grid-cols-1 gap-2 py-3 md:grid-cols-12 md:items-center md:gap-6"
                             >
                               <div className="flex items-center gap-2.5 md:col-span-3">
                                 <ScientificIcon
                                   concept={row.concept}
                                   className="h-4 w-4 shrink-0 text-[#7CA5B8]"
                                 />
-                                <div>
-                                  <p className="text-sm font-semibold text-[#E4DFD5]">
-                                    {row.label}
-                                  </p>
-                                  <p className="font-mono text-xs text-[#A3A1BD]">
-                                    {row.sourceTag}
-                                  </p>
-                                </div>
+                                <p className="text-sm font-semibold text-[#E4DFD5]">
+                                  {row.label}
+                                </p>
                               </div>
 
                               <div className="font-mono text-sm font-medium text-[#E4DFD5] tabular-nums md:col-span-4">
@@ -1520,25 +1518,25 @@ export function MissionBriefingLanding({
                 ============================================================= */}
                 <div
                   id="similitud-asi"
-                  className="mt-28 snap-start border-t border-[#55527D]/35 pt-24"
+                  className="mt-24 snap-start border-t border-[#55527D]/35 pt-18"
                 >
                   <div className="max-w-3xl">
                     <p className="font-mono text-xs font-semibold tracking-wider text-[#7CA5B8] uppercase">
                       ÍNDICE DE SIMILITUD ANÁLOGA (ASI) · ESCALA 0 – 100
                     </p>
-                    <h3 className="mt-3 text-3xl font-semibold tracking-tight text-[#E4DFD5] sm:text-4xl">
+                    <h3 className="mt-2 text-3xl font-semibold tracking-tight text-[#E4DFD5] sm:text-4xl">
                       Similitud cuantitativa por misión
                     </h3>
-                    <p className="mt-3 text-base leading-relaxed text-[#E4DFD5]">
+                    <p className="mt-2 text-sm text-[#A3A1BD]">
                       Pondera 5 dimensiones según el destino:{" "}
-                      <span className="inline-flex items-center rounded-md border border-[#7CA5B8]/40 bg-[#7CA5B8]/10 px-2.5 py-1 font-mono text-xs font-semibold text-[#7CA5B8]">
+                      <span className="inline-flex items-center rounded-md border border-[#7CA5B8]/40 bg-[#7CA5B8]/10 px-2 py-0.5 font-mono text-xs font-semibold text-[#7CA5B8]">
                         ASI Global = Σ (Peso[d] × Afinidad[d])
                       </span>
                     </p>
                   </div>
 
                   {/* Minimal Site & Target Selectors */}
-                  <div className="mt-10 grid grid-cols-1 gap-6 border-y border-[#55527D]/30 py-6 md:grid-cols-2">
+                  <div className="mt-6 grid grid-cols-1 gap-6 border-y border-[#55527D]/30 py-4 md:grid-cols-2">
                     <div>
                       <label
                         htmlFor="asi-site-select"
@@ -1560,7 +1558,7 @@ export function MissionBriefingLanding({
                             setSelectedAsiTargetId(siteObj.best_target);
                           }
                         }}
-                        className="mt-2 w-full border-b border-[#55527D]/35 bg-transparent py-2.5 text-base font-medium text-[#E4DFD5] focus:border-[#7CA5B8] focus:outline-none"
+                        className="mt-1.5 w-full border-b border-[#55527D]/35 bg-transparent py-2 text-sm font-medium text-[#E4DFD5] focus:border-[#7CA5B8] focus:outline-none"
                       >
                         {translatedSites.map((s) => (
                           <option
@@ -1587,7 +1585,7 @@ export function MissionBriefingLanding({
                         id="asi-target-select"
                         value={selectedAsiTargetId}
                         onChange={(e) => setSelectedAsiTargetId(e.target.value)}
-                        className="mt-2 w-full border-b border-[#55527D]/35 bg-transparent py-2.5 text-base font-medium text-[#E4DFD5] focus:border-[#C5A36D] focus:outline-none"
+                        className="mt-1.5 w-full border-b border-[#55527D]/35 bg-transparent py-2 text-sm font-medium text-[#E4DFD5] focus:border-[#C5A36D] focus:outline-none"
                       >
                         {referenceList.map((ref) => {
                           const pairScore =
@@ -1614,17 +1612,17 @@ export function MissionBriefingLanding({
                   {selectedAsiSite &&
                     selectedAsiTarget &&
                     selectedAsiScore && (
-                      <div className="mt-12 grid grid-cols-1 gap-12 lg:grid-cols-12 lg:items-start">
+                      <div className="mt-8 grid grid-cols-1 gap-8 lg:grid-cols-12 lg:items-center">
                         {/* Left 5 Columns: Large Typographic ASI Score + Radar */}
                         <div className="lg:col-span-5">
-                          <div className="flex items-baseline justify-between border-b border-[#55527D]/30 pb-6">
+                          <div className="flex items-baseline justify-between border-b border-[#55527D]/30 pb-4">
                             <div>
                               <span className="font-mono text-xs tracking-[0.18em] text-[#A3A1BD] uppercase">
                                 ÍNDICE ASI GLOBAL
                               </span>
-                              <div className="mt-1 font-mono text-6xl font-bold tracking-tight text-[#E4DFD5] tabular-nums sm:text-7xl">
-                                {currentAsiValue.toFixed(2)}
-                                <span className="ml-2 text-lg font-normal text-[#A3A1BD]">
+                              <div className="mt-1 font-mono text-5xl font-bold tracking-tight text-[#E4DFD5] tabular-nums sm:text-6xl">
+                                {currentAsiValue.toFixed(1)}
+                                <span className="ml-2 text-base font-normal text-[#A3A1BD]">
                                   / 100
                                 </span>
                               </div>
@@ -1633,7 +1631,7 @@ export function MissionBriefingLanding({
                               href={`/explorer?body=${selectedAsiTarget.body}&target=${selectedAsiTarget.id}&site=${selectedAsiSite.id}`}
                               className="inline-flex items-center gap-1.5 font-mono text-xs text-[#7CA5B8] hover:underline"
                             >
-                              <span>Abrir par en /explorer</span>
+                              <span>Abrir en /explorer</span>
                               <ArrowUpRight
                                 className="h-3.5 w-3.5"
                                 aria-hidden="true"
@@ -1641,7 +1639,7 @@ export function MissionBriefingLanding({
                             </Link>
                           </div>
 
-                          <div className="mt-6">
+                          <div className="mt-4">
                             <AsiRadarChart
                               dimensions={selectedAsiScore.dimensions}
                               weights={selectedAsiScore.weights}
@@ -1650,8 +1648,8 @@ export function MissionBriefingLanding({
                           </div>
                         </div>
 
-                        {/* Right 7 Columns: 5 Dimension Hairlines + Breakdowns */}
-                        <div className="space-y-8 lg:col-span-7">
+                        {/* Right 7 Columns: 5 Dimension Hairlines + Compact Physical Limits */}
+                        <div className="space-y-5 lg:col-span-7">
                           <div className="divide-y divide-[#55527D]/30 border-t border-b border-[#55527D]/30">
                             {DIMENSION_LABELS.map((dim) => {
                               const scoreVal =
@@ -1661,7 +1659,7 @@ export function MissionBriefingLanding({
                               const weightedContribution = scoreVal * weightVal;
 
                               return (
-                                <div key={dim.key} className="py-4">
+                                <div key={dim.key} className="py-2.5">
                                   <div className="flex flex-wrap items-baseline justify-between gap-2">
                                     <div className="flex items-center gap-2.5">
                                       <ScientificIcon
@@ -1674,8 +1672,7 @@ export function MissionBriefingLanding({
                                     </div>
                                     <div className="flex items-center gap-4 font-mono text-xs tabular-nums">
                                       <span className="text-[#A3A1BD]">
-                                        Peso:{" "}
-                                        {(weightVal * 100).toFixed(0)}%
+                                        Peso: {(weightVal * 100).toFixed(0)}%
                                       </span>
                                       <span className="text-[#7CA5B8]">
                                         +{weightedContribution.toFixed(1)} pts
@@ -1686,7 +1683,7 @@ export function MissionBriefingLanding({
                                     </div>
                                   </div>
 
-                                  <div className="mt-2.5 h-1 w-full overflow-hidden bg-[#27233E]">
+                                  <div className="mt-2 h-1 w-full overflow-hidden bg-[#27233E]">
                                     <div
                                       className="h-full bg-[#7CA5B8]"
                                       style={{
@@ -1702,39 +1699,33 @@ export function MissionBriefingLanding({
                             })}
                           </div>
 
-                          {/* Mandatory Analogy Breakdowns (Honest scientific limits) */}
-                          <div>
-                            <div className="flex items-center gap-2 font-mono text-xs font-semibold tracking-wider text-[#C5A36D] uppercase">
+                          {/* Concise Physical Limits Pills */}
+                          <div className="flex flex-wrap items-center gap-2">
+                            <span className="inline-flex items-center gap-1.5 font-mono text-[11px] font-semibold tracking-wider text-[#C5A36D] uppercase">
                               <ShieldAlert
-                                className="h-4 w-4"
+                                className="h-3.5 w-3.5"
                                 aria-hidden="true"
                               />
-                              <span>
-                                Límites físicos donde la analogía se rompe (
-                                {
-                                  Object.keys(
-                                    selectedAsiScore.analogy_breakdowns
-                                  ).length
-                                }
-                                )
+                              Límites físicos:
+                            </span>
+                            {[
+                              `Gravedad 9.81 vs. ${
+                                isSelectedTargetMars ? "3.71" : "1.62"
+                              } m/s²`,
+                              `Atmósfera vs. ${
+                                isSelectedTargetMars
+                                  ? "CO₂ tenue (0.6 kPa)"
+                                  : "vacío lunar"
+                              }`,
+                              "Radiación espacial sin magnetosfera",
+                            ].map((limitTag) => (
+                              <span
+                                key={limitTag}
+                                className="rounded-full border border-[#55527D]/40 bg-[#181B2C]/80 px-2.5 py-1 font-mono text-[11px] text-[#E4DFD5]"
+                              >
+                                {limitTag}
                               </span>
-                            </div>
-                            <ul className="mt-3 space-y-2 text-sm leading-relaxed text-[#E4DFD5]">
-                              {Object.entries(
-                                selectedAsiScore.analogy_breakdowns
-                              ).map(([key, msg]) => (
-                                <li
-                                  key={key}
-                                  className="flex items-start gap-2.5"
-                                >
-                                  <span
-                                    className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-[#C5A36D]"
-                                    aria-hidden="true"
-                                  />
-                                  <span>{msg}</span>
-                                </li>
-                              ))}
-                            </ul>
+                            ))}
                           </div>
                         </div>
                       </div>
@@ -1746,14 +1737,14 @@ export function MissionBriefingLanding({
                 ============================================================= */}
                 <div
                   id="explora-los-destinos"
-                  className="mt-28 snap-start border-t border-[#55527D]/35 pt-24"
+                  className="mt-24 snap-start border-t border-[#55527D]/35 pt-18"
                 >
-                  <div className="flex flex-col justify-between gap-6 lg:flex-row lg:items-end">
+                  <div className="flex flex-col justify-between gap-4 lg:flex-row lg:items-end">
                     <div className="max-w-2xl">
                       <p className="font-mono text-xs font-medium tracking-[0.22em] text-[#7CA5B8] uppercase">
                         CATÁLOGO PLANETARIO · 6 ESCENARIOS DE REFERENCIA
                       </p>
-                      <h3 className="mt-3 text-3xl font-semibold tracking-tight text-[#E4DFD5] sm:text-4xl">
+                      <h3 className="mt-2 text-3xl font-semibold tracking-tight text-[#E4DFD5] sm:text-4xl">
                         Explora los destinos lunares y marcianos
                       </h3>
                     </div>
@@ -1776,7 +1767,7 @@ export function MissionBriefingLanding({
                             key={filterVal}
                             type="button"
                             onClick={() => setDestinationFilter(filterVal)}
-                            className={`rounded-full px-4 py-2 text-xs font-semibold tracking-wider uppercase transition-colors ${
+                            className={`rounded-full px-4 py-1.5 text-xs font-semibold tracking-wider uppercase transition-colors ${
                               active
                                 ? "bg-[#27233E] text-[#C5A36D]"
                                 : "border border-[#55527D]/35 text-[#A3A1BD] hover:text-[#E4DFD5]"
@@ -1789,7 +1780,7 @@ export function MissionBriefingLanding({
                     </div>
                   </div>
 
-                  <div className="mt-12 grid grid-cols-1 gap-x-8 gap-y-14 md:grid-cols-2 lg:grid-cols-3">
+                  <div className="mt-8 grid grid-cols-1 gap-x-6 gap-y-8 md:grid-cols-2 lg:grid-cols-3">
                     {filteredDestinations.map((target) => {
                       const media = TARGET_MEDIA[target.id];
                       const isMars = target.body === "Mars";
@@ -1801,11 +1792,14 @@ export function MissionBriefingLanding({
                         .sort((a, b) => b.score - a.score)
                         .slice(0, 2);
                       const topAnalog = rankedAnalogs[0];
+                      const shortName = target.name.split("/")[0].trim();
+                      const shortSummary =
+                        SHORT_TARGET_SUMMARIES[target.id] ?? target.context;
 
                       return (
                         <article
                           key={target.id}
-                          className="group flex flex-col justify-between border-t border-[#55527D]/35 pt-5"
+                          className="group flex flex-col justify-between border-t border-[#55527D]/35 pt-4"
                         >
                           <div>
                             <div className="flex items-center justify-between font-mono text-[11px] text-[#A3A1BD]">
@@ -1821,12 +1815,12 @@ export function MissionBriefingLanding({
                               </span>
                             </div>
 
-                            <h4 className="mt-2 text-2xl font-bold text-[#E4DFD5]">
-                              {target.name}
+                            <h4 className="mt-1 text-lg font-bold text-[#E4DFD5]">
+                              {shortName}
                             </h4>
 
                             {media && (
-                              <div className="relative mt-4 h-48 w-full overflow-hidden rounded-xl">
+                              <div className="relative mt-2.5 h-34 w-full overflow-hidden rounded-xl">
                                 <Image
                                   src={media.image}
                                   alt={media.alt}
@@ -1837,31 +1831,29 @@ export function MissionBriefingLanding({
                               </div>
                             )}
 
-                            <p className="mt-4 text-sm leading-relaxed text-[#A3A1BD]">
-                              {target.context}
+                            <p className="mt-2.5 text-xs leading-relaxed text-[#A3A1BD]">
+                              {shortSummary}
                             </p>
                           </div>
 
-                          <div className="mt-6 border-t border-[#55527D]/30 pt-4">
-                            <div className="flex items-center justify-between font-mono text-xs">
-                              <span className="text-[#A3A1BD]">
-                                Mejor análogo:{" "}
-                                <strong className="font-normal text-[#E4DFD5]">
-                                  {topAnalog?.site.name}
-                                </strong>
-                              </span>
+                          <div className="mt-3 flex items-center justify-between border-t border-[#55527D]/30 pt-2.5">
+                            <span className="truncate font-mono text-[11px] text-[#A3A1BD]">
+                              Análogo:{" "}
+                              <strong className="font-normal text-[#E4DFD5]">
+                                {topAnalog?.site.name.split("(")[0].trim()}
+                              </strong>{" "}
                               <span className="font-bold text-[#7CA5B8] tabular-nums">
-                                {topAnalog?.score.toFixed(1)}
+                                ({topAnalog?.score.toFixed(1)})
                               </span>
-                            </div>
+                            </span>
 
                             <Link
                               href={`/explorer?body=${target.body}&target=${target.id}${
                                 topAnalog ? `&site=${topAnalog.site.id}` : ""
                               }`}
-                              className="mt-4 inline-flex items-center gap-2 text-xs font-semibold tracking-wider text-[#E4DFD5] uppercase transition-colors hover:text-[#7CA5B8]"
+                              className="ml-2 inline-flex shrink-0 items-center gap-1 font-mono text-[11px] font-semibold tracking-wider text-[#C5A36D] uppercase transition-colors hover:text-[#E4DFD5]"
                             >
-                              <span>Inspeccionar en el explorador</span>
+                              <span>Explorar</span>
                               <ArrowUpRight
                                 className="h-3.5 w-3.5"
                                 aria-hidden="true"

@@ -21,81 +21,65 @@ export const EXPLORER_HOTSPOTS: ExplorerHotspot[] = [
   {
     id: "interactive-maps",
     title: "01 · Mapas interactivos",
-    badge: "MapLibre GL 6 + Relieve 3D",
-    summary:
-      "Conmutador de mapas base entre Satélite (Esri World Imagery), NASA GIBS (VIIRS True Color) y Vector Oscuro (OpenFreeMap), con terreno 3D AWS Terrarium e inclinación de cámara.",
-    realImplementation:
-      "Implementado en AnalogMap.tsx con caché local de teselas mediante Service Worker (tile-cache-sw.js).",
+    badge: "MapLibre + 3D",
+    summary: "Capas Satélite, NASA GIBS, Mapa Base y relieve 3D.",
+    realImplementation: "",
     coordsPercent: { left: "54%", top: "46%" },
   },
   {
     id: "region-selection",
     title: "02 · Selección de regiones",
-    badge: "30 Sitios · 17 Países",
-    summary:
-      "Navegación por pestañas (Tierra, Luna, Marte), filtro rápido por país con foco en Ecuador y Sudamérica, búsqueda textual y directorio completo.",
-    realImplementation:
-      "Implementado en MissionControlApp.tsx y SiteDirectory.tsx con encuadre automático de cámara.",
+    badge: "35 Sitios · 20 Países",
+    summary: "Filtro por planeta, país y buscador directo.",
+    realImplementation: "",
     coordsPercent: { left: "34%", top: "14%" },
   },
   {
     id: "geo-probing",
     title: "03 · Sondeo geográfico",
-    badge: "API /api/evaluate",
-    summary:
-      "Permite hacer clic en cualquier coordenada de la Tierra para consultar en tiempo real su elevación, pendiente y climatología satelital.",
-    realImplementation:
-      "Implementado en src/app/api/evaluate/route.ts y src/lib/evaluateCoordinate.ts.",
+    badge: "En vivo",
+    summary: "Evalúa cualquier coordenada terrestre con un clic.",
+    realImplementation: "",
     coordsPercent: { left: "68%", top: "30%" },
   },
   {
     id: "env-telemetry",
     title: "04 · Datos ambientales",
-    badge: "NASA POWER + Copernicus DEM",
-    summary:
-      "Muestra 7 parámetros climáticos de NASA POWER (T2M_MAX, T2M_MIN, precipitación, viento, humedad, irradiancia solar, presión) y muestreo DEM de 5 puntos.",
-    realImplementation:
-      "Precalculado en analogs.json (30/30 sitios con fuente nasa_power y open_meteo) y consultado en vivo.",
+    badge: "NASA POWER + DEM",
+    summary: "Clima orbital y topografía DEM a 90 m.",
+    realImplementation: "",
     coordsPercent: { left: "18%", top: "58%" },
   },
   {
     id: "side-by-side",
-    title: "05 · Comparación Tierra vs. Luna/Marte",
-    badge: "Mesa en 3 Columnas",
-    summary:
-      "Expande el panel lateral en una mesa comparativa de 3 columnas: Sitio Terrestre, Motor ASI de 5 ejes y Sitio de Referencia Planetario con archivo PDS.",
-    realImplementation:
-      "Implementado en TelemetryDrawer.tsx y SideBySideComparison.tsx.",
+    title: "05 · Comparación directa",
+    badge: "Tierra vs. Luna/Marte",
+    summary: "Contraste lado a lado frente a escenarios PDS.",
+    realImplementation: "",
     coordsPercent: { left: "22%", top: "34%" },
   },
   {
     id: "asi-results",
-    title: "06 · Resultados de similitud",
-    badge: "ASI v0.2.0 + Límites Físicos",
-    summary:
-      "Presenta la puntuación ASI ponderada, el gráfico radar pentagonal, las fortalezas (≥ 70/100) y las diferencias físicas irreproducibles (gravedad, vacío, radiación).",
-    realImplementation:
-      "Generado por engine/asi_engine.py y representado en AsiRadarChart.tsx.",
+    title: "06 · Índice ASI y radar",
+    badge: "5 Ejes",
+    summary: "Afinidad ponderada por misión y límites físicos.",
+    realImplementation: "",
     coordsPercent: { left: "16%", top: "78%" },
   },
   {
     id: "regional-prospecting",
     title: "07 · Prospección regional",
-    badge: "Grilla 3×3 y 4×4 en Vivo",
-    summary:
-      "Traza un rectángulo sobre el mapa para evaluar simultáneamente 9 o 16 sectores orbitales, generando un mapa de calor y ranking respecto al catálogo.",
-    realImplementation:
-      "Implementado en src/app/api/evaluate-region/route.ts y src/lib/evaluateRegion.ts.",
+    badge: "Grilla 3×3 / 4×4",
+    summary: "Escaneo simultáneo de sectores con mapa de calor.",
+    realImplementation: "",
     coordsPercent: { left: "82%", top: "70%" },
   },
   {
     id: "data-export",
-    title: "08 · Exportación de datos",
-    badge: "Markdown / JSON / QGIS GeoJSON",
-    summary:
-      "Descarga el Dossier científico de cada comparación en Markdown o JSON con trazabilidad de fuentes, o exporta la colección GeoJSON EPSG:4326 para QGIS.",
-    realImplementation:
-      "Implementado en src/lib/dossier.ts y verificado por tests/dossier.test.mjs.",
+    title: "08 · Exportación GIS",
+    badge: "GeoJSON / Dossier",
+    summary: "Descarga directa para QGIS, JSON y Markdown.",
+    realImplementation: "",
     coordsPercent: { left: "84%", top: "14%" },
   },
 ];
@@ -104,11 +88,6 @@ interface ExplorerTransitionProps {
   sites: AnalogSite[];
 }
 
-/**
- * Chapter 5 component: As the 3D camera pulls back into high orbit,
- * presents a clean editorial index of the 8 real features alongside the
- * interactive viewport preview and the final open-space mission CTA.
- */
 export function ExplorerTransition({ sites }: ExplorerTransitionProps) {
   const [activeHotspotId, setActiveHotspotId] = useState<string>(
     EXPLORER_HOTSPOTS[0].id
@@ -121,9 +100,9 @@ export function ExplorerTransition({ sites }: ExplorerTransitionProps) {
   const primarySite = sites[0];
 
   return (
-    <div id="herramienta-investigacion" className="space-y-28">
+    <div id="herramienta-investigacion" className="space-y-20">
       {/* Interactive Workbench Preview + Hairline Feature Index */}
-      <div className="grid gap-12 lg:grid-cols-12 lg:items-start">
+      <div className="grid gap-10 lg:grid-cols-12 lg:items-center">
         {/* Left 5 Cols: Clean Hairline Feature Index (No boxy cards) */}
         <div
           role="listbox"
@@ -139,13 +118,13 @@ export function ExplorerTransition({ sites }: ExplorerTransitionProps) {
                 role="option"
                 aria-selected={isSelected}
                 onClick={() => setActiveHotspotId(spot.id)}
-                className="group w-full py-3.5 text-left transition-colors"
+                className="group w-full py-2.5 text-left transition-colors"
               >
                 <div className="flex items-center justify-between gap-3">
                   <span
                     className={`text-sm font-semibold tracking-tight transition-colors ${
                       isSelected
-                        ? "text-[#7CA5B8]"
+                        ? "text-[#C5A36D]"
                         : "text-[#A3A1BD] group-hover:text-[#E4DFD5]"
                     }`}
                   >
@@ -157,12 +136,9 @@ export function ExplorerTransition({ sites }: ExplorerTransitionProps) {
                 </div>
 
                 {isSelected && (
-                  <div className="mt-2 space-y-1 text-xs leading-relaxed text-[#E4DFD5]/85">
-                    <p>{spot.summary}</p>
-                    <p className="font-mono text-[11px] text-[#A3A1BD]">
-                      {spot.realImplementation}
-                    </p>
-                  </div>
+                  <p className="mt-1 text-xs text-[#E4DFD5]/90">
+                    {spot.summary}
+                  </p>
                 )}
               </button>
             );
@@ -194,7 +170,7 @@ export function ExplorerTransition({ sites }: ExplorerTransitionProps) {
             </div>
 
             {/* Main Preview Canvas */}
-            <div className="relative h-[360px] w-full overflow-hidden sm:h-[420px]">
+            <div className="relative h-[340px] w-full overflow-hidden sm:h-[380px]">
               <Image
                 src="/nasa/earth-horizon-iss.jpg"
                 alt="Vista orbital de la Tierra desde la Estación Espacial Internacional como fondo del visor geoespacial"
@@ -209,7 +185,7 @@ export function ExplorerTransition({ sites }: ExplorerTransitionProps) {
               />
 
               {/* Real Data Telemetry Mini-Drawer Overlay */}
-              <div className="absolute top-4 bottom-4 left-4 w-[220px] rounded-xl border border-[#55527D]/30 bg-[#181B2C]/85 p-4 backdrop-blur-md sm:w-[250px]">
+              <div className="absolute top-4 bottom-4 left-4 w-[215px] rounded-xl border border-[#55527D]/30 bg-[#181B2C]/85 p-4 backdrop-blur-md sm:w-[240px]">
                 <div className="flex items-center justify-between font-mono text-[10px]">
                   <span className="text-[#C5A36D]">
                     ECUADOR · {primarySite?.elevation_m ?? 409} m
@@ -229,19 +205,19 @@ export function ExplorerTransition({ sites }: ExplorerTransitionProps) {
                   <div className="flex justify-between">
                     <span className="text-[#A3A1BD]">NASA POWER:</span>
                     <span className="text-[#E4DFD5]">
-                      {primarySite?.climatology.tmax_c}°C /{" "}
-                      {primarySite?.climatology.tmin_c}°C
+                      {Number(primarySite?.climatology.tmax_c ?? 24.4).toFixed(1)}°C /{" "}
+                      {Number(primarySite?.climatology.tmin_c ?? 21.8).toFixed(1)}°C
                     </span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-[#A3A1BD]">DEM Pendiente:</span>
                     <span className="text-[#7CA5B8]">
-                      {primarySite?.dem_telemetry.dem_slope_deg}°
+                      {Number(primarySite?.dem_telemetry.dem_slope_deg ?? 4.9).toFixed(1)}°
                     </span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-[#A3A1BD]">Subterráneo:</span>
-                    <span className="text-[#8AB8A8]">100.0 / 100</span>
+                    <span className="text-[#8AB8A8]">100 / 100</span>
                   </div>
                 </div>
 
@@ -249,8 +225,7 @@ export function ExplorerTransition({ sites }: ExplorerTransitionProps) {
                   <span className="block font-bold text-[#C5A36D]">
                     LÍMITE FÍSICO:
                   </span>
-                  Gravedad 9.81 m/s² vs. 1.62 m/s² lunar; atmósfera húmeda vs.
-                  vacío.
+                  Gravedad 9.81 vs. 1.62 m/s² · Atmósfera vs. vacío.
                 </div>
               </div>
 
@@ -285,21 +260,19 @@ export function ExplorerTransition({ sites }: ExplorerTransitionProps) {
       {/* Final Open-Space Editorial Mission CTA (No heavy container box) */}
       <div
         id="comienza-tu-mision"
-        className="border-t border-[#55527D]/30 pt-20 pb-8 text-center"
+        className="border-t border-[#55527D]/30 pt-16 pb-6 text-center"
       >
         <div className="mx-auto max-w-3xl">
           <span className="font-mono text-xs tracking-[0.22em] text-[#C5A36D] uppercase">
             05 // Comienza tu Misión
           </span>
 
-          <h3 className="mt-5 text-4xl font-bold tracking-tight text-[#E4DFD5] sm:text-6xl">
+          <h3 className="mt-4 text-4xl font-bold tracking-tight text-[#E4DFD5] sm:text-5xl">
             La próxima misión comienza en la Tierra.
           </h3>
 
-          <p className="mx-auto mt-5 max-w-2xl text-base leading-relaxed text-[#A3A1BD] sm:text-lg">
-            Descubre lugares, compara condiciones y explora cómo los datos
-            terrestres pueden apoyar la investigación de futuros entornos
-            lunares y marcianos.
+          <p className="mx-auto mt-3 max-w-xl text-base text-[#A3A1BD]">
+            Compara sitios terrestres con la Luna y Marte en tiempo real.
           </p>
 
           <div className="mt-10 flex flex-wrap items-center justify-center gap-4">
