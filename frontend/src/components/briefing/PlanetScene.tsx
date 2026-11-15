@@ -216,11 +216,11 @@ export function PlanetScene({
     const earthMat = new THREE.MeshStandardMaterial({
       map: earthTexture,
       emissiveMap: earthTexture,
-      emissive: new THREE.Color(0x1b365d),
-      emissiveIntensity: 0.34,
+      emissive: new THREE.Color(0x1e3a5f),
+      emissiveIntensity: 0.44,
       roughness: 0.65,
-      metalness: 0.06,
-      transparent: true,
+      metalness: 0.05,
+      transparent: false,
       opacity: 1,
     });
     const earthMesh = new THREE.Mesh(earthGeo, earthMat);
@@ -605,18 +605,24 @@ export function PlanetScene({
       let earthFade = 1.0;
 
       if (ch <= 2) {
-        // Chapters 1 & 2 shared continuous orbital approach into Earth's atmosphere:
+        // Chapters 1 & 2 shared continuous orbital approach:
+        // Camera advances toward Earth but stops safely outside the atmosphere (never clips sphere)
         const t = Math.max(0, Math.min(1, introP));
-        targetCamPos.set(0.18 * t, 0.35 - t * 0.52, 9.2 - t * 4.55);
-        targetLookAt.set(0.25 * t, -0.55 - t * 0.3, 0);
-
-        earthGroup.position.set(
-          THREE.MathUtils.lerp(0.35, 0.82, t),
-          THREE.MathUtils.lerp(-3.15, -1.95, t),
-          THREE.MathUtils.lerp(0.2, 0.9, t)
+        const targetEarthPos = new THREE.Vector3(
+          THREE.MathUtils.lerp(0.35, 0.72, t),
+          THREE.MathUtils.lerp(-3.15, -2.15, t),
+          THREE.MathUtils.lerp(0.2, 0.55, t)
         );
-        atmoUniforms.uIntensity.value = 1.05 + t * 0.85;
-        earthFade = t > 0.86 ? Math.max(0.25, 1.0 - (t - 0.86) * 3.5) : 1.0;
+        earthGroup.position.lerp(targetEarthPos, 0.14);
+        earthGroup.scale.lerp(new THREE.Vector3(1, 1, 1), 0.12);
+
+        const minSafeZ = earthGroup.position.z + earthRadius + 1.35;
+        const desiredZ = Math.max(minSafeZ, 9.2 - t * 3.85);
+        targetCamPos.set(0.16 * t, 0.35 - t * 0.45, desiredZ);
+        targetLookAt.set(0.22 * t, -0.55 - t * 0.25, 0);
+
+        atmoUniforms.uIntensity.value = 1.05 + t * 0.75;
+        earthFade = 1.0;
 
         moonMesh.position.set(
           -4.35 - t * 1.4,
@@ -631,19 +637,22 @@ export function PlanetScene({
       } else if (ch === 3) {
         // Chapter 3: Atmospheric descent into the 3D Stratified Terrain Block framed on the right
         const t = Math.max(0, Math.min(1, terrP));
-        targetCamPos.set(-0.32, 0.08, 6.75 - t * 0.3);
-        targetLookAt.set(-0.28, 0.0, 1.4);
+        targetCamPos.set(-0.28, 0.05, 6.85 - t * 0.25);
+        targetLookAt.set(-0.24, 0.0, 1.4);
 
-        // Earth smoothly fades away with atmospheric bloom as the 3D strata emerge
-        earthFade = Math.max(0, 1.0 - t * 4.5);
-        earthGroup.position.lerp(new THREE.Vector3(-1.35, -3.55, -0.8), 0.08);
-        atmoUniforms.uIntensity.value = 1.45 * earthFade;
+        // Earth smoothly attenuates and scales gently back as the atmospheric veil transitions to strata
+        earthFade = Math.max(0, 1.0 - t * 3.8);
+        earthGroup.position.lerp(new THREE.Vector3(-1.1, -3.45, -1.0), 0.08);
+        const earthScale = 1.0 - (1.0 - earthFade) * 0.18;
+        earthGroup.scale.lerp(new THREE.Vector3(earthScale, earthScale, earthScale), 0.1);
+        atmoUniforms.uIntensity.value = 1.35 * earthFade;
       } else if (ch === 4) {
         // Chapter 4: Planetary Comparison (Earth on left, Moon or Mars on right)
         targetCamPos.set(0, 0.1, 6.8);
         targetLookAt.set(0, -0.15, 0);
 
         earthGroup.position.lerp(new THREE.Vector3(-2.35, -1.85, -0.4), 0.08);
+        earthGroup.scale.lerp(new THREE.Vector3(1, 1, 1), 0.12);
         atmoUniforms.uIntensity.value = 1.2;
 
         if (body === "Moon") {
@@ -658,12 +667,15 @@ export function PlanetScene({
         targetCamPos.set(0, 0.6, 9.6);
         targetLookAt.set(0, -0.6, 0);
         earthGroup.position.lerp(new THREE.Vector3(0, -3.35, 0), 0.08);
+        earthGroup.scale.lerp(new THREE.Vector3(1, 1, 1), 0.12);
         moonMesh.position.lerp(new THREE.Vector3(-4.2, 1.8, -2.5), 0.08);
         marsMesh.position.lerp(new THREE.Vector3(4.4, 2.1, -4.5), 0.08);
       }
 
-      earthMat.opacity = THREE.MathUtils.lerp(earthMat.opacity, earthFade, 0.14);
-      earthGroup.visible = earthMat.opacity > 0.015;
+      const nextEarthOpacity = THREE.MathUtils.lerp(earthMat.opacity, earthFade, 0.14);
+      earthMat.opacity = nextEarthOpacity;
+      earthMat.transparent = nextEarthOpacity < 0.995;
+      earthGroup.visible = nextEarthOpacity > 0.015;
 
       const lerpFactor = prefersReducedMotion ? 0.25 : 0.09;
       currentCamPos.lerp(targetCamPos, lerpFactor);
@@ -688,35 +700,36 @@ export function PlanetScene({
       }
 
       // Chapter 3 Volumetric 3D Terrain Layers separation, staggered atmospheric reveal & rotation
-      const showTerrain = ch === 3 || (ch === 2 && introP > 0.88);
+      const showTerrain = ch === 3;
       terrainGroup.visible = showTerrain;
       if (showTerrain) {
-        terrainGroup.position.set(1.55, -0.05, 1.55);
-        const revealProgress =
-          ch === 2 ? Math.max(0, (introP - 0.88) / 0.12) * 0.25 : 0.25 + terrP * 0.75;
-        const effectiveSep = ch === 2 ? 0 : Math.max(0, Math.min(1, sep));
+        terrainGroup.position.set(1.52, -0.06, 1.45);
+        terrainGroup.scale.setScalar(0.84);
+        const revealProgress = Math.max(0, Math.min(1, terrP));
+        const effectiveSep = Math.max(0, Math.min(1, sep));
 
-        // Wide vertical spacing between adjacent strata: 0.44 (compact) -> 1.22 (expanded)
-        const stepZ = 0.44 + effectiveSep * 0.78;
+        // Clamped vertical spacing (~48% tighter max gap so all 4 layers stay framed in viewport)
+        const maxLayerGap = 0.64;
+        const stepZ = Math.min(maxLayerGap, 0.24 + effectiveSep * 0.40);
 
         layer1Surface.group.position.z = THREE.MathUtils.lerp(
           layer1Surface.group.position.z,
-          stepZ * 1.55,
+          stepZ * 1.45,
           0.12
         );
         layer2Relief.group.position.z = THREE.MathUtils.lerp(
           layer2Relief.group.position.z,
-          stepZ * 0.52,
+          stepZ * 0.48,
           0.12
         );
         layer3Geology.group.position.z = THREE.MathUtils.lerp(
           layer3Geology.group.position.z,
-          -stepZ * 0.52,
+          -stepZ * 0.48,
           0.12
         );
         layer4Subsurface.group.position.z = THREE.MathUtils.lerp(
           layer4Subsurface.group.position.z,
-          -stepZ * 1.55,
+          -stepZ * 1.45,
           0.12
         );
 

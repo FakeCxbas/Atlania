@@ -92,8 +92,8 @@ export function ScrollScene({
       if (terrainTrackEl) {
         ScrollTrigger.create({
           trigger: terrainTrackEl,
-          start: "top 65%",
-          end: "bottom 35%",
+          start: "top 32%",
+          end: "bottom 45%",
           scrub: 0.25,
           onToggle: (self) => {
             if (self.isActive) {
@@ -105,7 +105,7 @@ export function ScrollScene({
               ...prev,
               activeChapter: 3,
               terrainProgress: self.progress,
-              layerSeparation: Math.min(1, Math.max(0, (self.progress - 0.12) * 1.35)),
+              layerSeparation: Math.min(1, Math.max(0, (self.progress - 0.14) * 1.28)),
             }));
           },
         });
