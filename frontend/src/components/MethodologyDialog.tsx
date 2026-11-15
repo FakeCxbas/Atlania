@@ -205,10 +205,18 @@ export function MethodologyDialog({ dataset }: { dataset: AnalogDataset }) {
                   son el principal refugio frente a radiación y micrometeoritos.
                 </li>
                 <li>
+                  <span className="font-medium text-cyan-300">
+                    Mons Mouton (Polo Sur Lunar · Artemis III)
+                  </span>{" "}
+                  prioriza Topografía (30%) y Geología (25%) al tratarse de una
+                  meseta polar de cima plana candidata para aterrizajes tripulados
+                  y travesías de rovers con iluminación solar prolongada.
+                </li>
+                <li>
                   <span className="font-medium text-amber-300">
                     Cráter Jezero
                   </span>{" "}
-                  prioriza Geología (30%) e Hidrología / Hielo (25%) porque la
+                  prioriza Geología (35%) e Hidrología / Hielo (25%) porque la
                   astrobiología y el muestreo con rovers se enfocan en deltas
                   fluvio-lacustres de arcillas/carbonatos y preservación
                   evaporítica árida.
@@ -221,6 +229,14 @@ export function MethodologyDialog({ dataset }: { dataset: AnalogDataset }) {
                   coladas basálticas de volcán en escudo, transitabilidad en
                   pendientes y refugio en tubos de lava (20%) por encima del
                   hielo polar.
+                </li>
+                <li>
+                  <span className="font-medium text-amber-300">
+                    Valles Marineris (Coprates Chasma)
+                  </span>{" "}
+                  prioriza Topografía (35%) y Geología (30%) para modelar taludes
+                  tectónicos escarpados, estratigrafía basáltica expuesta y
+                  depósitos de sulfatos polihidratados (20%).
                 </li>
               </ul>
             </div>
@@ -255,15 +271,14 @@ export function MethodologyDialog({ dataset }: { dataset: AnalogDataset }) {
           </section>
           <section>
             <h3 className="font-semibold text-cyan-300">
-              Telemetría del Terreno
+              Telemetría del Terreno (ESA Copernicus DEM)
             </h3>
             <p>
-              Open-Meteo / Copernicus GLO-90 proporciona la elevación central y
-              muestras vecinas para calcular la telemetría de pendiente y
-              rugosidad. Estas mediciones no reemplazan las referencias
-              ilustrativas de terreno del ASI. Cada dossier conserva la fuente
-              DEM, atribución y respaldo para distinguir estimaciones de
-              elevaciones muestreadas.
+              Open-Meteo / ESA Copernicus DEM GLO-90 (DOI: 10.5270/ESA-c5d3d65)
+              proporciona la elevación central y muestras vecinas para calcular
+              la telemetría de pendiente y rugosidad a 90 m. Además, cada sitio
+              documenta perfiles orbitales de Landsat 8/9 (OLI/TIRS) y radar
+              ESA Sentinel-1 C-SAR.
             </p>
             <a
               href="https://open-meteo.com/en/docs/elevation-api"
@@ -271,7 +286,7 @@ export function MethodologyDialog({ dataset }: { dataset: AnalogDataset }) {
               rel="noreferrer noopener"
               className="text-cyan-300 underline"
             >
-              Datos de elevación Open-Meteo
+              Datos de elevación Open-Meteo / Copernicus DEM
             </a>
           </section>
           <section>
@@ -289,7 +304,7 @@ export function MethodologyDialog({ dataset }: { dataset: AnalogDataset }) {
           </section>
           <section>
             <h3 className="font-semibold text-cyan-300">
-              Escenarios Planetarios de Referencia
+              Escenarios Planetarios de Referencia (NASA PDS)
             </h3>
             <ul className="space-y-2">
               {Object.entries(dataset.references).map(([id, target]) => {
@@ -309,6 +324,21 @@ export function MethodologyDialog({ dataset }: { dataset: AnalogDataset }) {
                 );
               })}
             </ul>
+          </section>
+          <section className="rounded-lg border border-slate-700/80 bg-[#060913]/70 p-3.5 text-xs text-slate-300">
+            <h3 className="font-semibold text-[#C5A36D]">
+              Transparencia SI (Super Intelligence) y Atribución Espacial
+            </h3>
+            <p className="mt-1">
+              En cumplimiento con la guía oficial de NASA Space Apps Challenge 2026:
+              la formulación matemática del índice ASI, la curaduría científica de
+              los 35 sitios y la ingesta determinista de datos (NASA POWER, NASA PDS,
+              NASA GIBS y ESA Copernicus DEM) fueron diseñadas por el equipo. Se
+              emplearon asistentes de IA (Gemini / Codex) como apoyo de ingeniería
+              de software y pruebas automatizadas, diseño conceptual del isotipo
+              propio (sin usar ni alterar logotipos de la NASA) y síntesis de voz
+              (edge-tts) para la narración del video demostrativo.
+            </p>
           </section>
           <p className="text-xs text-slate-400">
             {dataset.methodology.name} · v{dataset.methodology.version} ·

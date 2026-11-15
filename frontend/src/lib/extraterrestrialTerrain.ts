@@ -211,7 +211,7 @@ export function buildExtraterrestrialTerrainData(
   }
 
   const computed = computeTerrainMetrics(elevations, gridSize, cellSizeMeters);
-  const { minElevationM, maxElevationM, reliefM } = computed;
+  const { minElevationM, reliefM } = computed;
   const safeRelief = Math.max(1, reliefM);
 
   // Build procedural surface albedo RGBA texture matching Moon / Mars mineralogy

@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { PLANET_VISUALS } from "@/lib/planetaryVisuals";
-import { PlanetPortrait } from "@/components/PlanetPortrait";
 import * as maplibregl from "maplibre-gl";
 import {
   Box,
