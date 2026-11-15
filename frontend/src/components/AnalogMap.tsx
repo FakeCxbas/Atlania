@@ -1,6 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { PLANET_VISUALS } from "@/lib/planetaryVisuals";
+import { PlanetPortrait } from "@/components/PlanetPortrait";
 import * as maplibregl from "maplibre-gl";
 import {
   Box,
@@ -221,9 +223,8 @@ interface MarkerVisualRefs {
   marker: maplibregl.Marker;
   btn: HTMLButtonElement;
   outer: HTMLSpanElement;
-  core: HTMLSpanElement;
+  core: HTMLImageElement;
   label: HTMLSpanElement;
-  ringColor: string;
 }
 
 export function AnalogMap({
@@ -612,27 +613,30 @@ export function AnalogMap({
       const isSelected = site.id === selectedSiteId;
       const target = references[site.best_target];
       const isMars = target?.body === "Mars";
-      const ringColor = isMars ? "#E07A5F" : "#06B6D4";
+      const planet = PLANET_VISUALS[isMars ? "Mars" : "Moon"];
+      const ringColor = planet.accent;
+      const markerLabel = `${site.name}, ${site.country}. Análogo de ${planet.label}. ASI ${site.overall_asi.toFixed(1)}% para ${target?.name ?? site.best_target}`;
 
       const shortName = site.name.split(" - ")[0].split(" (")[0];
       const badgeText = `${shortName} · ${site.overall_asi.toFixed(0)}%`;
 
+      const hexClip = "polygon(50% 0%, 93% 25%, 93% 75%, 50% 100%, 7% 75%, 7% 25%)";
+      const sizePx = isSelected ? "40px" : "32px";
+      const glowFilter = isSelected
+        ? `drop-shadow(0 0 10px ${ringColor})`
+        : `drop-shadow(0 0 5px ${ringColor}88)`;
+
       const existing = markersRef.current.get(site.id);
       if (existing) {
         existing.marker.setLngLat([site.longitude, site.latitude]);
-        existing.btn.style.width = isSelected ? "28px" : "20px";
-        existing.btn.style.height = isSelected ? "28px" : "20px";
+        existing.btn.style.width = sizePx;
+        existing.btn.style.height = sizePx;
         existing.btn.style.zIndex = isSelected ? "30" : "10";
-        existing.outer.style.border = `2px solid ${ringColor}`;
-        existing.outer.style.backgroundColor = isSelected
-          ? `${ringColor}40`
-          : "rgba(6, 9, 19, 0.8)";
-        existing.outer.style.boxShadow = isSelected
-          ? `0 0 18px ${ringColor}`
-          : `0 0 8px ${ringColor}66`;
-        existing.core.style.width = isSelected ? "10px" : "7px";
-        existing.core.style.height = isSelected ? "10px" : "7px";
-        existing.core.style.backgroundColor = ringColor;
+        existing.btn.style.filter = glowFilter;
+        existing.outer.style.backgroundColor = isSelected ? "#D4AF37" : ringColor;
+        existing.core.src = planet.image;
+        existing.btn.setAttribute("aria-label", markerLabel);
+        existing.btn.setAttribute("aria-pressed", String(isSelected));
         existing.label.textContent = badgeText;
         existing.label.style.opacity = isSelected ? "1" : "";
         existing.label.style.borderColor = isSelected ? "#D4AF37" : `${ringColor}88`;
@@ -641,32 +645,25 @@ export function AnalogMap({
 
       const btn = document.createElement("button");
       btn.type = "button";
-      btn.setAttribute(
-        "aria-label",
-        `${site.name}, ${site.country}. ASI ${site.overall_asi.toFixed(1)}% for ${target?.name ?? site.best_target}`
-      );
+      btn.setAttribute("aria-label", markerLabel);
+      btn.setAttribute("aria-pressed", String(isSelected));
       btn.className = "group relative flex items-center justify-center cursor-pointer";
-      btn.style.width = isSelected ? "28px" : "20px";
-      btn.style.height = isSelected ? "28px" : "20px";
+      btn.style.width = sizePx;
+      btn.style.height = sizePx;
       btn.style.zIndex = isSelected ? "30" : "10";
+      btn.style.filter = glowFilter;
 
       const outer = document.createElement("span");
-      outer.style.position = "absolute";
-      outer.style.inset = "0";
-      outer.style.borderRadius = "9999px";
-      outer.style.border = `2px solid ${ringColor}`;
-      outer.style.backgroundColor = isSelected
-        ? `${ringColor}40`
-        : "rgba(6, 9, 19, 0.8)";
-      outer.style.boxShadow = isSelected
-        ? `0 0 18px ${ringColor}`
-        : `0 0 8px ${ringColor}66`;
+      outer.setAttribute("aria-hidden", "true");
+      outer.style.cssText = `position:absolute;inset:0;clip-path:${hexClip};background-color:${isSelected ? "#D4AF37" : ringColor}`;
 
-      const core = document.createElement("span");
-      core.style.width = isSelected ? "10px" : "7px";
-      core.style.height = isSelected ? "10px" : "7px";
-      core.style.borderRadius = "9999px";
-      core.style.backgroundColor = ringColor;
+      const core = document.createElement("img");
+      core.src = planet.image;
+      core.alt = "";
+      core.setAttribute("aria-hidden", "true");
+      core.draggable = false;
+      core.className = "transition-transform duration-150 group-hover:scale-110";
+      core.style.cssText = `position:relative;width:calc(100% - 5px);height:calc(100% - 5px);object-fit:cover;clip-path:${hexClip};pointer-events:none;background:#060913`;
 
       const label = document.createElement("span");
       label.textContent = badgeText;
@@ -697,7 +694,6 @@ export function AnalogMap({
         outer,
         core,
         label,
-        ringColor,
       });
     }
   }, [sites, references, selectedSiteId]);

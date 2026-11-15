@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import type { AnalogDataset, AnalogSite } from "@/types/analog";
 import {
   buildSiteRationale,
@@ -25,14 +26,34 @@ import {
   ChevronUp,
   Compass,
   Download,
-  Globe2,
   ListFilter,
-  Moon,
-  Orbit,
   Presentation,
   Search,
   X,
 } from "lucide-react";
+
+const COUNTRY_FLAGS: Record<string, string> = {
+  Ecuador: "🇪🇨",
+  Bolivia: "🇧🇴",
+  China: "🇨🇳",
+  Etiopía: "🇪🇹",
+  "Estados Unidos": "🇺🇸",
+  Canadá: "🇨🇦",
+  Chile: "🇨🇱",
+  Islandia: "🇮🇸",
+  "Chile / Argentina": "🇨🇱🇦🇷",
+  Irán: "🇮🇷",
+  Chad: "🇹🇩",
+  España: "🇪🇸",
+  Argentina: "🇦🇷",
+  Perú: "🇵🇪",
+  Antártida: "🇦🇶",
+  Noruega: "🇳🇴",
+  Namibia: "🇳🇦",
+  Rusia: "🇷🇺",
+  India: "🇮🇳",
+  Australia: "🇦🇺",
+};
 
 interface MissionControlAppProps {
   dataset: AnalogDataset;
@@ -573,7 +594,9 @@ export function MissionControlApp({ dataset }: MissionControlAppProps) {
                 : "text-[#A3A1BD] hover:text-[#E4DFD5]"
             }`}
           >
-            <Globe2 className="h-3.5 w-3.5 text-[#7CA5B8]" aria-hidden="true" />
+            <span aria-hidden="true" className="relative h-5 w-5 shrink-0 overflow-hidden rounded-full bg-black shadow-[0_0_7px_rgba(255,255,255,0.12)]">
+              <Image src="/nasa/earth-blue-marble.jpg" alt="" fill sizes="24px" className="object-cover scale-[1.18]" />
+            </span>
             <span>Tierra</span>
           </button>
 
@@ -587,7 +610,9 @@ export function MissionControlApp({ dataset }: MissionControlAppProps) {
                 : "text-[#A3A1BD] hover:text-[#E4DFD5]"
             }`}
           >
-            <Moon className="h-3.5 w-3.5 text-[#A3A1BD]" aria-hidden="true" />
+            <span aria-hidden="true" className="relative h-5 w-5 shrink-0 overflow-hidden rounded-full bg-black shadow-[0_0_7px_rgba(255,255,255,0.12)]">
+              <Image src="/nasa/moon-navigation.jpg" alt="" fill sizes="24px" className="object-cover scale-[1.1]" />
+            </span>
             <span>Luna</span>
           </button>
 
@@ -601,7 +626,9 @@ export function MissionControlApp({ dataset }: MissionControlAppProps) {
                 : "text-[#A3A1BD] hover:text-[#E4DFD5]"
             }`}
           >
-            <Orbit className="h-3.5 w-3.5 text-[#D47A61]" aria-hidden="true" />
+            <span aria-hidden="true" className="relative h-5 w-5 shrink-0 overflow-hidden rounded-full bg-black shadow-[0_0_7px_rgba(255,255,255,0.12)]">
+              <Image src="/nasa/mars-orb.jpg" alt="" fill sizes="64px" quality={90} className="object-cover scale-[1.02]" />
+            </span>
             <span>Marte</span>
           </button>
         </nav>
@@ -727,6 +754,7 @@ export function MissionControlApp({ dataset }: MissionControlAppProps) {
                 {countryList.map(([country, count]) => {
                   const active = selectedCountry === country;
                   const expanded = countryDropdown?.country === country;
+                  const flag = COUNTRY_FLAGS[country];
                   return (
                     <button
                       key={country}
@@ -742,6 +770,11 @@ export function MissionControlApp({ dataset }: MissionControlAppProps) {
                           : "bg-[#181B2C] text-[#A3A1BD] ring-1 ring-[#55527D]/25 hover:text-[#E4DFD5]"
                       }`}
                     >
+                      {flag && (
+                        <span aria-hidden="true" className="text-xs leading-none">
+                          {flag}
+                        </span>
+                      )}
                       <span>{country}</span>
                       <span className="font-mono text-[10px] opacity-75">({count})</span>
                       {expanded ? (
