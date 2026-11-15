@@ -81,13 +81,20 @@ function getBasemapStyle(mode: BasemapMode): string | maplibregl.StyleSpecificat
       },
       layers: [
         {
+          id: "ocean-background",
+          type: "background",
+          paint: {
+            "background-color": "#071426",
+          },
+        },
+        {
           id: "nasa-gibs-layer",
           type: "raster",
           source: "nasa-gibs",
           minzoom: 0,
           maxzoom: 18,
           paint: {
-            "raster-fade-duration": 120,
+            "raster-fade-duration": 250,
           },
         },
         {
@@ -119,6 +126,16 @@ function getBasemapStyle(mode: BasemapMode): string | maplibregl.StyleSpecificat
     version: 8,
     name: "Esri World Imagery",
     sources: {
+      "esri-satellite-lowres": {
+        type: "raster",
+        tiles: [
+          "https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+          "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+        ],
+        tileSize: 256,
+        maxzoom: 6,
+        attribution: "Esri, Maxar, Earthstar Geographics",
+      },
       "esri-satellite": {
         type: "raster",
         tiles: [
@@ -142,13 +159,32 @@ function getBasemapStyle(mode: BasemapMode): string | maplibregl.StyleSpecificat
     },
     layers: [
       {
+        id: "ocean-background",
+        type: "background",
+        paint: {
+          "background-color": "#071426",
+        },
+      },
+      {
+        id: "esri-satellite-lowres-layer",
+        type: "raster",
+        source: "esri-satellite-lowres",
+        minzoom: 0,
+        maxzoom: 18,
+        paint: {
+          "raster-fade-duration": 0,
+        },
+      },
+      {
         id: "esri-satellite-layer",
         type: "raster",
         source: "esri-satellite",
         minzoom: 0,
         maxzoom: 18,
         paint: {
-          "raster-fade-duration": 120,
+          "raster-fade-duration": 300,
+          "raster-contrast": 0.12,
+          "raster-saturation": 0.08,
         },
       },
       {
@@ -294,13 +330,73 @@ export function AnalogMap({
     [getFlyDuration]
   );
 
+  const ensureTerrainSynced = useCallback(
+    (forceEnable = false) => {
+      const map = mapRef.current;
+      if (!map || !map.getStyle()) return;
+
+      const shouldEnableDem = terrain3d && (forceEnable || map.getZoom() >= TERRAIN_MIN_ZOOM);
+
+      if (!shouldEnableDem) {
+        if (map.getTerrain()) {
+          map.setTerrain(null);
+        }
+        if (map.getLayer("terrain-hillshade")) {
+          map.removeLayer("terrain-hillshade");
+        }
+        return;
+      }
+
+      if (!map.getSource("terrain-dem")) {
+        map.addSource("terrain-dem", {
+          type: "raster-dem",
+          tiles: [
+            "https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png",
+          ],
+          tileSize: 256,
+          minzoom: 0,
+          maxzoom: 14,
+          encoding: "terrarium",
+        });
+      }
+
+      if (!map.getLayer("terrain-hillshade")) {
+        map.addLayer(
+          {
+            id: "terrain-hillshade",
+            type: "hillshade",
+            source: "terrain-dem",
+            minzoom: TERRAIN_MIN_ZOOM,
+            paint: {
+              "hillshade-illumination-direction": 315,
+              "hillshade-illumination-anchor": "map",
+              "hillshade-exaggeration": 0.45,
+              "hillshade-shadow-color": "#060c18",
+              "hillshade-highlight-color": "#fff7e6",
+            },
+          },
+          map.getLayer("esri-labels-layer") ? "esri-labels-layer" : undefined
+        );
+      }
+
+      if (!map.getTerrain()) {
+        map.setTerrain({ source: "terrain-dem", exaggeration: 1.6 });
+      }
+    },
+    [terrain3d]
+  );
+
   const flyToSiteCinematographically = useCallback(
     (site: AnalogSite, requestedZoom?: number) => {
       const map = mapRef.current;
       if (!map) return;
 
       const isPolar = Math.abs(site.latitude) > 60;
-      const targetZoom = isPolar ? 7.5 : (requestedZoom ?? 9.8);
+      const targetZoom = isPolar ? 7.5 : (requestedZoom ?? 12.2);
+      const targetPitch = terrain3d ? 60 : map.getPitch();
+
+      ensureTerrainSynced(targetZoom >= TERRAIN_MIN_ZOOM);
+
       const prefersReducedMotion =
         typeof window !== "undefined" &&
         window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -309,23 +405,24 @@ export function AnalogMap({
         map.jumpTo({
           center: [site.longitude, site.latitude],
           zoom: targetZoom,
-          pitch: terrain3d ? Math.max(map.getPitch(), 45) : map.getPitch(),
+          pitch: targetPitch,
           bearing: 0,
         });
+        ensureTerrainSynced(targetZoom >= TERRAIN_MIN_ZOOM);
         return;
       }
 
       map.flyTo({
         center: [site.longitude, site.latitude],
         zoom: targetZoom,
-        pitch: terrain3d ? Math.max(map.getPitch(), 45) : map.getPitch(),
+        pitch: targetPitch,
         bearing: 0,
-        speed: 0.85,
-        curve: 1.35,
+        speed: 0.75,
+        curve: 1.0,
         essential: true,
       });
     },
-    [terrain3d]
+    [ensureTerrainSynced, terrain3d]
   );
 
   // Register tile cache Service Worker once on client
@@ -357,7 +454,7 @@ export function AnalogMap({
       pitch: startPitch,
       bearing: 0,
       fadeDuration: 100,
-      maxTileCacheSize: 500,
+      maxTileCacheSize: 800,
       refreshExpiredTiles: false,
       cancelPendingTileRequestsWhileZooming: true,
     });
@@ -434,49 +531,25 @@ export function AnalogMap({
     const map = mapRef.current;
     if (!map) return;
 
-    const syncTerrain = () => {
-      if (!map.getStyle()) return;
-
-      const shouldEnableDem = terrain3d && map.getZoom() >= TERRAIN_MIN_ZOOM;
-
-      if (!shouldEnableDem) {
-        if (map.getTerrain()) {
-          map.setTerrain(null);
-        }
-        return;
-      }
-
-      if (!map.getSource("terrain-dem")) {
-        map.addSource("terrain-dem", {
-          type: "raster-dem",
-          tiles: [
-            "https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png",
-          ],
-          tileSize: 256,
-          minzoom: 0,
-          maxzoom: 11,
-          encoding: "terrarium",
-        });
-      }
-
-      if (!map.getTerrain()) {
-        map.setTerrain({ source: "terrain-dem", exaggeration: 1.2 });
-      }
+    const handleSync = () => {
+      ensureTerrainSynced();
     };
 
     if (map.isStyleLoaded()) {
-      syncTerrain();
+      handleSync();
     }
-    map.on("style.load", syncTerrain);
-    map.on("load", syncTerrain);
-    map.on("zoomend", syncTerrain);
+    map.on("style.load", handleSync);
+    map.on("styledata", handleSync);
+    map.on("load", handleSync);
+    map.on("zoomend", handleSync);
 
     return () => {
-      map.off("style.load", syncTerrain);
-      map.off("load", syncTerrain);
-      map.off("zoomend", syncTerrain);
+      map.off("style.load", handleSync);
+      map.off("styledata", handleSync);
+      map.off("load", handleSync);
+      map.off("zoomend", handleSync);
     };
-  }, [terrain3d]);
+  }, [ensureTerrainSynced]);
 
   // Synchronize site markers without destroying/recreating unchanged DOM elements
   useEffect(() => {
@@ -1091,7 +1164,7 @@ export function AnalogMap({
   }, [cameraTarget, sites, flyToSiteCinematographically]);
 
   return (
-    <div className="relative h-full w-full bg-[#060913]">
+    <div className="relative h-full w-full bg-[#071426]">
       <div
         ref={containerRef}
         className="h-full w-full"
