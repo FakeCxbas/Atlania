@@ -1154,7 +1154,7 @@ export function AnalogMap({
       />
 
       {/* Selector de capa de mapa base y modos de prospección */}
-      <div className="absolute right-14 top-[112px] z-10 flex flex-col items-end gap-2">
+      <div className="absolute right-14 top-[138px] z-10 flex flex-col items-end gap-2">
         <div
           className="flex items-center gap-1 rounded-lg border border-slate-800/80 bg-[#060913]/90 p-1 shadow-xl backdrop-blur-md"
           role="group"
@@ -1393,6 +1393,15 @@ export function AnalogMap({
           >
             <Box className="h-3 w-3" aria-hidden="true" />
             <span>3D</span>
+          </button>
+          <button
+            type="button"
+            onClick={handleOpenDiorama}
+            title="Abrir Gemelo Topográfico 3D HD (Three.js + Simulador Solar)"
+            className="flex flex-1 items-center justify-center gap-1 rounded border border-amber-400/50 bg-amber-500/15 px-2 py-1 text-[11px] font-semibold text-amber-200 transition-colors hover:border-amber-400 hover:bg-amber-500/25 hover:text-white"
+          >
+            <Mountain className="h-3 w-3" aria-hidden="true" />
+            <span>HD</span>
           </button>
         </div>
 
