@@ -904,11 +904,11 @@ export function MissionBriefingLanding({
                           Antes de llegar a otros mundos, debemos aprender aquí.
                         </h2>
                         <p className="mt-4 max-w-2xl text-sm leading-relaxed text-[#CBD5E1] sm:text-base">
-                          A medida que nos aproximamos a la atmósfera y corteza
-                          terrestre, ciertos desiertos hiperáridos, campos
-                          volcánicos y cráteres polares actúan como bancos de
-                          prueba naturales para validar hábitats, rovers y
-                          sistemas de soporte vital.
+                          A medida que nos aproximamos a la corteza terrestre, ciertos desiertos hiperáridos,
+                          campos volcánicos y cráteres polares actúan como bancos de prueba naturales.
+                          ATLANIA no busca inventar territorios perdidos; busca revelar lo extraordinario
+                          que ya existe, encontrando conexiones donde antes solo veíamos distancia para
+                          acercarnos a mundos que todavía no comprendemos por completo.
                         </p>
                       </div>
 
@@ -1598,6 +1598,7 @@ export function MissionBriefingLanding({
                 <div className="mx-auto max-w-[1440px] px-6 sm:px-10 lg:px-16">
                   <div className="grid grid-cols-1 gap-12 lg:grid-cols-12">
                     <div className="lg:col-span-5">
+                      <AtlaniaLockup size="lg" showTagline className="mb-5" />
                       <p className="font-mono text-xs tracking-[0.2em] text-[#00D9F5] uppercase">
                         RIGOR CIENTÍFICO Y TRANSPARENCIA
                       </p>

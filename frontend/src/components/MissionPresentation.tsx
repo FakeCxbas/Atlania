@@ -106,7 +106,20 @@ export function MissionPresentation({
         {/* 1. HERO SECTION */}
         <section className="relative overflow-hidden rounded-2xl border border-[#D4AF37]/40 bg-gradient-to-br from-[#0D1424] via-[#060913] to-[#0D1424] p-6 shadow-2xl sm:p-12">
           <div className="max-w-3xl space-y-5">
-            <div className="inline-flex items-center gap-2 rounded-full border border-cyan-500/40 bg-cyan-500/10 px-3.5 py-1 text-xs font-medium text-cyan-300">
+            <div className="flex items-center gap-3.5 pb-1">
+              <img
+                src="/brand/atlania-isotipo-3d.png"
+                alt="Emblema 3D ATLANIA"
+                className="h-14 w-14 rounded-full object-contain drop-shadow-[0_0_20px_rgba(212,175,55,0.28)]"
+              />
+              <img
+                src="/brand/atlania-wordmark.png"
+                alt="ATLANIA"
+                className="h-7 w-auto object-contain"
+              />
+            </div>
+
+            <div className="inline-flex items-center gap-2 rounded-full border border-[#D4AF37]/40 bg-[#D4AF37]/10 px-3 py-1 font-mono text-[11px] font-semibold uppercase tracking-wider text-[#D4AF37]">
               <Sparkles className="h-3.5 w-3.5 text-[#D4AF37]" aria-hidden="true" />
               <span>Reto: Identify Earth Locations that Analog the Moon &amp; Mars</span>
             </div>
@@ -119,6 +132,13 @@ export function MissionPresentation({
               <span className="text-[#D4AF37]">Análogos Terrestres</span> para
               Bases Lunares y Exploración en Marte
             </h1>
+
+            <p className="border-l-2 border-[#D4AF37]/60 pl-3.5 font-serif italic text-xs leading-relaxed text-[#C5A36D] sm:text-sm">
+              &ldquo;Hace siglos, los cartógrafos dibujaban territorios inexplorados guiados por relatos y estrellas. 
+              Hoy levantamos la mirada al cosmos con la misma inquietud: ¿Y si para comprender otros planetas 
+              primero tuviéramos que volver a descubrir el nuestro? Quizá lo desconocido siempre estuvo aquí, 
+              esperando a que volviéramos a mirar.&rdquo;
+            </p>
 
             <p className="text-sm leading-relaxed text-slate-300 sm:text-base">
               Antes de enviar hábitats presurizados, perforadoras criogénicas ISRU o
