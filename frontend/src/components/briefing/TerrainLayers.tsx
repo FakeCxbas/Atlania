@@ -1,8 +1,9 @@
 "use client";
 
 import React from "react";
+import { ChevronDown } from "lucide-react";
 import { ScientificIcon, type ScientificConcept } from "./ScientificIcon";
-import { BrandLogo, type BrandId } from "./BrandLogo";
+import { type BrandId } from "./BrandLogo";
 
 export interface TerrainLayersProps {
   /** Scroll-driven separation factor [0..1] */
@@ -205,78 +206,100 @@ export function TerrainLayers({
         id="nuestra-solucion"
         className="mx-auto max-w-7xl px-6 py-24 sm:px-12 lg:px-16"
       >
-        <div className="grid gap-12 border-t border-white/10 pt-16 lg:grid-cols-12">
+        <div className="grid items-start gap-12 border-t border-white/10 pt-16 lg:grid-cols-12">
           <div className="lg:col-span-5">
-            <span className="font-mono text-xs tracking-[0.2em] text-[#00D9F5] uppercase">
-              Arquitectura de Solución // 4 Etapas
+            <span className="font-mono text-xs tracking-[0.22em] text-[#00D9F5] uppercase">
+              Arquitectura de Solución
             </span>
-            <h3 className="mt-3 text-3xl font-bold tracking-tight text-[#F1F5F9] sm:text-4xl">
+            <h3 className="mt-4 text-3xl font-bold tracking-tight text-[#F8FAFC] sm:text-4xl sm:leading-[1.12]">
               De los datos terrestres a la exploración planetaria.
             </h3>
-            <p className="mt-4 text-base leading-relaxed text-slate-200">
-              Cada estrato físico del terreno alimenta el modelo analógico ASI y la estación interactiva del explorador planetario.
+            <p className="mt-5 max-w-md text-base leading-relaxed text-slate-300">
+              Cada estrato físico del terreno alimenta el modelo analógico ASI
+              y la estación interactiva del explorador planetario.
             </p>
-
-            {/* Official Source & Tech Logos */}
-            <div className="mt-8 flex flex-wrap items-center gap-5 border-t border-white/10 pt-6">
-              <BrandLogo brand="nasa-power" size="sm" />
-              <BrandLogo brand="copernicus" size="sm" />
-              <BrandLogo brand="nasa-pds" size="sm" />
-              <BrandLogo brand="python" size="sm" />
-            </div>
           </div>
 
           <div className="lg:col-span-7">
-            {/* Clean 4-Step Tabs */}
-            <div className="flex flex-wrap gap-6 border-b border-white/10 pb-4">
+            <div className="grid grid-cols-1 items-start gap-4 sm:grid-cols-2">
               {pipelineSteps.map((item, idx) => {
-                const active = activePipelineStep === idx;
+                const isActive = activePipelineStep === idx;
+                const stageConcepts: ScientificConcept[] = [
+                  "thermal",
+                  "topography",
+                  "geology",
+                  "subsurface",
+                ];
+                const stageLabels = [
+                  "01 · Recopilar",
+                  "02 · Analizar",
+                  "03 · Comparar",
+                  "04 · Explorar",
+                ];
+                const label = stageLabels[idx] ?? item.step;
+                const concept = stageConcepts[idx] ?? "thermal";
+
                 return (
                   <button
                     key={item.step}
                     type="button"
-                    onClick={() => onSelectPipelineStep(idx)}
-                    aria-pressed={active}
-                    className={`pb-2 font-mono text-xs uppercase tracking-wider transition-colors ${
-                      active
-                        ? "border-b-2 border-[#00D9F5] font-bold text-[#F1F5F9]"
-                        : "text-[#94A3B8] hover:text-[#F1F5F9]"
+                    aria-expanded={isActive}
+                    onClick={() => onSelectPipelineStep(isActive ? -1 : idx)}
+                    className={`group flex w-full cursor-pointer flex-col justify-between overflow-visible rounded-xl border bg-[#060d18]/85 p-5 text-left backdrop-blur-md transition-all duration-300 ${
+                      isActive
+                        ? "border-[#00D9F5]/45 shadow-[0_12px_32px_rgba(0,0,0,0.45)]"
+                        : "border-white/10 hover:border-white/25"
                     }`}
                   >
-                    {item.step}
+                    <div>
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="font-mono text-[11px] font-medium tracking-wider text-[#00D9F5] uppercase">
+                          {label}
+                        </span>
+                        <ScientificIcon
+                          concept={concept}
+                          className="h-4 w-4 shrink-0 text-slate-400 transition-colors group-hover:text-slate-200"
+                        />
+                      </div>
+
+                      <h4 className="mt-3 text-base font-semibold leading-snug text-[#F8FAFC] sm:text-lg">
+                        {item.title}
+                      </h4>
+
+                      {isActive && (
+                        <div className="mt-3.5 space-y-3 overflow-visible">
+                          <p className="text-sm leading-relaxed text-slate-300">
+                            {item.description}
+                          </p>
+                          <ul className="space-y-1.5 border-t border-white/10 pt-3 font-mono text-[11px] leading-relaxed text-slate-200/90">
+                            {item.sources.map((src) => (
+                              <li
+                                key={src}
+                                className="flex items-start gap-2"
+                              >
+                                <span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-[#00D9F5]" />
+                                <span>{src}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="mt-4 flex items-center justify-between border-t border-white/10 pt-3 font-mono text-xs text-[#00D9F5]">
+                      <span>
+                        {isActive ? "Ocultar detalles" : "Ver detalles"}
+                      </span>
+                      <ChevronDown
+                        aria-hidden="true"
+                        className={`h-4 w-4 transition-transform duration-300 ${
+                          isActive ? "rotate-180" : "rotate-0"
+                        }`}
+                      />
+                    </div>
                   </button>
                 );
               })}
-            </div>
-
-            <div className="mt-8">
-              <div className="flex flex-wrap items-center justify-between gap-4">
-                <span className="font-mono text-xs uppercase tracking-widest text-[#F5B82E]">
-                  {pipelineSteps[activePipelineStep].code}
-                </span>
-                <div className="flex items-center gap-4">
-                  {pipelineSteps[activePipelineStep].brands.map((b) => (
-                    <BrandLogo key={b} brand={b} size="sm" />
-                  ))}
-                </div>
-              </div>
-
-              <h4 className="mt-3 text-2xl font-bold text-[#F1F5F9]">
-                {pipelineSteps[activePipelineStep].title}
-              </h4>
-
-              <p className="mt-3 text-base leading-relaxed text-[#94A3B8]">
-                {pipelineSteps[activePipelineStep].description}
-              </p>
-
-              <ul className="mt-6 grid gap-2.5 border-t border-white/10 pt-5 font-mono text-xs text-[#F1F5F9]/85 sm:grid-cols-2">
-                {pipelineSteps[activePipelineStep].sources.map((src) => (
-                  <li key={src} className="flex items-start gap-2.5">
-                    <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-[#00D9F5]" />
-                    <span>{src}</span>
-                  </li>
-                ))}
-              </ul>
             </div>
           </div>
         </div>

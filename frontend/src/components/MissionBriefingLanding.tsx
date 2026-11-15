@@ -368,7 +368,7 @@ export function MissionBriefingLanding({
   const [activeBodyTab, setActiveBodyTab] = useState<"Moon" | "Mars">("Moon");
   const [activeExampleId, setActiveExampleId] =
     useState<string>("moon-lava-tubes");
-  const [activePipelineStep, setActivePipelineStep] = useState<number>(0);
+  const [activePipelineStep, setActivePipelineStep] = useState<number>(-1);
   const [focusedLayer, setFocusedLayer] = useState<0 | 1 | 2 | 3 | 4>(0);
 
   // Always start at the top (01 · El comienzo) on page load/reload without residual #hash
