@@ -222,7 +222,7 @@ export function AnalogMap({
   const [basemap, setBasemap] = useState<BasemapMode>("satellite");
   const [terrain3d, setTerrain3d] = useState(true);
   const [cameraView, setCameraView] = useState<{ pitch: number; bearing: number }>({
-    pitch: selectedSiteId ? 42 : 24,
+    pitch: selectedSiteId ? 45 : 0,
     bearing: 0,
   });
   const [dragBox, setDragBox] = useState<{
@@ -300,7 +300,7 @@ export function AnalogMap({
       if (!map) return;
 
       const isPolar = Math.abs(site.latitude) > 60;
-      const targetZoom = isPolar ? 7.5 : (requestedZoom ?? 12);
+      const targetZoom = isPolar ? 7.5 : (requestedZoom ?? 9.8);
       const prefersReducedMotion =
         typeof window !== "undefined" &&
         window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -309,7 +309,8 @@ export function AnalogMap({
         map.jumpTo({
           center: [site.longitude, site.latitude],
           zoom: targetZoom,
-          pitch: terrain3d ? Math.max(map.getPitch(), 48) : map.getPitch(),
+          pitch: terrain3d ? Math.max(map.getPitch(), 45) : map.getPitch(),
+          bearing: 0,
         });
         return;
       }
@@ -317,8 +318,8 @@ export function AnalogMap({
       map.flyTo({
         center: [site.longitude, site.latitude],
         zoom: targetZoom,
-        pitch: terrain3d ? Math.max(map.getPitch(), 48) : map.getPitch(),
-        bearing: map.getBearing() + 20,
+        pitch: terrain3d ? Math.max(map.getPitch(), 45) : map.getPitch(),
+        bearing: 0,
         speed: 0.85,
         curve: 1.35,
         essential: true,
@@ -337,11 +338,13 @@ export function AnalogMap({
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return;
 
-    const initialSite =
-      sites.find((s) => s.id === initialSelectedSiteIdRef.current) ?? sites[0];
-    const startLon = initialSite ? initialSite.longitude : -78.6;
-    const startLat = initialSite ? initialSite.latitude : -0.67;
-    const startZoom = initialSite ? 6.2 : 2.1;
+    const initialSite = initialSelectedSiteIdRef.current
+      ? sites.find((s) => s.id === initialSelectedSiteIdRef.current) ?? null
+      : null;
+    const startLon = initialSite ? initialSite.longitude : 0;
+    const startLat = initialSite ? initialSite.latitude : 15;
+    const startZoom = initialSite ? 9.8 : 1.8;
+    const startPitch = initialSite ? 45 : 0;
 
     const map = new maplibregl.Map({
       container: containerRef.current,
@@ -351,7 +354,8 @@ export function AnalogMap({
       minZoom: 1.3,
       maxZoom: 15.5,
       maxPitch: 60,
-      pitch: initialSite ? 42 : 24,
+      pitch: startPitch,
+      bearing: 0,
       fadeDuration: 100,
       maxTileCacheSize: 500,
       refreshExpiredTiles: false,
@@ -1051,13 +1055,14 @@ export function AnalogMap({
     const dur = prefersReducedMotion ? 0 : 750;
 
     if (cameraTarget.type === "world") {
-      map.fitBounds(
-        [
-          [-170, -55],
-          [170, 70],
-        ],
-        { padding: 40, duration: dur }
-      );
+      map.flyTo({
+        center: [0, 15],
+        zoom: 1.8,
+        pitch: 0,
+        bearing: 0,
+        duration: dur,
+        essential: true,
+      });
       return;
     }
 

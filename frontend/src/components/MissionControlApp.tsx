@@ -56,9 +56,7 @@ export function MissionControlApp({ dataset }: MissionControlAppProps) {
   const [canScrollRight, setCanScrollRight] = useState(false);
   const [selectedTargetFilter, setSelectedTargetFilter] = useState<string>("ALL");
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedSiteId, setSelectedSiteId] = useState<string | null>(
-    dataset.sites[0]?.id ?? null,
-  );
+  const [selectedSiteId, setSelectedSiteId] = useState<string | null>(null);
   const [activeTargetId, setActiveTargetId] = useState<string>(
     dataset.sites[0]?.best_target ?? Object.keys(dataset.references)[0] ?? "",
   );
@@ -94,15 +92,39 @@ export function MissionControlApp({ dataset }: MissionControlAppProps) {
 
   // Distinct countries available for the "Tierra" tab
   const countryList = useMemo(() => {
+    const SOUTH_AMERICA_COUNTRIES = new Set([
+      "Argentina",
+      "Bolivia",
+      "Brasil",
+      "Chile",
+      "Chile / Argentina",
+      "Colombia",
+      "Ecuador",
+      "Guyana",
+      "Paraguay",
+      "Perú",
+      "Surinam",
+      "Uruguay",
+      "Venezuela",
+    ]);
+
+    const getCountryPriority = (country: string): number => {
+      if (country === "Ecuador") return 0;
+      if (SOUTH_AMERICA_COUNTRIES.has(country)) return 1;
+      if (country === "Antártida") return 3;
+      return 2;
+    };
+
     const map = new Map<string, number>();
     for (const site of translatedSites) {
       map.set(site.country, (map.get(site.country) ?? 0) + 1);
     }
-    // Put Ecuador first as key regional analog, then rest alphabetically
+
     const entries = Array.from(map.entries()).sort((a, b) => {
-      if (a[0] === "Ecuador") return -1;
-      if (b[0] === "Ecuador") return 1;
-      return a[0].localeCompare(b[0]);
+      const pa = getCountryPriority(a[0]);
+      const pb = getCountryPriority(b[0]);
+      if (pa !== pb) return pa - pb;
+      return a[0].localeCompare(b[0], "es");
     });
     return entries;
   }, [translatedSites]);
@@ -346,7 +368,9 @@ export function MissionControlApp({ dataset }: MissionControlAppProps) {
         setCameraTarget({ type: "fitBounds", sites: marsSites });
       }
     } else {
-      // Tierra: show all sites
+      // Tierra: show all sites in global 2D view without auto-selecting a site
+      setSelectedSiteId(null);
+      setComparisonExpanded(false);
       setCameraTarget({ type: "world" });
     }
   };
@@ -356,6 +380,8 @@ export function MissionControlApp({ dataset }: MissionControlAppProps) {
     if (country === "TODOS") {
       setSelectedCountry("TODOS");
       setCountryDropdown(null);
+      setSelectedSiteId(null);
+      setComparisonExpanded(false);
       setCameraTarget({ type: "world" });
       return;
     }
@@ -383,7 +409,7 @@ export function MissionControlApp({ dataset }: MissionControlAppProps) {
     setShowDirectory(false);
     setSelectedSiteId(site.id);
     setActiveTargetId(site.best_target);
-    setCameraTarget({ type: "site", siteId: site.id, zoom: 12 });
+    setCameraTarget({ type: "site", siteId: site.id, zoom: 9.8 });
   }, []);
 
   // Toggle directory: ensure site detail panel is closed to prevent overlap
