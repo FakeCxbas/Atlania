@@ -185,15 +185,15 @@ export function TerrainLayers({
                           </span>
                         </div>
 
-                        <span className="font-mono text-[10px] tracking-wider text-[#94A3B8] uppercase">
+                        <span className="font-mono text-xs font-semibold tracking-wider text-slate-300 uppercase">
                           {s.natureBadge}
                         </span>
                       </div>
 
                       {isCurrent && (
-                        <div className="mt-2 pl-7 text-xs leading-relaxed text-[#94A3B8]">
-                          <p className="text-[#F1F5F9]/90">{s.summary}</p>
-                          <p className="mt-1 font-mono text-[11px] text-[#94A3B8]">
+                        <div className="mt-2.5 pl-7 text-sm leading-relaxed text-slate-200">
+                          <p className="font-medium text-slate-100">{s.summary}</p>
+                          <p className="mt-1 font-mono text-xs text-slate-300">
                             {s.detail}
                           </p>
                         </div>
@@ -235,17 +235,13 @@ export function TerrainLayers({
         <div className="grid gap-12 border-t border-white/10 pt-16 lg:grid-cols-12">
           <div className="lg:col-span-5">
             <span className="font-mono text-xs tracking-[0.2em] text-[#00D9F5] uppercase">
-              Arquitectura Reproducible // 4 Etapas
+              Arquitectura de Solución // 4 Etapas
             </span>
             <h3 className="mt-3 text-3xl font-bold tracking-tight text-[#F1F5F9] sm:text-4xl">
               De los datos terrestres a la exploración planetaria.
             </h3>
-            <p className="mt-4 text-sm leading-relaxed text-[#94A3B8] sm:text-base">
-              Cada estrato del terreno alimenta el motor científico{" "}
-              <code className="font-mono text-[#00D9F5]">
-                engine/asi_engine.py
-              </code>{" "}
-              y los endpoints en vivo del explorador geoespacial.
+            <p className="mt-4 text-base leading-relaxed text-slate-200">
+              Cada estrato físico del terreno alimenta el modelo analógico ASI y la estación interactiva del explorador planetario.
             </p>
 
             {/* Official Source & Tech Logos */}

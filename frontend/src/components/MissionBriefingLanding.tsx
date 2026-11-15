@@ -464,9 +464,9 @@ export function MissionBriefingLanding({
           "¿Dónde podemos simular las condiciones de una región lunar o marciana?",
         tag: "Cartografía de Análogos",
         shortAnswer:
-          "En entornos terrestres extremos cuyos procesos geológicos, topográficos o climáticos comparten rasgos acotados con regiones específicas de la Luna o Marte.",
+          "En regiones terrestres extremas que aíslan variables clave: tubos de lava basálticos, salares hiperáridos y criósfera de alta montaña.",
         detail:
-          "Ningún sitio terrestre replica otro planeta por completo, pero regiones concretas permiten aislar variables de misión: los tubos de lava basáltica de Galápagos (Ecuador), Timanfaya (España) o Craters of the Moon (EE. UU.) reproducen geometrías de cavidades volcánicas subterráneas; los salares e hiperdesiertos de Atacama (Chile) y Uyuni (Bolivia) preservan evaporitas y costras salinas comparables a antiguos paleolagos marcianos; y el permafrost polar del Cráter Haughton (Canadá) o de alta montaña en el Chimborazo y Antisana (Ecuador) permite ensayar movilidad y perforación en suelos congelados.",
+          "Ningún sitio terrestre replica un planeta al 100%, pero permiten aislar subsistemas: tubos volcánicos en Galápagos y Craters of the Moon reproducen cavidades subterráneas; salares en Atacama y Uyuni simulan paleolagos marcianos; y permafrost en Chimborazo y Haughton permite ensayar perforación en suelos congelados.",
         metricLabel: "Cobertura actual del catálogo",
         metricValue: `${translatedSites.length} sitios documentados en ${
           new Set(translatedSites.map((s) => s.country)).size
@@ -478,9 +478,9 @@ export function MissionBriefingLanding({
         question: "¿Qué características hacen útil a un análogo terrestre?",
         tag: "Evaluación Multidimensional",
         shortAnswer:
-          "La correspondencia medible o documentada entre las propiedades del sitio terrestre y los requisitos operativos de la misión extraterrestre.",
+          "La correspondencia cuantitativa en 5 ejes: Topografía (pendientes), Geología (basalto/regolito), Clima térmico, Aridez/Hielo y Refugio subterráneo.",
         detail:
-          "La utilidad de un análogo depende de qué subsistema se desea poner a prueba. En ATLANIA evaluamos cinco ejes complementarios: Topografía (pendiente y rugosidad para locomoción de rovers y aterrizaje), Geología (presencia de basalto, regolito, sedimentos, evaporitas o estructuras de impacto), Régimen Térmico (temperatura media y oscilación térmica), Hidrología y Criósfera (aridez extrema, presencia de hielo/permafrost e historia acuosa) y Operaciones Subterráneas (tubos de lava y potencial de refugio natural). Cada destino pondera estos ejes según su prioridad científica.",
+          "Un análogo es útil según el subsistema a evaluar: movilidad de rovers en pendientes escarpadas, durabilidad de sellos en polvo abrasivo o aislamiento térmico en amplitudes extremas. Cada destino extraterrestre pondera los 5 ejes según su objetivo científico prioritario.",
         metricLabel: "Dimensiones del modelo ASI",
         metricValue: `${
           dataset.methodology.dimensions?.length ?? 5
@@ -495,9 +495,9 @@ export function MissionBriefingLanding({
           "¿Cuáles son las diferencias que ningún entorno terrestre puede reproducir?",
         tag: "Ruptura de Analogía Física",
         shortAnswer:
-          "La gravedad reducida, el vacío lunar o la tenue atmósfera de CO₂ marciana, la radiación cósmica ionizante y la ausencia de biosfera activa.",
+          "Límites físicos insalvables: gravedad terrestre (9.81 m/s² frente a 1.62 y 3.71 m/s²), atmósfera densa con O₂/humedad y ausencia de radiación cósmica directa.",
         detail:
-          "Comprender dónde falla una analogía es tan importante como identificar dónde funciona. En la Tierra la aceleración gravitatoria es de 9.81 m/s² (frente a 1.62 m/s² en la Luna y 3.71 m/s² en Marte), lo que altera la mecánica de suelos, el esfuerzo de motores y la estabilidad estructural. Además, la atmósfera terrestre (101.3 kPa, rica en N₂/O₂ y humedad) y la magnetosfera nos protegen de los rayos cósmicos galácticos (GCR) y micrometeoritos, mientras que la vida microbiana y el agua líquida meteorizan las rocas terrestres de forma distinta al regolito lunar o marciano.",
+          "Identificar la ruptura de la analogía es mandatorio: la gravedad terrestre altera la mecánica de suelos y tracción; la atmósfera protege contra micrometeoritos y rayos cósmicos (GCR); y la biosfera meteoriza rocas de forma distinta al vacío lunar o marciano.",
         metricLabel: "Constantes físicas contrastadas",
         metricValue:
           "Tierra 9.81 m/s² (101.3 kPa) vs. Luna 1.62 m/s² (0 kPa) y Marte 3.71 m/s² (0.65 kPa)",
@@ -510,60 +510,57 @@ export function MissionBriefingLanding({
     () => [
       {
         step: "Etapa 1 — Recopilar",
-        code: "INGESTA // FUENTES ABIERTAS",
-        title: "Datos satelitales y archivos planetarios reales",
+        code: "01 // FUENTES ABIERTAS",
+        title: "Telemetría satelital y archivos planetarios oficiales",
         description:
-          "El motor consulta la API climatológica de NASA POWER (7 parámetros en celda a 2 metros: T2M_MAX, T2M_MIN, PRECTOTCORR, WS10M, RH2M, ALLSKY_SFC_SW_DWN y PS) y el modelo digital de elevación Copernicus DEM GLO-90 vía Open-Meteo, cruzándolos con 6 perfiles de referencia documentados con fuentes del Planetary Data System (PDS) de la NASA.",
+          "Ingesta automatizada de 7 variables climáticas de superficie desde NASA POWER API y modelos digitales de elevación Copernicus DEM GLO-90, cotejados con registros del Planetary Data System (PDS).",
         sources: [
-          `NASA POWER API (${dataset.methodology.source_counts.nasa_power}/${dataset.sites.length} sitios activos)`,
-          `Copernicus DEM GLO-90 (${
-            dataset.methodology.dem_source_counts?.open_meteo ??
-            dataset.sites.length
-          }/${dataset.sites.length} muestreos de 5 puntos)`,
-          "NASA PDS: LRO LOLA/Diviner/LROC, MRO CRISM/HiRISE, MGS MOLA y Perseverance MEDA",
-          "Capas cartográficas: NASA GIBS VIIRS True Color, Esri World Imagery y AWS Terrarium 3D",
+          `NASA POWER API: 7 parámetros climáticos a 2 m (${dataset.methodology.source_counts.nasa_power}/${dataset.sites.length} sitios activos)`,
+          `Copernicus DEM 90m: Muestreo topográfico de 5 puntos para pendientes y rugosidad`,
+          "NASA PDS: Archivos de misiones LRO (Diviner/LOLA), MRO (HiRISE/CRISM) y Perseverance",
+          "Capas cartográficas: NASA GIBS VIIRS True Color y relieve sombreado tridimensional",
         ],
         brands: ["nasa-power", "copernicus", "nasa-pds"] as BrandId[],
       },
       {
         step: "Etapa 2 — Analizar",
-        code: "PROCESAMIENTO // TELEMETRÍA Y PRIORS",
-        title: "Caracterización ambiental, topográfica y geológica",
+        code: "02 // TELEMETRÍA Y PRIORS",
+        title: "Procesamiento topográfico, térmico y litológico",
         description:
-          "En engine/asi_engine.py y src/lib/evaluateCoordinate.ts se calculan la pendiente por gradiente central N/S/E/W a 0.01°, la rugosidad por desviación estándar de elevación, la temperatura media anual, el rango térmico diurno y el índice hiperbólico de sequedad 1 / (1 + precip_mm_día), integrados con los vectores de membresía litológica y subterránea del catálogo.",
+          "Cálculo de gradientes locales de pendiente por diferencias centrales a 0.01°, rugosidad superficial (σ), amplitud térmica anual e índice continuo de aridez terrestre, cruzados con perfiles litológicos documentados.",
         sources: [
-          "Muestreo cardinal de 5 puntos DEM (centro ± 0.01° N, S, E, O)",
-          "Índice de aridez terrestre continuo: Dryness = 1 / (1 + PRECTOTCORR)",
-          "5 membresías litológicas en [0, 1]: basalto, regolito, sedimentario, evaporita e impacto",
-          "Distinción explícita entre telemetría medida y supuestos de escenario (priors)",
+          "Gradiente topográfico por diferencias centrales cardinales (centro ± 0.01° N, S, E, O)",
+          "Índice continuo de aridez y balance de sequedad superficial",
+          "Superposición geológica difusa: basalto, regolito, sedimentario, evaporitas e impacto",
+          "Separación explícita entre telemetría medida en vivo y supuestos documentales",
         ],
         brands: ["python", "open-meteo", "nasa-power"] as BrandId[],
       },
       {
         step: "Etapa 3 — Comparar",
-        code: "MODELO // ÍNDICE ASI v0.2.0",
-        title: "Cálculo del Analog Similarity Index (ASI) en 5 ejes",
+        code: "03 // MODELO ANALÓGICO ASI",
+        title: "Analog Similarity Index (ASI) en 5 dimensiones",
         description:
-          "Cada sitio terrestre se compara contra cada objetivo lunar y marciano mediante la función de similitud acotada L(a, b; s) = max(0, 1 − |a − b| / s) y la superposición difusa de Jaccard Σ min / Σ max para geología. Las 5 dimensiones se ponderan según las prioridades del destino extraterrestre y se generan automáticamente las advertencias de ruptura de analogía.",
+          "Cuantificación multidimensional que compara cada sitio terrestre contra los 6 destinos de referencia lunar y marciano, reportando fortalezas de misión y rupturas de analogía física.",
         sources: [
-          "Ecuación real: overall_asi = Σ (target_weight[d] × dimension_score[d])",
-          "Umbral de fortaleza dimensional: puntuación ≥ 70 / 100",
-          "Reporte obligatorio de 6 categorías de ruptura de analogía (analogy_breakdowns)",
-          "Verificado por pruebas unitarias en Python (pytest) y Node.js (node --test)",
+          "Puntuación global ASI (0 a 100%) ponderada según prioridad científica de misión",
+          "Superposición difusa de Jaccard para litología y vulcanismo basáltico",
+          "Advertencias obligatorias de límites físicos: gravedad, atmósfera y radiación cósmica",
+          "Validación cuantitativa de cálculos con suite automatizada de pruebas unitarias",
         ],
         brands: ["python", "nasa-pds"] as BrandId[],
       },
       {
         step: "Etapa 4 — Explorar",
-        code: "INTERFAZ // MISSION CONTROL HUD",
-        title: "Exploración cartográfica 3D, sondeo en vivo y exportación",
+        code: "04 // ESTACIÓN INTERACTIVA",
+        title: "Cartografía 3D, prospección de áreas y exportación científica",
         description:
-          "Los resultados alimentan el explorador interactivo en /explorer: globo y relieve 3D con MapLibre GL, comparación lado a lado Tierra vs. Luna/Marte, sondeo puntual de cualquier coordenada terrestre, prospección matricial 3×3 y 4×4 de regiones enteras y exportación de dossiers científicos en Markdown, JSON y GeoJSON para QGIS.",
+          "Estación de misión interactiva con globo y terreno 3D, panel comparativo sincrónico de 3 columnas, sondeo de cualquier coordenada terrestre y exportación directa a QGIS y reportes.",
         sources: [
-          "Explorador geoespacial interactivo en /explorer con filtros por cuerpo y país",
-          "Endpoints en tiempo real: /api/evaluate (punto) y /api/evaluate-region (grilla 3×3 / 4×4)",
-          "Mesa comparativa expandible de 3 columnas con gráfico radar pentagonal",
-          "Exportación directa de Dossier Markdown/JSON y capa GeoJSON EPSG:4326",
+          "Visor geoespacial interactivo 3D con navegación por cuerpo planetario y país",
+          "Sondeo puntual y prospección matricial de áreas (grillas 3x3 y 4x4) en tiempo real",
+          "Gráfico radar pentagonal de afinidad y análisis lado a lado sincronizado",
+          "Descarga instantánea en formatos interoperables: GeoJSON para QGIS, Markdown y JSON",
         ],
         brands: ["nextjs", "maplibre", "github"] as BrandId[],
       },
@@ -908,24 +905,24 @@ export function MissionBriefingLanding({
                             >
                               <div>
                                 <div className="flex items-center justify-between gap-2">
-                                  <span className="font-mono text-[11px] tracking-[0.18em] text-[#00D9F5] uppercase">
+                                  <span className="font-mono text-xs font-semibold tracking-wider text-[#00D9F5] uppercase">
                                     0{idx + 1} · {item.tag}
                                   </span>
                                   <ScientificIcon
                                     concept={item.concept}
-                                    className="h-4 w-4 text-[#94A3B8]"
+                                    className="h-4 w-4 text-slate-400"
                                   />
                                 </div>
-                                <h3 className="mt-2.5 text-base font-semibold leading-snug text-[#F1F5F9] sm:text-lg">
+                                <h3 className="mt-3 text-lg font-bold leading-snug text-slate-100 sm:text-xl">
                                   {item.question}
                                 </h3>
-                                <p className="mt-2 text-xs leading-relaxed text-[#CBD5E1] sm:text-sm">
+                                <p className="mt-2.5 text-sm leading-relaxed text-slate-200">
                                   {isSelected ? item.detail : item.shortAnswer}
                                 </p>
                               </div>
 
-                              <div className="mt-4 flex items-center justify-between border-t border-white/10 pt-3">
-                                <span className="font-mono text-[11px] text-[#94A3B8] tabular-nums">
+                              <div className="mt-5 flex flex-wrap items-center justify-between gap-2 border-t border-white/10 pt-3">
+                                <span className="rounded-md border border-white/15 bg-white/5 px-2.5 py-1 font-mono text-xs text-slate-200 tabular-nums">
                                   {item.metricValue}
                                 </span>
                                 <button
@@ -935,7 +932,7 @@ export function MissionBriefingLanding({
                                       isSelected ? -1 : idx
                                     )
                                   }
-                                  className="font-mono text-[11px] font-medium text-[#00D9F5] underline-offset-4 hover:underline"
+                                  className="font-mono text-xs font-semibold text-[#00D9F5] underline-offset-4 hover:underline"
                                 >
                                   {isSelected ? "Sintetizar" : "Profundizar"}
                                 </button>
@@ -1176,17 +1173,17 @@ export function MissionBriefingLanding({
                                   <p className="text-sm font-semibold text-[#F1F5F9]">
                                     {row.label}
                                   </p>
-                                  <p className="font-mono text-[11px] text-[#94A3B8]">
+                                  <p className="font-mono text-xs text-slate-300">
                                     {row.sourceTag}
                                   </p>
                                 </div>
                               </div>
 
-                              <div className="font-mono text-xs text-[#E2E8F0] tabular-nums md:col-span-4">
+                              <div className="font-mono text-sm font-medium text-slate-100 tabular-nums md:col-span-4">
                                 {row.earthValue}
                               </div>
 
-                              <div className="font-mono text-xs text-[#E2E8F0] tabular-nums md:col-span-5">
+                              <div className="font-mono text-sm font-medium text-slate-100 tabular-nums md:col-span-5">
                                 {row.planetaryValue}
                               </div>
                             </div>
@@ -1205,21 +1202,18 @@ export function MissionBriefingLanding({
                   className="mt-28 border-t border-white/15 pt-20"
                 >
                   <div className="max-w-3xl">
-                    <p className="font-mono text-xs font-medium tracking-[0.22em] text-[#00D9F5] uppercase">
+                    <p className="font-mono text-xs font-semibold tracking-wider text-[#00D9F5] uppercase">
                       ÍNDICE DE SIMILITUD ANÁLOGA (ASI) · ESCALA REAL 0 – 100
                     </p>
                     <h3 className="mt-3 text-3xl font-semibold tracking-tight text-[#F1F5F9] sm:text-4xl">
                       Cómo se interpreta una puntuación real en ATLANIA
                     </h3>
-                    <p className="mt-4 text-base leading-relaxed text-[#94A3B8]">
-                      El ASI combina cinco dimensiones mediante la suma
-                      ponderada{" "}
-                      <code className="font-mono text-sm text-[#E2E8F0]">
-                        overall_asi = Σ (peso_objetivo[d] × puntaje_dimensión[d])
-                      </code>
-                      . Todos los valores mostrados a continuación provienen
-                      directamente del catálogo precalculado por el motor
-                      científico.
+                    <p className="mt-4 text-base leading-relaxed text-slate-200">
+                      El ASI pondera cinco dimensiones clave (Topografía, Geología, Clima, Aridez/Hielo y Refugio Subterráneo) según los requisitos de cada misión:{" "}
+                      <span className="inline-flex items-center rounded-md border border-[#00D9F5]/40 bg-[#00D9F5]/10 px-2.5 py-1 font-mono text-xs font-semibold text-[#00D9F5]">
+                        ASI Global = Σ (Peso[d] × Afinidad[d])
+                      </span>
+                      . Todos los valores se calculan a partir de telemetría satelital abierta y priors geológicos documentados.
                     </p>
                   </div>
 
@@ -1383,7 +1377,7 @@ export function MissionBriefingLanding({
                                       }}
                                     />
                                   </div>
-                                  <p className="mt-1.5 font-mono text-[11px] text-[#94A3B8]">
+                                  <p className="mt-1.5 font-mono text-xs text-slate-300">
                                     {dim.formulaNote}
                                   </p>
                                 </div>
@@ -1393,7 +1387,7 @@ export function MissionBriefingLanding({
 
                           {/* Mandatory Analogy Breakdowns (Honest scientific limits) */}
                           <div>
-                            <div className="flex items-center gap-2 font-mono text-xs tracking-[0.16em] text-[#F5B82E] uppercase">
+                            <div className="flex items-center gap-2 font-mono text-xs font-semibold tracking-wider text-[#F5B82E] uppercase">
                               <ShieldAlert
                                 className="h-4 w-4"
                                 aria-hidden="true"
@@ -1408,7 +1402,7 @@ export function MissionBriefingLanding({
                                 )
                               </span>
                             </div>
-                            <ul className="mt-3 space-y-2 text-xs leading-relaxed text-[#CBD5E1]">
+                            <ul className="mt-3 space-y-2 text-sm leading-relaxed text-slate-200">
                               {Object.entries(
                                 selectedAsiScore.analogy_breakdowns
                               ).map(([key, msg]) => (
@@ -1417,7 +1411,7 @@ export function MissionBriefingLanding({
                                   className="flex items-start gap-2.5"
                                 >
                                   <span
-                                    className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-[#F5B82E]"
+                                    className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-[#F5B82E]"
                                     aria-hidden="true"
                                   />
                                   <span>{msg}</span>

@@ -3,6 +3,7 @@
 import type { AnalogDataset, AnalogSite, TargetProfile } from "@/types/analog";
 import {
   ArrowRight,
+  ChevronRight,
   Compass,
   Cpu,
   Database,
@@ -68,11 +69,15 @@ export function MissionPresentation({
               <Compass className="h-5 w-5" aria-hidden="true" />
             </div>
             <div>
-              <span className="block text-xs font-bold tracking-widest text-[#D4AF37] uppercase">
-                NASA SPACE APPS CHALLENGE · GUAYAQUIL
-              </span>
+              <nav aria-label="Ruta de navegación" className="flex items-center gap-1 font-mono text-xs text-slate-400">
+                <button type="button" onClick={onClose} className="transition-colors hover:text-[#00D9F5]">Inicio</button>
+                <ChevronRight className="h-3 w-3 text-slate-600" aria-hidden="true" />
+                <button type="button" onClick={onClose} className="transition-colors hover:text-[#00D9F5]">Explorador 3D</button>
+                <ChevronRight className="h-3 w-3 text-slate-600" aria-hidden="true" />
+                <span className="font-semibold text-[#D4AF37]">Dossier Científico</span>
+              </nav>
               <span className="text-sm font-semibold text-slate-100">
-                ATLANIA // Observatorio Planetario &amp; Dossier Científico
+                ATLANIA // Observatorio Planetario &amp; Dossier
               </span>
             </div>
           </div>
