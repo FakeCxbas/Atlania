@@ -26,6 +26,24 @@
   accent-color: var(--accent-gold);
 }
 
+@font-face {
+  font-family: "Hello Paris";
+  src: url("/fonts/HelloParis.woff2") format("woff2"),
+       url("/fonts/HelloParisSerif.ttf") format("truetype");
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+.atlania-hero-title {
+  font-family: "Hello Paris", var(--font-cormorant), Georgia, serif !important;
+  color: #f8fafc;
+  text-shadow:
+    0 0 12px rgba(255, 255, 255, 0.72),
+    0 0 32px rgba(224, 247, 255, 0.45),
+    0 0 64px rgba(56, 189, 248, 0.28);
+}
+
 @theme inline {
   --color-background: var(--bg-space);
   --color-foreground: var(--text-primary);
@@ -111,6 +129,48 @@ body {
 
   .mb-orbit-glow {
     animation: mb-orbit-pulse 7s ease-in-out infinite;
+  }
+
+  @keyframes mb-sat-float-a {
+    0%,
+    100% {
+      transform: translate3d(0, 0, 0) rotate(-3deg);
+    }
+    50% {
+      transform: translate3d(0, -14px, 0) rotate(-1deg);
+    }
+  }
+
+  @keyframes mb-sat-float-b {
+    0%,
+    100% {
+      transform: translate3d(0, 0, 0) rotate(5deg);
+    }
+    50% {
+      transform: translate3d(-8px, 12px, 0) rotate(2deg);
+    }
+  }
+
+  @keyframes mb-sat-float-c {
+    0%,
+    100% {
+      transform: translate3d(0, 0, 0) rotate(2deg);
+    }
+    50% {
+      transform: translate3d(7px, -10px, 0) rotate(5deg);
+    }
+  }
+
+  .mb-sat-float-a {
+    animation: mb-sat-float-a 8s ease-in-out infinite;
+  }
+
+  .mb-sat-float-b {
+    animation: mb-sat-float-b 10s ease-in-out infinite;
+  }
+
+  .mb-sat-float-c {
+    animation: mb-sat-float-c 12s ease-in-out infinite;
   }
 
   @supports ((animation-timeline: view()) and (animation-range: entry)) {

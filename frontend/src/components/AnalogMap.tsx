@@ -1,17 +1,24 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { PLANET_VISUALS } from "@/lib/planetaryVisuals";
+import { PlanetPortrait } from "@/components/PlanetPortrait";
 import * as maplibregl from "maplibre-gl";
 import {
   Box,
   ChevronDown,
   ChevronUp,
+  Mountain,
   RotateCcw,
   RotateCw,
   Square,
 } from "lucide-react";
 import type { AnalogSite, TargetProfile } from "@/types/analog";
 import type { RegionBounds, RegionEvaluationResult } from "@/lib/evaluateRegion";
+import {
+  TerrainDioramaModal,
+  type TerrainDioramaTarget,
+} from "@/components/TerrainDioramaModal";
 
 if (typeof window !== "undefined") {
   maplibregl.setWorkerUrl("/maplibre-gl-worker.mjs");
@@ -216,9 +223,8 @@ interface MarkerVisualRefs {
   marker: maplibregl.Marker;
   btn: HTMLButtonElement;
   outer: HTMLSpanElement;
-  core: HTMLSpanElement;
+  core: HTMLImageElement;
   label: HTMLSpanElement;
-  ringColor: string;
 }
 
 export function AnalogMap({
@@ -250,6 +256,33 @@ export function AnalogMap({
   useEffect(() => {
     onSelectSiteRef.current = onSelectSite;
   }, [onSelectSite]);
+
+  const [dioramaTarget, setDioramaTarget] =
+    useState<TerrainDioramaTarget | null>(null);
+
+  const handleOpenDiorama = useCallback(() => {
+    const activeSite = selectedSiteId
+      ? sites.find((s) => s.id === selectedSiteId)
+      : null;
+    if (activeSite) {
+      setDioramaTarget({
+        name: activeSite.name,
+        country: activeSite.country,
+        latitude: activeSite.latitude,
+        longitude: activeSite.longitude,
+        asiScore: activeSite.overall_asi,
+      });
+      return;
+    }
+    const center = mapRef.current?.getCenter();
+    const lat = center?.lat ?? -0.67;
+    const lon = center?.lng ?? -78.6;
+    setDioramaTarget({
+      name: `Terreno en ${lat.toFixed(2)}°, ${lon.toFixed(2)}°`,
+      latitude: lat,
+      longitude: lon,
+    });
+  }, [selectedSiteId, sites]);
 
   const latSpanRef = useRef<HTMLSpanElement | null>(null);
   const lonSpanRef = useRef<HTMLSpanElement | null>(null);
@@ -507,10 +540,21 @@ export function AnalogMap({
 
     mapRef.current = map;
 
+    const resizeObserver =
+      typeof ResizeObserver !== "undefined" && containerRef.current
+        ? new ResizeObserver(() => {
+            map.resize();
+          })
+        : null;
+    if (resizeObserver && containerRef.current) {
+      resizeObserver.observe(containerRef.current);
+    }
+
     const markers = markersRef.current;
 
     return () => {
       if (rafId) cancelAnimationFrame(rafId);
+      resizeObserver?.disconnect();
       markers.forEach((m) => m.marker.remove());
       markers.clear();
       map.remove();
@@ -569,27 +613,30 @@ export function AnalogMap({
       const isSelected = site.id === selectedSiteId;
       const target = references[site.best_target];
       const isMars = target?.body === "Mars";
-      const ringColor = isMars ? "#E07A5F" : "#06B6D4";
+      const planet = PLANET_VISUALS[isMars ? "Mars" : "Moon"];
+      const ringColor = planet.accent;
+      const markerLabel = `${site.name}, ${site.country}. Análogo de ${planet.label}. ASI ${site.overall_asi.toFixed(1)}% para ${target?.name ?? site.best_target}`;
 
       const shortName = site.name.split(" - ")[0].split(" (")[0];
       const badgeText = `${shortName} · ${site.overall_asi.toFixed(0)}%`;
 
+      const hexClip = "polygon(50% 0%, 93% 25%, 93% 75%, 50% 100%, 7% 75%, 7% 25%)";
+      const sizePx = isSelected ? "40px" : "32px";
+      const glowFilter = isSelected
+        ? `drop-shadow(0 0 10px ${ringColor})`
+        : `drop-shadow(0 0 5px ${ringColor}88)`;
+
       const existing = markersRef.current.get(site.id);
       if (existing) {
         existing.marker.setLngLat([site.longitude, site.latitude]);
-        existing.btn.style.width = isSelected ? "28px" : "20px";
-        existing.btn.style.height = isSelected ? "28px" : "20px";
+        existing.btn.style.width = sizePx;
+        existing.btn.style.height = sizePx;
         existing.btn.style.zIndex = isSelected ? "30" : "10";
-        existing.outer.style.border = `2px solid ${ringColor}`;
-        existing.outer.style.backgroundColor = isSelected
-          ? `${ringColor}40`
-          : "rgba(6, 9, 19, 0.8)";
-        existing.outer.style.boxShadow = isSelected
-          ? `0 0 18px ${ringColor}`
-          : `0 0 8px ${ringColor}66`;
-        existing.core.style.width = isSelected ? "10px" : "7px";
-        existing.core.style.height = isSelected ? "10px" : "7px";
-        existing.core.style.backgroundColor = ringColor;
+        existing.btn.style.filter = glowFilter;
+        existing.outer.style.backgroundColor = isSelected ? "#D4AF37" : ringColor;
+        existing.core.src = planet.image;
+        existing.btn.setAttribute("aria-label", markerLabel);
+        existing.btn.setAttribute("aria-pressed", String(isSelected));
         existing.label.textContent = badgeText;
         existing.label.style.opacity = isSelected ? "1" : "";
         existing.label.style.borderColor = isSelected ? "#D4AF37" : `${ringColor}88`;
@@ -598,32 +645,25 @@ export function AnalogMap({
 
       const btn = document.createElement("button");
       btn.type = "button";
-      btn.setAttribute(
-        "aria-label",
-        `${site.name}, ${site.country}. ASI ${site.overall_asi.toFixed(1)}% for ${target?.name ?? site.best_target}`
-      );
+      btn.setAttribute("aria-label", markerLabel);
+      btn.setAttribute("aria-pressed", String(isSelected));
       btn.className = "group relative flex items-center justify-center cursor-pointer";
-      btn.style.width = isSelected ? "28px" : "20px";
-      btn.style.height = isSelected ? "28px" : "20px";
+      btn.style.width = sizePx;
+      btn.style.height = sizePx;
       btn.style.zIndex = isSelected ? "30" : "10";
+      btn.style.filter = glowFilter;
 
       const outer = document.createElement("span");
-      outer.style.position = "absolute";
-      outer.style.inset = "0";
-      outer.style.borderRadius = "9999px";
-      outer.style.border = `2px solid ${ringColor}`;
-      outer.style.backgroundColor = isSelected
-        ? `${ringColor}40`
-        : "rgba(6, 9, 19, 0.8)";
-      outer.style.boxShadow = isSelected
-        ? `0 0 18px ${ringColor}`
-        : `0 0 8px ${ringColor}66`;
+      outer.setAttribute("aria-hidden", "true");
+      outer.style.cssText = `position:absolute;inset:0;clip-path:${hexClip};background-color:${isSelected ? "#D4AF37" : ringColor}`;
 
-      const core = document.createElement("span");
-      core.style.width = isSelected ? "10px" : "7px";
-      core.style.height = isSelected ? "10px" : "7px";
-      core.style.borderRadius = "9999px";
-      core.style.backgroundColor = ringColor;
+      const core = document.createElement("img");
+      core.src = planet.image;
+      core.alt = "";
+      core.setAttribute("aria-hidden", "true");
+      core.draggable = false;
+      core.className = "transition-transform duration-150 group-hover:scale-110";
+      core.style.cssText = `position:relative;width:calc(100% - 5px);height:calc(100% - 5px);object-fit:cover;clip-path:${hexClip};pointer-events:none;background:#060913`;
 
       const label = document.createElement("span");
       label.textContent = badgeText;
@@ -654,7 +694,6 @@ export function AnalogMap({
         outer,
         core,
         label,
-        ringColor,
       });
     }
   }, [sites, references, selectedSiteId]);
@@ -1180,9 +1219,9 @@ export function AnalogMap({
       />
 
       {/* Selector de capa de mapa base y modos de prospección */}
-      <div className="absolute right-14 top-[112px] z-10 flex flex-col items-end gap-2">
+      <div className="absolute right-14 top-3 z-10 flex flex-col items-end gap-2">
         <div
-          className="flex items-center gap-1 rounded-lg border border-slate-800/80 bg-[#060913]/90 p-1 shadow-xl backdrop-blur-md"
+          className="flex items-center gap-1 rounded-lg border border-[#55527D]/35 bg-[#101321]/90 p-1 shadow-lg backdrop-blur-md"
           role="group"
           aria-label="Capa de mapa base"
         >
@@ -1190,7 +1229,7 @@ export function AnalogMap({
             [
               { id: "satellite", label: "Satélite" },
               { id: "nasa-gibs", label: "NASA GIBS" },
-              { id: "dark", label: "Vector Oscuro" },
+              { id: "dark", label: "Mapa Base" },
             ] as const
           ).map(({ id, label }) => {
             const active = basemap === id;
@@ -1200,29 +1239,38 @@ export function AnalogMap({
                 type="button"
                 onClick={() => setBasemap(id)}
                 aria-pressed={active}
-                className={`rounded px-2.5 py-1 text-xs font-medium transition-colors ${
+                className={`rounded-md px-2.5 py-1 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C5A36D] ${
                   active
-                    ? "border border-[#D4AF37]/60 bg-[#D4AF37]/20 text-[#D4AF37]"
-                    : "border border-transparent text-slate-300 hover:text-slate-100"
+                    ? "bg-[#C5A36D]/20 text-[#E4DFD5] ring-1 ring-[#C5A36D]/50"
+                    : "text-[#A3A1BD] hover:text-[#E4DFD5]"
                 }`}
               >
                 {label}
               </button>
             );
           })}
-          <span className="mx-0.5 h-4 w-px bg-slate-800" aria-hidden="true" />
+          <span className="mx-0.5 h-4 w-px bg-[#55527D]/35" aria-hidden="true" />
           <button
             type="button"
             onClick={() => setTerrain3d((prev) => !prev)}
             aria-pressed={terrain3d}
             title="Activar o desactivar relieve topográfico 3D"
-            className={`rounded px-2.5 py-1 text-xs font-medium transition-colors ${
+            className={`rounded-md px-2.5 py-1 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C5A36D] ${
               terrain3d
-                ? "border border-cyan-500/60 bg-cyan-500/20 text-cyan-200"
-                : "border border-transparent text-slate-400 hover:text-slate-100"
+                ? "bg-[#7CA5B8]/20 text-[#E4DFD5] ring-1 ring-[#7CA5B8]/50"
+                : "text-[#A3A1BD] hover:text-[#E4DFD5]"
             }`}
           >
             Relieve 3D
+          </button>
+          <button
+            type="button"
+            onClick={handleOpenDiorama}
+            title="Abrir Gemelo Topográfico 3D HD (Three.js + Simulador Solar)"
+            className="flex items-center gap-1 rounded-md px-2.5 py-1 text-xs font-medium text-[#C5A36D] transition-colors hover:bg-[#C5A36D]/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C5A36D]"
+          >
+            <Mountain className="h-3.5 w-3.5" aria-hidden="true" />
+            <span>3D HD</span>
           </button>
         </div>
 
@@ -1233,17 +1281,18 @@ export function AnalogMap({
                 type="button"
                 onClick={onToggleProbeMode}
                 aria-pressed={probeMode}
-                className={`rounded-md border px-3 py-1.5 text-xs font-medium shadow-lg backdrop-blur-md transition-colors ${
+                title="Haz clic en cualquier coordenada de la Tierra para evaluar NASA POWER y relieve DEM"
+                className={`rounded-lg border px-3 py-1.5 text-xs font-medium shadow-lg backdrop-blur-md transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C5A36D] ${
                   probeMode
-                    ? "border-amber-400/70 bg-amber-500/20 text-amber-200"
-                    : "border-slate-800/80 bg-[#060913]/90 text-slate-200 hover:border-cyan-500/50"
+                    ? "border-[#C5A36D] bg-[#C5A36D]/20 text-[#E4DFD5]"
+                    : "border-[#55527D]/35 bg-[#101321]/90 text-[#E4DFD5] hover:border-[#C5A36D]/50"
                 }`}
               >
                 {isProbing
-                  ? "Sondeando NASA POWER..."
+                  ? "Consultando NASA POWER..."
                   : probeMode
-                  ? "Sondeo: Clic en Mapa"
-                  : "Sondear Punto"}
+                  ? "Sondeo activo: Clic en mapa"
+                  : "Sondear punto"}
               </button>
             )}
 
@@ -1253,22 +1302,23 @@ export function AnalogMap({
                   type="button"
                   onClick={onToggleRegionProbeMode}
                   aria-pressed={regionProbeMode}
-                  className={`rounded-md border px-3 py-1.5 text-xs font-medium shadow-lg backdrop-blur-md transition-colors ${
+                  title="Evalúa una grilla de coordenadas en el área visible o arrastrando un rectángulo"
+                  className={`rounded-lg border px-3 py-1.5 text-xs font-medium shadow-lg backdrop-blur-md transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C5A36D] ${
                     regionProbeMode
-                      ? "border-cyan-400/70 bg-cyan-500/20 text-cyan-200"
-                      : "border-slate-800/80 bg-[#060913]/90 text-slate-200 hover:border-cyan-500/50"
+                      ? "border-[#7CA5B8] bg-[#7CA5B8]/20 text-[#E4DFD5]"
+                      : "border-[#55527D]/35 bg-[#101321]/90 text-[#E4DFD5] hover:border-[#7CA5B8]/60"
                   }`}
                 >
                   {isProbingRegion
                     ? `Escaneando ${regionGridSize}×${regionGridSize}...`
                     : regionProbeMode
-                    ? "Región: Arrastra o Clic"
-                    : "Sondear Región"}
+                    ? "Región activa: Arrastra o clic"
+                    : "Sondear región"}
                 </button>
 
                 {regionProbeMode && onChangeRegionGridSize && (
                   <div
-                    className="flex items-center rounded-md border border-slate-800/80 bg-[#060913]/90 p-0.5 backdrop-blur-md"
+                    className="flex items-center rounded-lg border border-[#55527D]/35 bg-[#101321]/90 p-0.5 backdrop-blur-md"
                     role="group"
                     aria-label="Densidad de grilla regional"
                   >
@@ -1278,10 +1328,10 @@ export function AnalogMap({
                         type="button"
                         onClick={() => onChangeRegionGridSize(size)}
                         aria-pressed={regionGridSize === size}
-                        className={`rounded px-2 py-1 font-mono text-[11px] font-medium transition-colors ${
+                        className={`rounded px-2 py-1 font-mono text-[11px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C5A36D] ${
                           regionGridSize === size
-                            ? "bg-cyan-500/25 text-cyan-200"
-                            : "text-slate-400 hover:text-slate-200"
+                            ? "bg-[#7CA5B8]/25 text-[#E4DFD5]"
+                            : "text-[#A3A1BD] hover:text-[#E4DFD5]"
                         }`}
                       >
                         {size}×{size}
@@ -1310,9 +1360,9 @@ export function AnalogMap({
                         onProbeRegion({ minLat, maxLat, minLon, maxLon });
                       }
                     }}
-                    className="rounded-md border border-cyan-500/50 bg-[#060913]/90 px-2.5 py-1.5 text-xs font-medium text-cyan-300 backdrop-blur-md transition-colors hover:bg-cyan-500/20 disabled:opacity-50"
+                    className="rounded-lg border border-[#7CA5B8]/60 bg-[#101321]/90 px-2.5 py-1.5 text-xs font-medium text-[#E4DFD5] backdrop-blur-md transition-colors hover:bg-[#7CA5B8]/20 disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C5A36D]"
                   >
-                    Escanear Vista
+                    Escanear vista
                   </button>
                 )}
               </div>
@@ -1324,7 +1374,7 @@ export function AnalogMap({
       {regionProbeMode && dragBox && (
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute z-10 border-2 border-dashed border-cyan-400 bg-cyan-400/15"
+          className="pointer-events-none absolute z-10 border-2 border-dashed border-[#C5A36D] bg-[#C5A36D]/10"
           style={{
             left: Math.min(dragBox.startX, dragBox.curX),
             top: Math.min(dragBox.startY, dragBox.curY),
@@ -1335,50 +1385,46 @@ export function AnalogMap({
       )}
 
       {/* Overlay HUD de Coordenadas y Leyenda */}
-      <div
-        className={`pointer-events-none absolute bottom-3 left-3 z-10 flex flex-wrap items-center gap-3 rounded-lg border border-slate-800/80 bg-[#060913]/90 px-3 py-1.5 text-xs text-slate-300 shadow-xl backdrop-blur-md transition-all duration-300 ${
-          selectedSiteId ? "sm:left-[492px]" : "sm:left-3"
-        }`}
-      >
-        <span ref={latSpanRef} className="font-mono tabular-nums text-cyan-400">
+      <div className="pointer-events-none absolute bottom-3 left-3 z-10 flex flex-wrap items-center gap-3 rounded-lg border border-[#55527D]/30 bg-[#101321]/88 px-3 py-1.5 text-xs text-[#A3A1BD] shadow-lg backdrop-blur-md">
+        <span ref={latSpanRef} className="font-mono tabular-nums text-[#E4DFD5]">
           LAT -0.670°
         </span>
-        <span ref={lonSpanRef} className="font-mono tabular-nums text-cyan-400">
+        <span ref={lonSpanRef} className="font-mono tabular-nums text-[#E4DFD5]">
           LON -78.600°
         </span>
-        <span ref={zoomSpanRef} className="font-mono tabular-nums text-slate-400">
+        <span ref={zoomSpanRef} className="font-mono tabular-nums text-[#A3A1BD]">
           ZOOM 6.2
         </span>
-        <span className="h-3 w-px bg-slate-800" aria-hidden="true" />
-        <span className="flex items-center gap-1.5">
+        <span className="h-3 w-px bg-[#55527D]/40" aria-hidden="true" />
+        <span className="flex items-center gap-1.5 text-[#E4DFD5]">
           <span
-            className="inline-block h-2.5 w-2.5 rounded-full bg-[#06B6D4]"
+            className="inline-block h-2.5 w-2.5 rounded-full bg-[#7CA5B8]"
             aria-hidden="true"
           />
-          Análogo Lunar
+          Lunar
         </span>
-        <span className="flex items-center gap-1.5">
+        <span className="flex items-center gap-1.5 text-[#E4DFD5]">
           <span
-            className="inline-block h-2.5 w-2.5 rounded-full bg-[#E07A5F]"
+            className="inline-block h-2.5 w-2.5 rounded-full bg-[#D47A61]"
             aria-hidden="true"
           />
-          Análogo Marciano
+          Marciano
         </span>
         {regionResult && (
           <>
-            <span className="h-3 w-px bg-slate-800" aria-hidden="true" />
-            <span className="font-mono tabular-nums text-slate-300">
-              Sectores ASI: Bajo{" "}
-              <span className="inline-block h-2 w-10 rounded-sm bg-gradient-to-r from-[#1E293B] via-[#06B6D4] via-60% to-[#D4AF37] align-middle" />{" "}
+            <span className="h-3 w-px bg-[#55527D]/40" aria-hidden="true" />
+            <span className="font-mono tabular-nums text-[#E4DFD5]">
+              ASI: Bajo{" "}
+              <span className="inline-block h-2 w-10 rounded-sm bg-gradient-to-r from-[#27233E] via-[#7CA5B8] via-60% to-[#C5A36D] align-middle" />{" "}
               Alto
             </span>
           </>
         )}
       </div>
 
-      {/* Control compacto de perspectiva 2D / 3D y ángulos CAD */}
+      {/* Control compacto de perspectiva 2D / 3D y ángulos */}
       <div
-        className="absolute bottom-14 right-3 z-10 flex flex-col gap-1 rounded-lg border border-slate-800/80 bg-[#060913]/90 p-1.5 shadow-xl backdrop-blur-md"
+        className="absolute bottom-3 right-3 z-10 flex flex-col gap-1 rounded-lg border border-[#55527D]/35 bg-[#101321]/90 p-1.5 shadow-lg backdrop-blur-md"
         role="group"
         aria-label="Control de perspectiva 2D y 3D"
       >
@@ -1388,10 +1434,10 @@ export function AnalogMap({
             onClick={handleSet2D}
             aria-pressed={cameraView.pitch < 10}
             title="Vista Plana 2D (inclinación 0°, norte 0°)"
-            className={`flex flex-1 items-center justify-center gap-1 rounded px-2 py-1 text-[11px] font-semibold transition-colors ${
+            className={`flex flex-1 items-center justify-center gap-1 rounded px-2 py-1 text-[11px] font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C5A36D] ${
               cameraView.pitch < 10
-                ? "border border-[#D4AF37]/60 bg-[#D4AF37]/20 text-[#D4AF37]"
-                : "border border-transparent text-slate-400 hover:bg-slate-800/60 hover:text-slate-100"
+                ? "bg-[#C5A36D]/20 text-[#E4DFD5] ring-1 ring-[#C5A36D]/50"
+                : "text-[#A3A1BD] hover:bg-[#1F243B] hover:text-[#E4DFD5]"
             }`}
           >
             <Square className="h-3 w-3" aria-hidden="true" />
@@ -1402,25 +1448,34 @@ export function AnalogMap({
             onClick={handleSet3D}
             aria-pressed={cameraView.pitch >= 10}
             title="Vista Terreno 3D inclinada (60°)"
-            className={`flex flex-1 items-center justify-center gap-1 rounded px-2 py-1 text-[11px] font-semibold transition-colors ${
+            className={`flex flex-1 items-center justify-center gap-1 rounded px-2 py-1 text-[11px] font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C5A36D] ${
               cameraView.pitch >= 10
-                ? "border border-cyan-500/60 bg-cyan-500/20 text-cyan-200"
-                : "border border-transparent text-slate-400 hover:bg-slate-800/60 hover:text-slate-100"
+                ? "bg-[#7CA5B8]/20 text-[#E4DFD5] ring-1 ring-[#7CA5B8]/50"
+                : "text-[#A3A1BD] hover:bg-[#1F243B] hover:text-[#E4DFD5]"
             }`}
           >
             <Box className="h-3 w-3" aria-hidden="true" />
             <span>3D</span>
           </button>
+          <button
+            type="button"
+            onClick={handleOpenDiorama}
+            title="Abrir Gemelo Topográfico 3D HD (Three.js + Simulador Solar)"
+            className="flex flex-1 items-center justify-center gap-1 rounded px-2 py-1 text-[11px] font-semibold text-[#C5A36D] transition-colors hover:bg-[#C5A36D]/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C5A36D]"
+          >
+            <Mountain className="h-3 w-3" aria-hidden="true" />
+            <span>HD</span>
+          </button>
         </div>
 
-        <div className="flex items-center justify-between gap-1.5 border-t border-slate-800/80 pt-1">
+        <div className="flex items-center justify-between gap-1.5 border-t border-[#55527D]/30 pt-1">
           <div className="flex items-center gap-0.5" title="Rotación de ángulo (Bearing)">
             <button
               type="button"
               onClick={() => handleAdjustBearing(-45)}
               aria-label="Rotar vista -45 grados"
               title="Rotar -45°"
-              className="rounded p-1 text-slate-400 transition-colors hover:bg-slate-800/80 hover:text-cyan-300"
+              className="rounded p-1 text-[#A3A1BD] transition-colors hover:bg-[#1F243B] hover:text-[#E4DFD5] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C5A36D]"
             >
               <RotateCcw className="h-3 w-3" aria-hidden="true" />
             </button>
@@ -1429,7 +1484,7 @@ export function AnalogMap({
               onClick={handleResetBearing}
               aria-label="Restablecer orientación al norte"
               title="Restablecer norte (0°)"
-              className="min-w-[30px] rounded px-1 py-0.5 text-center font-mono text-[10px] tabular-nums text-slate-300 transition-colors hover:bg-slate-800/80 hover:text-cyan-300"
+              className="min-w-[30px] rounded px-1 py-0.5 text-center font-mono text-[10px] tabular-nums text-[#E4DFD5] transition-colors hover:bg-[#1F243B] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C5A36D]"
             >
               {String(cameraView.bearing).padStart(3, "0")}°
             </button>
@@ -1438,13 +1493,13 @@ export function AnalogMap({
               onClick={() => handleAdjustBearing(45)}
               aria-label="Rotar vista +45 grados"
               title="Rotar +45°"
-              className="rounded p-1 text-slate-400 transition-colors hover:bg-slate-800/80 hover:text-cyan-300"
+              className="rounded p-1 text-[#A3A1BD] transition-colors hover:bg-[#1F243B] hover:text-[#E4DFD5] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C5A36D]"
             >
               <RotateCw className="h-3 w-3" aria-hidden="true" />
             </button>
           </div>
 
-          <span className="h-3 w-px bg-slate-800" aria-hidden="true" />
+          <span className="h-3 w-px bg-[#55527D]/35" aria-hidden="true" />
 
           <div className="flex items-center gap-0.5" title="Inclinación lateral (Pitch)">
             <button
@@ -1453,12 +1508,12 @@ export function AnalogMap({
               disabled={cameraView.pitch <= 0}
               aria-label="Reducir inclinación 15 grados"
               title="Reducir inclinación (-15°)"
-              className="rounded p-1 text-slate-400 transition-colors hover:bg-slate-800/80 hover:text-cyan-300 disabled:opacity-35 disabled:hover:bg-transparent disabled:hover:text-slate-400"
+              className="rounded p-1 text-[#A3A1BD] transition-colors hover:bg-[#1F243B] hover:text-[#E4DFD5] disabled:opacity-35 disabled:hover:bg-transparent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C5A36D]"
             >
               <ChevronDown className="h-3 w-3" aria-hidden="true" />
             </button>
             <span
-              className="min-w-[26px] text-center font-mono text-[10px] tabular-nums text-cyan-300"
+              className="min-w-[26px] text-center font-mono text-[10px] tabular-nums text-[#C5A36D]"
               aria-label={`Inclinación actual ${cameraView.pitch} grados`}
             >
               {cameraView.pitch}°
@@ -1469,13 +1524,18 @@ export function AnalogMap({
               disabled={cameraView.pitch >= 60}
               aria-label="Aumentar inclinación 15 grados"
               title="Aumentar inclinación (+15°)"
-              className="rounded p-1 text-slate-400 transition-colors hover:bg-slate-800/80 hover:text-cyan-300 disabled:opacity-35 disabled:hover:bg-transparent disabled:hover:text-slate-400"
+              className="rounded p-1 text-[#A3A1BD] transition-colors hover:bg-[#1F243B] hover:text-[#E4DFD5] disabled:opacity-35 disabled:hover:bg-transparent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C5A36D]"
             >
               <ChevronUp className="h-3 w-3" aria-hidden="true" />
             </button>
           </div>
         </div>
       </div>
+
+      <TerrainDioramaModal
+        target={dioramaTarget}
+        onClose={() => setDioramaTarget(null)}
+      />
     </div>
   );
 }

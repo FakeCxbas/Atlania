@@ -112,6 +112,10 @@ export function TerrainLayers({
     <div>
       {/* Pinned / Sticky 3D Stratification Track (240vh) */}
       <div id="terrain-3d-track" className="relative h-[240vh]">
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute top-[115vh] left-0 h-screen w-full snap-start snap-always"
+        />
         <div className="sticky top-0 flex h-screen w-full items-center overflow-hidden px-6 sm:px-12 lg:px-16">
           <div className="mx-auto grid w-full max-w-7xl items-center gap-12 lg:grid-cols-12">
             {/* Left 6 Cols: Minimalist Title + Clean Accordion */}
@@ -194,7 +198,7 @@ export function TerrainLayers({
       {/* Editorial 4-Stage Pipeline Section (Nuestra Solución) */}
       <div
         id="nuestra-solucion"
-        className="mx-auto max-w-7xl px-6 py-24 sm:px-12 lg:px-16"
+        className="mx-auto max-w-7xl snap-start snap-always px-6 py-24 sm:px-12 lg:px-16"
       >
         <div className="grid items-start gap-12 border-t border-white/10 pt-16 lg:grid-cols-12">
           <div className="lg:col-span-5">

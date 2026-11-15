@@ -23,7 +23,7 @@ export function MethodologyDialog({ dataset }: { dataset: AnalogDataset }) {
         type="button"
         aria-haspopup="dialog"
         onClick={() => dialogRef.current?.showModal()}
-        className="h-8 rounded-lg border border-[#D4AF37]/40 bg-[#D4AF37]/10 px-2.5 py-1.5 text-xs font-medium text-[#D4AF37] transition-colors hover:bg-[#D4AF37]/20"
+        className="min-h-9 rounded-lg bg-[#181B2C] px-3 py-1.5 text-xs font-medium text-[#C5A36D] ring-1 ring-[#C5A36D]/35 transition-colors hover:bg-[#C5A36D]/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C5A36D]"
       >
         Metodología
       </button>
@@ -31,7 +31,7 @@ export function MethodologyDialog({ dataset }: { dataset: AnalogDataset }) {
         ref={dialogRef}
         aria-labelledby="methodology-title"
         onClose={() => triggerRef.current?.focus()}
-        className="m-auto max-h-[90dvh] w-[calc(100%-2rem)] max-w-2xl overflow-y-auto rounded-lg border border-slate-700 bg-[#0D1424] p-5 text-slate-200 shadow-2xl backdrop:bg-black/75"
+        className="m-auto max-h-[90dvh] w-[calc(100%-2rem)] max-w-2xl overflow-y-auto rounded-xl border border-[#55527D]/35 bg-[#121626] p-5 text-[#E4DFD5] shadow-2xl backdrop:bg-black/75"
       >
         <div className="flex items-start justify-between gap-4">
           <h2 id="methodology-title" className="text-lg font-semibold">
@@ -46,6 +46,46 @@ export function MethodologyDialog({ dataset }: { dataset: AnalogDataset }) {
           </button>
         </div>
         <div className="mt-4 space-y-5 text-sm leading-relaxed">
+          <section className="rounded-lg border border-slate-700/80 bg-[#060913]/70 p-4">
+            <h3 className="font-semibold text-[#D4AF37]">
+              Metodología de Desarrollo y Diseño
+            </h3>
+            <div className="mt-3 grid gap-2.5 sm:grid-cols-2">
+              <div className="rounded border border-slate-800 bg-[#0D1424]/80 p-2.5">
+                <span className="block font-mono text-xs font-semibold text-cyan-300">
+                  01 · Design Thinking
+                </span>
+                <p className="mt-1 text-xs text-slate-300">
+                  Ideación centrada en investigadores espaciales para identificar análogos terrestres en minutos sin procesar hojas de cálculo manuales.
+                </p>
+              </div>
+              <div className="rounded border border-slate-800 bg-[#0D1424]/80 p-2.5">
+                <span className="block font-mono text-xs font-semibold text-[#F5B82E]">
+                  02 · Scrum / Entregas Ágiles
+                </span>
+                <p className="mt-1 text-xs text-slate-300">
+                  Desarrollo iterativo por sprints cortos: calibración del motor ASI, catálogo global, visor 3D interactivo y exportación GIS.
+                </p>
+              </div>
+              <div className="rounded border border-slate-800 bg-[#0D1424]/80 p-2.5">
+                <span className="block font-mono text-xs font-semibold text-emerald-300">
+                  03 · Metodología Científica ASI
+                </span>
+                <p className="mt-1 text-xs text-slate-300">
+                  Cruce cuantitativo de telemetría satelital NASA POWER y modelos digitales de elevación frente a archivos PDS de Luna y Marte.
+                </p>
+              </div>
+              <div className="rounded border border-slate-800 bg-[#0D1424]/80 p-2.5">
+                <span className="block font-mono text-xs font-semibold text-slate-200">
+                  04 · Usabilidad UX / HCI
+                </span>
+                <p className="mt-1 text-xs text-slate-300">
+                  Navegación con breadcrumbs, alto contraste WCAG AA, métricas clave y retroalimentación continua de ubicación al usuario.
+                </p>
+              </div>
+            </div>
+          </section>
+
           <section>
             <h3 className="font-semibold text-cyan-300">
               ASI Exploratorio de 5 Ejes

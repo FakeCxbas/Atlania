@@ -5,6 +5,13 @@ export const metadata: Metadata = {
   title: "ATLANIA // Observatorio Planetario & Atlas de Análogos Espaciales",
   description:
     "Atlas y observatorio planetario para explorar territorios terrestres extraordinarios y sus analogías con la Luna y Marte mediante teledetección satelital e índice de similitud ASI.",
+  icons: {
+    icon: [
+      { url: "/favicon.ico", sizes: "any" },
+      { url: "/icon.png", type: "image/png", sizes: "512x512" },
+    ],
+    apple: [{ url: "/apple-icon.png", sizes: "180x180", type: "image/png" }],
+  },
 };
 
 export default function RootLayout({

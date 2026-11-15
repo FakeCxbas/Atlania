@@ -49,7 +49,7 @@ export function ScrollScene({
         trigger: root,
         start: "top top",
         end: "bottom bottom",
-        scrub: 0.2,
+        scrub: 0.55,
         onUpdate: (self) => {
           setScrollState((prev) => ({
             ...prev,
@@ -65,7 +65,7 @@ export function ScrollScene({
           trigger: introTrackEl,
           start: "top top",
           end: "bottom bottom",
-          scrub: 0.25,
+          scrub: 0.55,
           onUpdate: (self) => {
             const p = self.progress;
             setScrollState((prev) => ({

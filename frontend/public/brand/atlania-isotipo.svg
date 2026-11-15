@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" fill="none">
+  <circle cx="128" cy="128" r="124" fill="#091124" />
+  <!-- Outer orbital ring with gap at top for North Star -->
+  <path
+    d="M117 44 A86 86 0 1 0 139 44"
+    stroke="#F7EED7"
+    stroke-width="7.5"
+    stroke-linecap="round"
+  />
+  <!-- 4-Point North Star -->
+  <path
+    d="M128 24 L133.5 55 L154 61 L133.5 66.5 L128 84 L122.5 66.5 L102 61 L122.5 55 Z"
+    fill="#F7EED7"
+  />
+  <!-- Moon (Left) & Mars (Right) -->
+  <circle cx="81" cy="94" r="11.5" fill="#D5D8DC" />
+  <circle cx="174" cy="94" r="12" fill="#E0783C" />
+  <!-- Earth Atmospheric Horizon Arc -->
+  <path
+    d="M52 152 Q128 112 204 152"
+    stroke="#4989C8"
+    stroke-width="7.5"
+    stroke-linecap="round"
+  />
+  <!-- Layered Terrestrial & Subsurface Strata -->
+  <path
+    d="M56 184 Q128 144 196 177 Q152 183 108 188 Q80 190 56 184 Z"
+    fill="#485E33"
+  />
+  <path
+    d="M108 188 Q154 170 195 178 Q162 212 108 188 Z"
+    fill="#7A3E1E"
+  />
+  <path
+    d="M62 183 Q106 182 128 194 Q156 208 188 182"
+    stroke="#F7EED7"
+    stroke-width="6.5"
+    stroke-linecap="round"
+  />
+  <!-- Central Stylized A Apex -->
+  <path
+    d="M128 88 L88 164 Q76 179 54 188 Q82 178 102 162 L128 112 L154 162 Q174 178 198 180 Q176 170 166 156 Z"
+    fill="#F7EED7"
+  />
+  <!-- Inner A Horizon Bridge -->
+  <path
+    d="M94 164 Q128 150 162 164 L154 154 Q128 143 102 154 Z"
+    fill="#F7EED7"
+  />
+</svg>
