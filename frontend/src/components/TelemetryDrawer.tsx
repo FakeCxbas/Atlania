@@ -1,6 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Image from "next/image";
+import { PlanetPortrait } from "@/components/PlanetPortrait";
+import { PLANET_VISUALS, SITE_PHOTOS } from "@/lib/planetaryVisuals";
 import type {
   AnalogDataset,
   AnalogSite,
@@ -117,6 +120,8 @@ export function TelemetryDrawer({
   const activeTarget = translateTarget(rawActiveTarget);
   const rawBestTarget = references[site.best_target];
   const bestTarget = rawBestTarget ? translateTarget(rawBestTarget) : undefined;
+  const sitePhoto = SITE_PHOTOS[rawSite.id];
+  const planet = PLANET_VISUALS[activeTarget.body];
 
   const isMars = activeTarget.body === "Mars";
   const accentText = isMars ? "text-[#D47A61]" : "text-[#7CA5B8]";
@@ -196,24 +201,31 @@ export function TelemetryDrawer({
       {/* Bloque 1: Identificación y localización */}
       <div className="border-b border-[#55527D]/25 px-5 py-4">
         <div className="flex items-start justify-between gap-3">
-          <div className="min-w-0 flex-1">
-            <p className="text-[11px] font-medium tracking-wider text-[#C5A36D] uppercase">
-              Sitio seleccionado
-            </p>
-            <h2 className="mt-1 font-serif text-xl font-semibold leading-snug text-[#E4DFD5]">
-              {site.name}
-            </h2>
-            <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-[#A3A1BD]">
-              <span>{site.country}</span>
-              <span aria-hidden="true">·</span>
-              <span className="font-mono tabular-nums text-[#E4DFD5]/90">
-                {site.latitude.toFixed(2)}°, {site.longitude.toFixed(2)}°
-              </span>
-              <span aria-hidden="true">·</span>
-              <span className="font-mono tabular-nums">
-                {site.elevation_m.toLocaleString()} m
-              </span>
-            </p>
+          <div className="flex min-w-0 flex-1 items-center gap-3">
+            <PlanetPortrait
+              body={activeTarget.body}
+              spinning
+              className="h-14 w-14 shrink-0 ring-1 ring-white/20 sm:h-16 sm:w-16"
+            />
+            <div className="min-w-0 flex-1">
+              <p className="text-[11px] font-medium tracking-wider text-[#C5A36D] uppercase">
+                Comparación activa · {planet.label}
+              </p>
+              <h2 className="mt-0.5 truncate font-serif text-lg font-semibold leading-snug text-[#E4DFD5] sm:text-xl">
+                {site.name}
+              </h2>
+              <p className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-[#A3A1BD]">
+                <span>{site.country}</span>
+                <span aria-hidden="true">·</span>
+                <span className="font-mono tabular-nums text-[#E4DFD5]/90">
+                  {site.latitude.toFixed(2)}°, {site.longitude.toFixed(2)}°
+                </span>
+                <span aria-hidden="true">·</span>
+                <span className="font-mono tabular-nums">
+                  {site.elevation_m.toLocaleString()} m
+                </span>
+              </p>
+            </div>
           </div>
 
           {onClose && (
@@ -259,6 +271,28 @@ export function TelemetryDrawer({
 
       {/* Contenido desplazable organizado en bloques editoriales */}
       <div className="flex-1 divide-y divide-[#55527D]/20 overflow-y-auto px-5">
+        {sitePhoto && (
+          <figure className="py-4">
+            <div className="relative h-36 overflow-hidden rounded-xl border border-[#55527D]/25 bg-[#0D111C] sm:h-40">
+              <Image
+                src={sitePhoto.image}
+                alt={sitePhoto.caption}
+                fill
+                sizes="(max-width: 640px) 100vw, 440px"
+                className="object-cover"
+              />
+              <span className="absolute bottom-2 left-2 rounded bg-[#0B0D18]/85 px-2 py-0.5 text-[10px] font-semibold tracking-wider text-[#E6C589]">
+                ZONA TERRESTRE
+              </span>
+            </div>
+            <figcaption className="mt-2 text-xs leading-relaxed text-[#A3A1BD]">
+              {sitePhoto.caption}
+              <span className="mt-0.5 block text-[10px] text-[#A3A1BD]/75">
+                {sitePhoto.credit}
+              </span>
+            </figcaption>
+          </figure>
+        )}
         {/* Bloque 2: Características geográficas y ambientales */}
         <section aria-labelledby="block-characteristics" className="py-4">
           <div className="flex items-center justify-between">
