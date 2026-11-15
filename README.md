@@ -5,10 +5,19 @@
 <h1 align="center">ATLANIA // Planetary Observatory &amp; Earth-Space Analog Atlas</h1>
 
 <p align="center">
-  <em>&ldquo;Somewhere between Earth and the stars. Discover the extraordinary in the familiar.&rdquo;</em><br />
   <strong>NASA International Space Apps Challenge 2026</strong><br />
   Desafío: <em>Identify Earth Locations that Analog the Permanent Moon Base Locations and Mars</em>
 </p>
+
+<blockquote align="center">
+  <em>
+    &ldquo;Existe una belleza particular en los lugares que no podemos encontrar.<br />
+    Hace siglos, los cartógrafos dibujaban territorios que todavía no habían explorado. Hoy levantamos la mirada al cielo y reconocemos cráteres, cañones y llanuras que parecen pertenecer a mundos completamente distintos.<br /><br />
+    <strong>¿Y si para comprender otros planetas primero tuviéramos que volver a descubrir el nuestro?</strong><br /><br />
+    ATLANIA nace de esa pregunta. No busca inventar territorios perdidos; busca revelar lo extraordinario que ya existe en la Tierra para abrir una ventana hacia la Luna y Marte.<br />
+    Porque quizá lo desconocido siempre estuvo aquí, esperando a que volviéramos a mirar.&rdquo;
+  </em>
+</blockquote>
 
 <p align="center">
   <a href="https://github.com/FakeCxbas/Atlania/actions/workflows/ci.yml">
