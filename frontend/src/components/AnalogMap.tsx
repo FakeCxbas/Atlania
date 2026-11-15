@@ -6,6 +6,7 @@ import {
   Box,
   ChevronDown,
   ChevronUp,
+  Globe,
   RotateCcw,
   RotateCw,
   Square,
@@ -48,8 +49,13 @@ interface AnalogMapProps {
 type BasemapMode = "satellite" | "dark" | "nasa-gibs";
 
 const TERRAIN_MIN_ZOOM = 5.2;
+const DEFAULT_GIBS_DATE = "2026-10-01";
 
-function getBasemapStyle(mode: BasemapMode): string | maplibregl.StyleSpecification {
+function getBasemapStyle(
+  mode: BasemapMode,
+  gibsDate = DEFAULT_GIBS_DATE,
+  gibsOpacity = 1
+): string | maplibregl.StyleSpecification {
   if (mode === "dark") {
     return "https://tiles.openfreemap.org/styles/dark";
   }
@@ -62,7 +68,7 @@ function getBasemapStyle(mode: BasemapMode): string | maplibregl.StyleSpecificat
         "nasa-gibs": {
           type: "raster",
           tiles: [
-            "https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/VIIRS_SNPP_CorrectedReflectance_TrueColor/default/2026-10-01/GoogleMapsCompatible_Level9/{z}/{y}/{x}.jpg",
+            `https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/VIIRS_SNPP_CorrectedReflectance_TrueColor/default/${gibsDate}/GoogleMapsCompatible_Level9/{z}/{y}/{x}.jpg`,
           ],
           tileSize: 256,
           maxzoom: 9,
@@ -95,6 +101,7 @@ function getBasemapStyle(mode: BasemapMode): string | maplibregl.StyleSpecificat
           maxzoom: 18,
           paint: {
             "raster-fade-duration": 250,
+            "raster-opacity": gibsOpacity,
           },
         },
         {
@@ -218,6 +225,8 @@ interface MarkerVisualRefs {
   outer: HTMLSpanElement;
   core: HTMLSpanElement;
   label: HTMLSpanElement;
+  tooltipTitle: HTMLSpanElement;
+  tooltipMeta: HTMLSpanElement;
   ringColor: string;
 }
 
@@ -244,6 +253,7 @@ export function AnalogMap({
   const markersRef = useRef<Map<string, MarkerVisualRefs>>(new Map());
   const regionMarkersRef = useRef<maplibregl.Marker[]>([]);
   const prevBasemapRef = useRef<BasemapMode>("satellite");
+  const prevGibsDateRef = useRef<string>(DEFAULT_GIBS_DATE);
   const initialSelectedSiteIdRef = useRef<string | null>(selectedSiteId);
   const hasSkippedInitialFlyRef = useRef(false);
   const onSelectSiteRef = useRef(onSelectSite);
@@ -256,6 +266,8 @@ export function AnalogMap({
   const zoomSpanRef = useRef<HTMLSpanElement | null>(null);
 
   const [basemap, setBasemap] = useState<BasemapMode>("satellite");
+  const [gibsDate, setGibsDate] = useState<string>(DEFAULT_GIBS_DATE);
+  const [gibsOpacity, setGibsOpacity] = useState<number>(1);
   const [terrain3d, setTerrain3d] = useState(true);
   const [cameraView, setCameraView] = useState<{ pitch: number; bearing: number }>({
     pitch: selectedSiteId ? 45 : 0,
@@ -288,8 +300,21 @@ export function AnalogMap({
     if (!map) return;
     setTerrain3d(true);
     map.easeTo({
-      pitch: 60,
+      pitch: 45,
       duration: getFlyDuration(500),
+    });
+  }, [getFlyDuration]);
+
+  const handleResetGlobalView = useCallback(() => {
+    const map = mapRef.current;
+    if (!map) return;
+    map.flyTo({
+      center: [0, 10],
+      zoom: 1.6,
+      pitch: 0,
+      bearing: 0,
+      duration: getFlyDuration(900),
+      essential: true,
     });
   }, [getFlyDuration]);
 
@@ -522,10 +547,20 @@ export function AnalogMap({
   useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
-    if (prevBasemapRef.current === basemap) return;
+    const basemapChanged = prevBasemapRef.current !== basemap;
+    const gibsDateChanged = basemap === "nasa-gibs" && prevGibsDateRef.current !== gibsDate;
+    if (!basemapChanged && !gibsDateChanged) return;
     prevBasemapRef.current = basemap;
-    map.setStyle(getBasemapStyle(basemap));
-  }, [basemap]);
+    prevGibsDateRef.current = gibsDate;
+    map.setStyle(getBasemapStyle(basemap, gibsDate, gibsOpacity));
+  }, [basemap, gibsDate, gibsOpacity]);
+
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || basemap !== "nasa-gibs") return;
+    if (!map.isStyleLoaded() || !map.getLayer("nasa-gibs-layer")) return;
+    map.setPaintProperty("nasa-gibs-layer", "raster-opacity", gibsOpacity);
+  }, [basemap, gibsOpacity]);
 
   useEffect(() => {
     const map = mapRef.current;
@@ -572,7 +607,7 @@ export function AnalogMap({
       const ringColor = isMars ? "#E07A5F" : "#06B6D4";
 
       const shortName = site.name.split(" - ")[0].split(" (")[0];
-      const badgeText = `${shortName} · ${site.overall_asi.toFixed(0)}%`;
+      const metaText = `${site.country} · ASI ${site.overall_asi.toFixed(1)}%`;
 
       const existing = markersRef.current.get(site.id);
       if (existing) {
@@ -590,7 +625,9 @@ export function AnalogMap({
         existing.core.style.width = isSelected ? "10px" : "7px";
         existing.core.style.height = isSelected ? "10px" : "7px";
         existing.core.style.backgroundColor = ringColor;
-        existing.label.textContent = badgeText;
+        existing.tooltipTitle.textContent = shortName;
+        existing.tooltipMeta.textContent = metaText;
+        existing.tooltipMeta.style.color = isSelected ? "#FDE68A" : ringColor;
         existing.label.style.opacity = isSelected ? "1" : "";
         existing.label.style.borderColor = isSelected ? "#D4AF37" : `${ringColor}88`;
         continue;
@@ -626,13 +663,24 @@ export function AnalogMap({
       core.style.backgroundColor = ringColor;
 
       const label = document.createElement("span");
-      label.textContent = badgeText;
       label.className =
-        "pointer-events-none absolute left-full ml-1.5 whitespace-nowrap rounded border bg-[#060913]/90 px-1.5 py-0.5 font-mono text-[10px] font-semibold text-slate-100 opacity-0 shadow-md transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100";
+        "pointer-events-none absolute left-full z-40 ml-2 flex flex-col whitespace-nowrap rounded-md border bg-[#060913]/95 px-2 py-1 text-left shadow-xl backdrop-blur-md opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100";
       label.style.borderColor = isSelected ? "#D4AF37" : `${ringColor}88`;
       if (isSelected) {
         label.style.opacity = "1";
       }
+
+      const tooltipTitle = document.createElement("span");
+      tooltipTitle.textContent = shortName;
+      tooltipTitle.className = "text-[10px] font-semibold leading-tight text-slate-100";
+
+      const tooltipMeta = document.createElement("span");
+      tooltipMeta.textContent = metaText;
+      tooltipMeta.className = "font-mono text-[9px] font-medium tabular-nums leading-tight";
+      tooltipMeta.style.color = isSelected ? "#FDE68A" : ringColor;
+
+      label.appendChild(tooltipTitle);
+      label.appendChild(tooltipMeta);
 
       btn.appendChild(outer);
       btn.appendChild(core);
@@ -654,6 +702,8 @@ export function AnalogMap({
         outer,
         core,
         label,
+        tooltipTitle,
+        tooltipMeta,
         ringColor,
       });
     }
@@ -1226,6 +1276,50 @@ export function AnalogMap({
           </button>
         </div>
 
+        {basemap === "nasa-gibs" && (
+          <div
+            className="flex flex-wrap items-center gap-2.5 rounded-lg border border-slate-800/80 bg-[#060913]/90 px-2.5 py-1.5 text-[11px] text-slate-200 shadow-xl backdrop-blur-md"
+            role="group"
+            aria-label="Controles de capa NASA GIBS"
+          >
+            <label className="flex items-center gap-1.5">
+              <span className="font-mono text-[10px] uppercase tracking-wider text-slate-400">
+                Fecha
+              </span>
+              <input
+                type="date"
+                min="2015-11-24"
+                max="2026-11-15"
+                value={gibsDate}
+                onChange={(e) => {
+                  if (e.target.value) setGibsDate(e.target.value);
+                }}
+                aria-label="Fecha de imagen NASA GIBS"
+                className="rounded border border-slate-700/80 bg-[#0D1424] px-1.5 py-0.5 font-mono text-[11px] tabular-nums text-cyan-200 focus:border-cyan-400 focus:outline-none"
+              />
+            </label>
+            <span className="h-3.5 w-px bg-slate-800" aria-hidden="true" />
+            <label className="flex items-center gap-1.5">
+              <span className="font-mono text-[10px] uppercase tracking-wider text-slate-400">
+                Opacidad
+              </span>
+              <input
+                type="range"
+                min={0.2}
+                max={1}
+                step={0.05}
+                value={gibsOpacity}
+                onChange={(e) => setGibsOpacity(Number(e.target.value))}
+                aria-label="Opacidad de capa NASA GIBS"
+                className="h-1.5 w-20 cursor-pointer accent-cyan-400"
+              />
+              <span className="w-8 text-right font-mono text-[10px] tabular-nums text-cyan-300">
+                {Math.round(gibsOpacity * 100)}%
+              </span>
+            </label>
+          </div>
+        )}
+
         {(onToggleProbeMode || onToggleRegionProbeMode) && (
           <div className="flex flex-wrap items-center justify-end gap-1.5">
             {onToggleProbeMode && (
@@ -1401,7 +1495,7 @@ export function AnalogMap({
             type="button"
             onClick={handleSet3D}
             aria-pressed={cameraView.pitch >= 10}
-            title="Vista Terreno 3D inclinada (60°)"
+            title="Vista Terreno 3D inclinada (45°)"
             className={`flex flex-1 items-center justify-center gap-1 rounded px-2 py-1 text-[11px] font-semibold transition-colors ${
               cameraView.pitch >= 10
                 ? "border border-cyan-500/60 bg-cyan-500/20 text-cyan-200"
@@ -1410,6 +1504,16 @@ export function AnalogMap({
           >
             <Box className="h-3 w-3" aria-hidden="true" />
             <span>3D</span>
+          </button>
+          <button
+            type="button"
+            onClick={handleResetGlobalView}
+            aria-label="Restablecer vista global"
+            title="Restablecer vista global (0°)"
+            className="flex items-center justify-center gap-1 rounded border border-transparent px-2 py-1 text-[11px] font-semibold text-slate-300 transition-colors hover:border-cyan-500/40 hover:bg-slate-800/60 hover:text-cyan-200"
+          >
+            <Globe className="h-3 w-3" aria-hidden="true" />
+            <span>Global</span>
           </button>
         </div>
 
