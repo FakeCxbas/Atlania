@@ -477,7 +477,6 @@ export function PlanetScene({
         terrainProgress: terrP,
         activeChapter: ch,
         comparisonBody: body,
-        focusedLayer: fLayer,
       } = stateRef.current;
 
       // =======================================================================
@@ -660,31 +659,26 @@ export function PlanetScene({
           deployRatio * 0.42 +
           (prefersReducedMotion ? 0 : Math.sin(elapsed * 0.35) * 0.04);
 
-        const applyFocusOpacity = (
-          stratum: {
-            surfaceMat: THREE.MeshStandardMaterial;
-            atmoVeilUniforms: { uOpacity: { value: number } } | null;
-            sideMat: THREE.MeshStandardMaterial;
-          },
-          idx: 1 | 2 | 3 | 4
-        ) => {
-          const active = fLayer === 0 || fLayer === idx;
-          stratum.surfaceMat.transparent = !active;
-          stratum.surfaceMat.opacity = active ? 1.0 : 0.16;
-          stratum.sideMat.transparent = !active;
-          stratum.sideMat.opacity = active ? 1.0 : 0.14;
+        const ensureSolidStratum = (stratum: {
+          surfaceMat: THREE.MeshStandardMaterial;
+          atmoVeilUniforms: { uOpacity: { value: number } } | null;
+          sideMat: THREE.MeshStandardMaterial;
+        }) => {
+          stratum.surfaceMat.transparent = false;
+          stratum.surfaceMat.opacity = 1.0;
+          stratum.sideMat.transparent = false;
+          stratum.sideMat.opacity = 1.0;
           if (stratum.atmoVeilUniforms) {
-            stratum.atmoVeilUniforms.uOpacity.value = active ? 0.22 : 0.03;
+            stratum.atmoVeilUniforms.uOpacity.value = 0.22;
           }
         };
 
-        applyFocusOpacity(layer1Surface, 1);
-        applyFocusOpacity(layer2Relief, 2);
-        applyFocusOpacity(layer3Geology, 3);
-        applyFocusOpacity(layer4Subsurface, 4);
+        ensureSolidStratum(layer1Surface);
+        ensureSolidStratum(layer2Relief);
+        ensureSolidStratum(layer3Geology);
+        ensureSolidStratum(layer4Subsurface);
 
-        const layer4Active = fLayer === 0 || fLayer === 4;
-        lavaGlowLight.intensity = layer4Active ? 0.95 : 0.12;
+        lavaGlowLight.intensity = 0.95;
       }
 
       renderer.render(scene, camera);

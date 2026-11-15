@@ -183,16 +183,6 @@ export function TerrainLayers({
                   );
                 })}
               </div>
-
-              {focusedLayer !== 0 && (
-                <button
-                  type="button"
-                  onClick={() => onSelectLayer(0)}
-                  className="mt-5 font-mono text-xs text-[#00D9F5] underline-offset-4 hover:underline"
-                >
-                  Restablecer vista automática
-                </button>
-              )}
             </div>
 
             {/* Right 6 Cols: Clean Unobstructed Viewport Window for the Three.js 3D Terrain Strata */}
