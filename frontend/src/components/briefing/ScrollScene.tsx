@@ -197,8 +197,8 @@ export function ScrollScene({
               <span
                 className={`transition-opacity duration-300 ${
                   isCurrent
-                    ? "opacity-100 font-semibold text-[#F1F5F9]"
-                    : "opacity-0 text-[#94A3B8] group-hover:opacity-100"
+                    ? "opacity-100 font-semibold text-[#E4DFD5]"
+                    : "opacity-0 text-[#E4DFD5] group-hover:opacity-100"
                 }`}
               >
                 {ch.label}
@@ -206,8 +206,8 @@ export function ScrollScene({
               <span
                 className={`h-1.5 rounded-full transition-all duration-300 ${
                   isCurrent
-                    ? "w-6 bg-[#00D9F5]"
-                    : "w-1.5 bg-white/30 group-hover:bg-white/70"
+                    ? "w-6 bg-[#C5A36D] shadow-[0_0_10px_rgba(197,163,109,0.7)]"
+                    : "w-1.5 bg-[#55527D]/45 group-hover:bg-[#55527D]/70"
                 }`}
               />
             </a>

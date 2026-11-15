@@ -31,7 +31,7 @@ export function MethodologyDialog({ dataset }: { dataset: AnalogDataset }) {
         ref={dialogRef}
         aria-labelledby="methodology-title"
         onClose={() => triggerRef.current?.focus()}
-        className="m-auto max-h-[90dvh] w-[calc(100%-2rem)] max-w-2xl overflow-y-auto rounded-xl border border-[#55527D]/35 bg-[#121626] p-5 text-[#E4DFD5] shadow-2xl backdrop:bg-black/75"
+        className="m-auto max-h-[90dvh] w-[calc(100%-2rem)] max-w-2xl overflow-y-auto rounded-xl border border-[#55527D]/35 bg-[#121626] p-5 text-[#E4DFD5] shadow-2xl backdrop:bg-[#101321]/75"
       >
         <div className="flex items-start justify-between gap-4">
           <h2 id="methodology-title" className="text-lg font-semibold">
@@ -40,46 +40,46 @@ export function MethodologyDialog({ dataset }: { dataset: AnalogDataset }) {
           <button
             type="button"
             onClick={() => dialogRef.current?.close()}
-            className="min-h-11 rounded border border-slate-600 px-3 text-sm hover:border-slate-500 hover:bg-slate-800/60"
+            className="min-h-11 rounded border border-[#55527D]/35 px-3 text-sm hover:border-[#55527D]/35 hover:bg-[#181B2C]/60"
           >
             Cerrar
           </button>
         </div>
         <div className="mt-4 space-y-5 text-sm leading-relaxed">
-          <section className="rounded-lg border border-slate-700/80 bg-[#060913]/70 p-4">
-            <h3 className="font-semibold text-[#D4AF37]">
+          <section className="rounded-lg border border-[#55527D]/35 bg-[#181B2C] p-4">
+            <h3 className="font-semibold text-[#C5A36D]">
               Metodología de Desarrollo y Diseño
             </h3>
             <div className="mt-3 grid gap-2.5 sm:grid-cols-2">
-              <div className="rounded border border-slate-800 bg-[#0D1424]/80 p-2.5">
-                <span className="block font-mono text-xs font-semibold text-cyan-300">
+              <div className="rounded border border-[#55527D]/35 bg-[#181B2C]/80 p-2.5">
+                <span className="block font-mono text-xs font-semibold text-[#7CA5B8]">
                   01 · Design Thinking
                 </span>
-                <p className="mt-1 text-xs text-slate-300">
+                <p className="mt-1 text-xs text-[#A3A1BD]">
                   Ideación centrada en investigadores espaciales para identificar análogos terrestres en minutos sin procesar hojas de cálculo manuales.
                 </p>
               </div>
-              <div className="rounded border border-slate-800 bg-[#0D1424]/80 p-2.5">
-                <span className="block font-mono text-xs font-semibold text-[#F5B82E]">
+              <div className="rounded border border-[#55527D]/35 bg-[#181B2C]/80 p-2.5">
+                <span className="block font-mono text-xs font-semibold text-[#C5A36D]">
                   02 · Scrum / Entregas Ágiles
                 </span>
-                <p className="mt-1 text-xs text-slate-300">
+                <p className="mt-1 text-xs text-[#A3A1BD]">
                   Desarrollo iterativo por sprints cortos: calibración del motor ASI, catálogo global, visor 3D interactivo y exportación GIS.
                 </p>
               </div>
-              <div className="rounded border border-slate-800 bg-[#0D1424]/80 p-2.5">
-                <span className="block font-mono text-xs font-semibold text-emerald-300">
+              <div className="rounded border border-[#55527D]/35 bg-[#181B2C]/80 p-2.5">
+                <span className="block font-mono text-xs font-semibold text-[#8AB8A8]">
                   03 · Metodología Científica ASI
                 </span>
-                <p className="mt-1 text-xs text-slate-300">
+                <p className="mt-1 text-xs text-[#A3A1BD]">
                   Cruce cuantitativo de telemetría satelital NASA POWER y modelos digitales de elevación frente a archivos PDS de Luna y Marte.
                 </p>
               </div>
-              <div className="rounded border border-slate-800 bg-[#0D1424]/80 p-2.5">
-                <span className="block font-mono text-xs font-semibold text-slate-200">
+              <div className="rounded border border-[#55527D]/35 bg-[#181B2C]/80 p-2.5">
+                <span className="block font-mono text-xs font-semibold text-[#E4DFD5]">
                   04 · Usabilidad UX / HCI
                 </span>
-                <p className="mt-1 text-xs text-slate-300">
+                <p className="mt-1 text-xs text-[#A3A1BD]">
                   Navegación con breadcrumbs, alto contraste WCAG AA, métricas clave y retroalimentación continua de ubicación al usuario.
                 </p>
               </div>
@@ -87,7 +87,7 @@ export function MethodologyDialog({ dataset }: { dataset: AnalogDataset }) {
           </section>
 
           <section>
-            <h3 className="font-semibold text-cyan-300">
+            <h3 className="font-semibold text-[#7CA5B8]">
               ASI Exploratorio de 5 Ejes
             </h3>
             <p>
@@ -143,7 +143,7 @@ export function MethodologyDialog({ dataset }: { dataset: AnalogDataset }) {
               aria-label="Pesos objetivo en el conjunto de datos"
             >
               <table className="w-full text-left text-xs">
-                <caption className="mb-2 text-left text-slate-300">
+                <caption className="mb-2 text-left text-[#A3A1BD]">
                   Pesos objetivo (%) en el conjunto de datos actual
                 </caption>
                 <thead>
@@ -162,7 +162,7 @@ export function MethodologyDialog({ dataset }: { dataset: AnalogDataset }) {
                     const score = dataset.sites.find((site) => site.scores[id])
                       ?.scores[id];
                     return (
-                      <tr key={id} className="border-t border-slate-700">
+                      <tr key={id} className="border-t border-[#55527D]/35">
                         <th className="p-2 font-normal">
                           {translatedTarget.name}
                         </th>
@@ -182,13 +182,13 @@ export function MethodologyDialog({ dataset }: { dataset: AnalogDataset }) {
                 </tbody>
               </table>
             </div>
-            <div className="mt-3 rounded border border-slate-700/80 bg-[#060913]/60 p-3">
-              <h4 className="font-semibold text-slate-200">
+            <div className="mt-3 rounded border border-[#55527D]/35 bg-[#181B2C] p-3">
+              <h4 className="font-semibold text-[#E4DFD5]">
                 ¿Por qué estos pesos? (Justificación de misión)
               </h4>
-              <ul className="mt-1.5 list-disc space-y-1 pl-5 text-xs text-slate-300">
+              <ul className="mt-1.5 list-disc space-y-1 pl-5 text-xs text-[#A3A1BD]">
                 <li>
-                  <span className="font-medium text-cyan-300">
+                  <span className="font-medium text-[#7CA5B8]">
                     Cráter Shackleton
                   </span>{" "}
                   prioriza Régimen Térmico (30%) e Hidrología / Hielo (30%)
@@ -197,7 +197,7 @@ export function MethodologyDialog({ dataset }: { dataset: AnalogDataset }) {
                   con pendientes escarpadas en el borde del cráter (20%).
                 </li>
                 <li>
-                  <span className="font-medium text-cyan-300">
+                  <span className="font-medium text-[#7CA5B8]">
                     Mare Tranquillitatis
                   </span>{" "}
                   prioriza Subsuelo y Operaciones (35%) y Geología (25%) porque
@@ -205,7 +205,7 @@ export function MethodologyDialog({ dataset }: { dataset: AnalogDataset }) {
                   son el principal refugio frente a radiación y micrometeoritos.
                 </li>
                 <li>
-                  <span className="font-medium text-cyan-300">
+                  <span className="font-medium text-[#7CA5B8]">
                     Mons Mouton (Polo Sur Lunar · Artemis III)
                   </span>{" "}
                   prioriza Topografía (30%) y Geología (25%) al tratarse de una
@@ -213,7 +213,7 @@ export function MethodologyDialog({ dataset }: { dataset: AnalogDataset }) {
                   y travesías de rovers con iluminación solar prolongada.
                 </li>
                 <li>
-                  <span className="font-medium text-amber-300">
+                  <span className="font-medium text-[#C5A36D]">
                     Cráter Jezero
                   </span>{" "}
                   prioriza Geología (35%) e Hidrología / Hielo (25%) porque la
@@ -222,7 +222,7 @@ export function MethodologyDialog({ dataset }: { dataset: AnalogDataset }) {
                   evaporítica árida.
                 </li>
                 <li>
-                  <span className="font-medium text-amber-300">
+                  <span className="font-medium text-[#C5A36D]">
                     Monte Olimpo / Tharsis
                   </span>{" "}
                   prioriza Geología (30%) y Topografía (25%) para destacar
@@ -231,7 +231,7 @@ export function MethodologyDialog({ dataset }: { dataset: AnalogDataset }) {
                   hielo polar.
                 </li>
                 <li>
-                  <span className="font-medium text-amber-300">
+                  <span className="font-medium text-[#C5A36D]">
                     Valles Marineris (Coprates Chasma)
                   </span>{" "}
                   prioriza Topografía (35%) y Geología (30%) para modelar taludes
@@ -242,7 +242,7 @@ export function MethodologyDialog({ dataset }: { dataset: AnalogDataset }) {
             </div>
           </section>
           <section>
-            <h3 className="font-semibold text-cyan-300">
+            <h3 className="font-semibold text-[#7CA5B8]">
               Climatología NASA POWER
             </h3>
             <p>
@@ -264,13 +264,13 @@ export function MethodologyDialog({ dataset }: { dataset: AnalogDataset }) {
               href="https://power.larc.nasa.gov/"
               target="_blank"
               rel="noreferrer noopener"
-              className="text-cyan-300 underline"
+              className="text-[#7CA5B8] underline"
             >
               Portal de datos NASA POWER
             </a>
           </section>
           <section>
-            <h3 className="font-semibold text-cyan-300">
+            <h3 className="font-semibold text-[#7CA5B8]">
               Telemetría del Terreno (ESA Copernicus DEM)
             </h3>
             <p>
@@ -284,13 +284,13 @@ export function MethodologyDialog({ dataset }: { dataset: AnalogDataset }) {
               href="https://open-meteo.com/en/docs/elevation-api"
               target="_blank"
               rel="noreferrer noopener"
-              className="text-cyan-300 underline"
+              className="text-[#7CA5B8] underline"
             >
               Datos de elevación Open-Meteo / Copernicus DEM
             </a>
           </section>
           <section>
-            <h3 className="font-semibold text-cyan-300">
+            <h3 className="font-semibold text-[#7CA5B8]">
               Fortalezas y Desglose de Analogía
             </h3>
             <p>
@@ -303,7 +303,7 @@ export function MethodologyDialog({ dataset }: { dataset: AnalogDataset }) {
             </p>
           </section>
           <section>
-            <h3 className="font-semibold text-cyan-300">
+            <h3 className="font-semibold text-[#7CA5B8]">
               Escenarios Planetarios de Referencia (NASA PDS)
             </h3>
             <ul className="space-y-2">
@@ -315,7 +315,7 @@ export function MethodologyDialog({ dataset }: { dataset: AnalogDataset }) {
                       href={target.source_url}
                       target="_blank"
                       rel="noreferrer noopener"
-                      className="text-cyan-300 underline"
+                      className="text-[#7CA5B8] underline"
                     >
                       {translatedTarget.name}
                     </a>
@@ -325,7 +325,7 @@ export function MethodologyDialog({ dataset }: { dataset: AnalogDataset }) {
               })}
             </ul>
           </section>
-          <section className="rounded-lg border border-slate-700/80 bg-[#060913]/70 p-3.5 text-xs text-slate-300">
+          <section className="rounded-lg border border-[#55527D]/35 bg-[#181B2C] p-3.5 text-xs text-[#A3A1BD]">
             <h3 className="font-semibold text-[#C5A36D]">
               Transparencia SI (Super Intelligence) y Atribución Espacial
             </h3>
@@ -340,7 +340,7 @@ export function MethodologyDialog({ dataset }: { dataset: AnalogDataset }) {
               (edge-tts) para la narración del video demostrativo.
             </p>
           </section>
-          <p className="text-xs text-slate-400">
+          <p className="text-xs text-[#A3A1BD]">
             {dataset.methodology.name} · v{dataset.methodology.version} ·
             Esquema del conjunto de datos {dataset.schema_version}
           </p>

@@ -40,7 +40,7 @@ const STRATA: StratumSpec[] = [
     title: "Superficie y Atmósfera",
     concept: "thermal",
     natureBadge: "NASA POWER · Clima",
-    accentColor: "#38BDF8",
+    accentColor: "#7CA5B8",
     summary:
       "Temperatura, lluvia, viento, humedad e irradiancia solar satelital.",
     detail: "Frontera atmosférica 3D + datos climáticos reales.",
@@ -51,7 +51,7 @@ const STRATA: StratumSpec[] = [
     title: "Relieve y Topografía",
     concept: "topography",
     natureBadge: "Copernicus DEM 90 m",
-    accentColor: "#00D9F5",
+    accentColor: "#7CA5B8",
     summary: "Pendiente media y rugosidad superficial medidas en 5 puntos.",
     detail: "Malla 3D ilustrativa para movilidad de rovers.",
   },
@@ -61,7 +61,7 @@ const STRATA: StratumSpec[] = [
     title: "Geología y Litología",
     concept: "geology",
     natureBadge: "Litología · MRO CRISM",
-    accentColor: "#F5B82E",
+    accentColor: "#C5A36D",
     summary: "Afinidad de basalto, regolito, sedimentos, sales e impacto.",
     detail: "Corteza rocosa frente a firmas orbitales lunares y marcianas.",
   },
@@ -131,31 +131,31 @@ export function TerrainLayers({
           <div className="mx-auto grid w-full max-w-7xl items-center gap-12 lg:grid-cols-12">
             {/* Left 6 Cols: Editorial Typography + Hairline Layer List */}
             <div className="lg:col-span-6">
-              <div className="flex items-center gap-3 font-mono text-xs tracking-[0.2em] text-[#00D9F5] uppercase">
+              <div className="flex items-center gap-3 font-mono text-xs tracking-[0.2em] text-[#7CA5B8] uppercase">
                 <span>03 // Capas del Terreno</span>
-                <span className="h-px w-8 bg-[#00D9F5]/50" />
-                <span className="text-[#94A3B8] tabular-nums">
+                <span className="h-px w-8 bg-[#7CA5B8]/50" />
+                <span className="text-[#A3A1BD] tabular-nums">
                   Separación 3D: {sepPct}%
                 </span>
               </div>
 
               <h2
                 id="capas-del-terreno-heading"
-                className="mt-4 text-3xl font-bold tracking-tight text-[#F1F5F9] sm:text-5xl sm:leading-[1.08]"
+                className="mt-4 text-3xl font-bold tracking-tight text-[#E4DFD5] sm:text-5xl sm:leading-[1.08]"
               >
                 Anatomía tridimensional de un análogo.
               </h2>
 
-              <p className="mt-4 max-w-xl text-sm leading-relaxed text-[#94A3B8] sm:text-base">
+              <p className="mt-4 max-w-xl text-sm leading-relaxed text-[#A3A1BD] sm:text-base">
                 Desplaza para separar los{" "}
-                <strong className="font-normal text-[#F5B82E]">
+                <strong className="font-normal text-[#C5A36D]">
                   4 estratos
                 </strong>{" "}
                 que conectan la telemetría satelital con el terreno real.
               </p>
 
               {/* Editorial Hairline List of the 4 Strata (No boxy cards) */}
-              <div className="mt-8 divide-y divide-white/10 border-y border-white/10">
+              <div className="mt-8 divide-y divide-[#55527D]/30 border-y border-[#55527D]/30">
                 {STRATA.map((s) => {
                   const isCurrent = activeStratumId === s.id;
                   return (
@@ -172,7 +172,7 @@ export function TerrainLayers({
                           <span
                             className="inline-flex items-center gap-2 font-mono text-xs font-bold tabular-nums"
                             style={{
-                              color: isCurrent ? s.accentColor : "#64748B",
+                              color: isCurrent ? s.accentColor : "#A3A1BD",
                             }}
                           >
                             <span>{s.number}</span>
@@ -184,15 +184,15 @@ export function TerrainLayers({
                           <span
                             className={`text-sm font-semibold tracking-tight transition-colors sm:text-base ${
                               isCurrent
-                                ? "text-[#F1F5F9]"
-                                : "text-[#94A3B8] group-hover:text-[#F1F5F9]"
+                                ? "text-[#E4DFD5]"
+                                : "text-[#A3A1BD] group-hover:text-[#E4DFD5]"
                             }`}
                           >
                             {s.title}
                           </span>
                         </div>
 
-                        <span className="font-mono text-xs font-semibold tracking-wider text-slate-300 uppercase">
+                        <span className="font-mono text-xs font-semibold tracking-wider text-[#A3A1BD] uppercase">
                           {s.natureBadge}
                         </span>
                       </div>
@@ -205,8 +205,8 @@ export function TerrainLayers({
                         }`}
                       >
                         <div className="overflow-hidden">
-                          <div className="mt-2 pl-7 text-sm leading-relaxed text-slate-200">
-                            <p className="font-medium text-slate-100">{s.summary}</p>
+                          <div className="mt-2 pl-7 text-sm leading-relaxed text-[#E4DFD5]">
+                            <p className="font-medium text-[#E4DFD5]">{s.summary}</p>
                           </div>
                         </div>
                       </div>
@@ -218,15 +218,15 @@ export function TerrainLayers({
 
             {/* Right 6 Cols: Unobstructed Viewport Window for the Three.js 3D Volumetric Terrain Block */}
             <div className="relative hidden h-[480px] flex-col justify-end pointer-events-none lg:col-span-6 lg:flex">
-              <div className="flex items-center justify-between border-t border-white/10 pt-3 font-mono text-[11px] text-[#94A3B8]">
-                <span className="text-[#00D9F5]">
+              <div className="flex items-center justify-between border-t border-[#55527D]/30 pt-3 font-mono text-[11px] text-[#A3A1BD]">
+                <span className="text-[#7CA5B8]">
                   MODELO 3D ESQUEMÁTICO · RELIEVE Y SOMBRAS EN VIVO
                 </span>
                 {focusedLayer !== -1 ? (
                   <button
                     type="button"
                     onClick={() => onSelectLayer(-1)}
-                    className="pointer-events-auto text-[#F1F5F9] underline decoration-[#00D9F5] underline-offset-4 hover:text-[#00D9F5]"
+                    className="pointer-events-auto text-[#E4DFD5] underline decoration-[#7CA5B8] underline-offset-4 hover:text-[#7CA5B8]"
                   >
                     Ver las 4 capas simultáneamente
                   </button>
@@ -234,7 +234,7 @@ export function TerrainLayers({
                   <button
                     type="button"
                     onClick={() => onSelectLayer(0)}
-                    className="pointer-events-auto text-[#00D9F5] underline decoration-[#00D9F5] underline-offset-4 hover:text-[#F1F5F9]"
+                    className="pointer-events-auto text-[#7CA5B8] underline decoration-[#7CA5B8] underline-offset-4 hover:text-[#E4DFD5]"
                   >
                     Sincronizar foco con scroll
                   </button>
@@ -250,20 +250,20 @@ export function TerrainLayers({
         id="nuestra-solucion"
         className="mx-auto max-w-7xl snap-start snap-always px-6 py-24 sm:px-12 lg:px-16"
       >
-        <div className="grid gap-12 border-t border-white/10 pt-16 lg:grid-cols-12">
+        <div className="grid gap-12 border-t border-[#55527D]/30 pt-16 lg:grid-cols-12">
           <div className="lg:col-span-5">
-            <span className="font-mono text-xs tracking-[0.2em] text-[#00D9F5] uppercase">
+            <span className="font-mono text-xs tracking-[0.2em] text-[#7CA5B8] uppercase">
               Arquitectura de Solución // 4 Etapas
             </span>
-            <h3 className="mt-3 text-3xl font-bold tracking-tight text-[#F1F5F9] sm:text-4xl">
+            <h3 className="mt-3 text-3xl font-bold tracking-tight text-[#E4DFD5] sm:text-4xl">
               De la Tierra a la Luna y Marte.
             </h3>
-            <p className="mt-4 text-base leading-relaxed text-slate-200">
+            <p className="mt-4 text-base leading-relaxed text-[#E4DFD5]">
               Cada estrato alimenta el índice ASI y el explorador 3D.
             </p>
 
             {/* Official Source & Tech Logos */}
-            <div className="mt-8 flex flex-wrap items-center gap-5 border-t border-white/10 pt-6">
+            <div className="mt-8 flex flex-wrap items-center gap-5 border-t border-[#55527D]/30 pt-6">
               <BrandLogo brand="nasa-power" size="sm" />
               <BrandLogo brand="copernicus" size="sm" />
               <BrandLogo brand="nasa-pds" size="sm" />
@@ -273,7 +273,7 @@ export function TerrainLayers({
 
           <div className="lg:col-span-7">
             {/* Clean 4-Step Tabs */}
-            <div className="flex flex-wrap gap-6 border-b border-white/10 pb-4">
+            <div className="flex flex-wrap gap-6 border-b border-[#55527D]/30 pb-4">
               {pipelineSteps.map((item, idx) => {
                 const active = activePipelineStep === idx;
                 return (
@@ -284,8 +284,8 @@ export function TerrainLayers({
                     aria-pressed={active}
                     className={`pb-2 font-mono text-xs uppercase tracking-wider transition-colors ${
                       active
-                        ? "border-b-2 border-[#00D9F5] font-bold text-[#F1F5F9]"
-                        : "text-[#94A3B8] hover:text-[#F1F5F9]"
+                        ? "border-b-2 border-[#C5A36D] bg-[#27233E] font-bold text-[#C5A36D]"
+                        : "text-[#A3A1BD] hover:text-[#E4DFD5]"
                     }`}
                   >
                     {item.step}
@@ -296,7 +296,7 @@ export function TerrainLayers({
 
             <div className="mt-8">
               <div className="flex flex-wrap items-center justify-between gap-4">
-                <span className="font-mono text-xs uppercase tracking-widest text-[#F5B82E]">
+                <span className="font-mono text-xs uppercase tracking-widest text-[#C5A36D]">
                   {pipelineSteps[activePipelineStep].code}
                 </span>
                 <div className="flex items-center gap-4">
@@ -306,19 +306,19 @@ export function TerrainLayers({
                 </div>
               </div>
 
-              <h4 className="mt-3 text-2xl font-bold text-[#F1F5F9]">
+              <h4 className="mt-3 text-2xl font-bold text-[#E4DFD5]">
                 {pipelineSteps[activePipelineStep].title}
               </h4>
 
-              <p className="mt-3 text-base leading-relaxed text-[#94A3B8]">
+              <p className="mt-3 text-base leading-relaxed text-[#A3A1BD]">
                 {pipelineSteps[activePipelineStep].description}
               </p>
 
-              <div className="mt-5 flex flex-wrap gap-2 border-t border-white/10 pt-4 font-mono text-xs text-[#F1F5F9]/90">
+              <div className="mt-5 flex flex-wrap gap-2 border-t border-[#55527D]/30 pt-4 font-mono text-xs text-[#E4DFD5]/90">
                 {pipelineSteps[activePipelineStep].sources.map((src) => (
                   <span
                     key={src}
-                    className="rounded-full border border-white/15 bg-white/5 px-3 py-1"
+                    className="rounded-full border border-[#55527D]/35 bg-[#181B2C]/85 px-3 py-1"
                   >
                     {src}
                   </span>

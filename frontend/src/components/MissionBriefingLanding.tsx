@@ -743,7 +743,7 @@ export function MissionBriefingLanding({
   const isSelectedTargetMars = selectedAsiTarget?.body === "Mars";
 
   return (
-    <div className="min-h-screen bg-[#03070D] text-[#F1F5F9] selection:bg-[#00D9F5]/30 selection:text-[#F1F5F9]">
+    <div className="min-h-screen bg-[#101321] text-[#E4DFD5] selection:bg-[#7CA5B8]/30 selection:text-[#E4DFD5]">
       {/* Accessibility Skip Link */}
       <a
         href="#capitulo-1"
@@ -755,7 +755,7 @@ export function MissionBriefingLanding({
       {/* =====================================================================
           FLOATING MINIMAL NAVIGATION OVERLAY (NO HEAVY BORDER / NO BOX)
       ===================================================================== */}
-      <header className="fixed inset-x-0 top-0 z-50 border-b border-white/10 bg-[#03070D]/80 backdrop-blur-md">
+      <header className="fixed inset-x-0 top-0 z-50 border-b border-[#55527D]/30 bg-[#121626]/85 backdrop-blur-md">
         <div className="mx-auto flex max-w-[1440px] items-center justify-between px-6 py-4 sm:px-10 lg:px-16">
           {/* Brand Wordmark + Route Breadcrumb */}
           <div className="flex items-center gap-3">
@@ -765,9 +765,9 @@ export function MissionBriefingLanding({
             >
               <AtlaniaLockup size="sm" />
             </Link>
-            <span className="hidden items-center gap-1.5 font-mono text-xs text-slate-400 sm:inline-flex">
-              <span className="text-slate-600">/</span>
-              <span className="rounded border border-[#00D9F5]/30 bg-[#00D9F5]/10 px-2 py-0.5 font-semibold text-[#00D9F5]">
+            <span className="hidden items-center gap-1.5 font-mono text-xs text-[#A3A1BD] sm:inline-flex">
+              <span className="text-[#A3A1BD]">/</span>
+              <span className="rounded border border-[#C5A36D]/40 bg-[#27233E]/80 px-2 py-0.5 font-semibold text-[#C5A36D]">
                 Inicio
               </span>
             </span>
@@ -776,35 +776,35 @@ export function MissionBriefingLanding({
           {/* Minimal Chapter Links (Desktop) */}
           <nav
             aria-label="Capítulos del viaje espacial"
-            className="hidden items-center gap-7 text-xs font-semibold tracking-[0.14em] text-slate-300 uppercase lg:flex"
+            className="hidden items-center gap-7 text-xs font-semibold tracking-[0.14em] text-[#A3A1BD] uppercase lg:flex"
           >
             <a
               href="#capitulo-1"
-              className="text-[#00D9F5] transition-colors hover:text-[#F1F5F9]"
+              className="text-[#C5A36D] transition-colors hover:text-[#E4DFD5]"
             >
               01 · Inicio
             </a>
             <a
               href="#el-desafio"
-              className="transition-colors hover:text-[#F1F5F9]"
+              className="transition-colors hover:text-[#E4DFD5]"
             >
               02 · La Tierra
             </a>
             <a
               href="#capas-del-terreno"
-              className="transition-colors hover:text-[#F1F5F9]"
+              className="transition-colors hover:text-[#E4DFD5]"
             >
               03 · Capas 3D
             </a>
             <a
               href="#que-es-un-analogo"
-              className="transition-colors hover:text-[#F1F5F9]"
+              className="transition-colors hover:text-[#E4DFD5]"
             >
               04 · Comparación y ASI
             </a>
             <a
               href="#explora-los-destinos"
-              className="transition-colors hover:text-[#F1F5F9]"
+              className="transition-colors hover:text-[#E4DFD5]"
             >
               05 · Destinos
             </a>
@@ -818,7 +818,7 @@ export function MissionBriefingLanding({
 
             <Link
               href="/explorer"
-              className="inline-flex min-h-10 items-center gap-2 rounded-full bg-[#F1F5F9] px-5 py-2 text-xs font-semibold tracking-wider text-[#03070D] uppercase transition-transform hover:scale-[1.02] hover:bg-[#00D9F5]"
+              className="inline-flex min-h-10 items-center gap-2 rounded-full bg-[#C5A36D] px-5 py-2 text-xs font-semibold tracking-wider text-[#101321] uppercase transition-transform hover:scale-[1.02] hover:bg-[#d4b47e]"
             >
               <span>Abrir Explorador</span>
               <ArrowUpRight className="h-3.5 w-3.5" aria-hidden="true" />
@@ -834,7 +834,7 @@ export function MissionBriefingLanding({
                   ? "Cerrar menú de navegación"
                   : "Abrir menú de navegación"
               }
-              className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/15 bg-[#03070D]/60 text-[#F1F5F9] lg:hidden"
+              className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-[#55527D]/35 bg-[#181B2C]/85 text-[#E4DFD5] lg:hidden"
             >
               {mobileMenuOpen ? (
                 <X className="h-5 w-5" aria-hidden="true" />
@@ -849,41 +849,41 @@ export function MissionBriefingLanding({
         {mobileMenuOpen && (
           <nav
             aria-label="Navegación móvil"
-            className="border-t border-white/10 bg-[#03070D]/95 px-6 py-6 backdrop-blur-xl lg:hidden"
+            className="border-t border-[#55527D]/30 bg-[#121626]/92 px-6 py-6 backdrop-blur-xl lg:hidden"
           >
-            <div className="flex flex-col gap-4 text-sm font-medium text-[#F1F5F9]">
+            <div className="flex flex-col gap-4 text-sm font-medium text-[#E4DFD5]">
               <a
                 href="#capitulo-1"
                 onClick={() => setMobileMenuOpen(false)}
-                className="py-1 text-[#94A3B8] hover:text-[#F1F5F9]"
+                className="py-1 text-[#A3A1BD] hover:text-[#E4DFD5]"
               >
                 01 · El Comienzo
               </a>
               <a
                 href="#el-desafio"
                 onClick={() => setMobileMenuOpen(false)}
-                className="py-1 text-[#94A3B8] hover:text-[#F1F5F9]"
+                className="py-1 text-[#A3A1BD] hover:text-[#E4DFD5]"
               >
                 02 · Aproximación a la Tierra
               </a>
               <a
                 href="#capas-del-terreno"
                 onClick={() => setMobileMenuOpen(false)}
-                className="py-1 text-[#94A3B8] hover:text-[#F1F5F9]"
+                className="py-1 text-[#A3A1BD] hover:text-[#E4DFD5]"
               >
                 03 · Capas Tridimensionales del Terreno
               </a>
               <a
                 href="#que-es-un-analogo"
                 onClick={() => setMobileMenuOpen(false)}
-                className="py-1 text-[#94A3B8] hover:text-[#F1F5F9]"
+                className="py-1 text-[#A3A1BD] hover:text-[#E4DFD5]"
               >
                 04 · Comparación Planetaria y ASI
               </a>
               <a
                 href="#explora-los-destinos"
                 onClick={() => setMobileMenuOpen(false)}
-                className="py-1 text-[#94A3B8] hover:text-[#F1F5F9]"
+                className="py-1 text-[#A3A1BD] hover:text-[#E4DFD5]"
               >
                 05 · Explora los Destinos
               </a>
@@ -948,7 +948,7 @@ export function MissionBriefingLanding({
                 >
                   {/* Directional bottom scrim for strict WCAG AA text legibility over centered 3D Earth */}
                   <div
-                    className="pointer-events-none absolute inset-x-0 bottom-0 h-[58vh] bg-gradient-to-t from-[#03070D]/95 via-[#03070D]/60 to-transparent"
+                    className="pointer-events-none absolute inset-x-0 bottom-0 h-[58vh] bg-gradient-to-t from-[#101321]/95 via-[#101321]/60 to-transparent"
                     aria-hidden="true"
                   />
 
@@ -966,7 +966,7 @@ export function MissionBriefingLanding({
                       type="button"
                       onClick={() => setSelectedSatelliteId("suomi-npp")}
                       aria-label="Inspeccionar telemetría del satélite NASA/NOAA Suomi NPP"
-                      className="group relative block w-full cursor-pointer rounded-2xl text-left transition-transform duration-300 hover:scale-[1.04] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00D9F5] focus-visible:ring-offset-4 focus-visible:ring-offset-[#03070D]"
+                      className="group relative block w-full cursor-pointer rounded-2xl text-left transition-transform duration-300 hover:scale-[1.04] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C5A36D] focus-visible:ring-offset-4 focus-visible:ring-offset-[#101321]"
                     >
                       {/* Nadir Reflector / VIIRS Scan Cone pointing down-right onto Earth */}
                       <svg
@@ -976,19 +976,19 @@ export function MissionBriefingLanding({
                       >
                         <defs>
                           <linearGradient id="beam-suomi" x1="10%" y1="5%" x2="90%" y2="95%">
-                            <stop offset="0%" stopColor="#00D9F5" stopOpacity="0.52" />
-                            <stop offset="50%" stopColor="#38BDF8" stopOpacity="0.16" />
-                            <stop offset="100%" stopColor="#00D9F5" stopOpacity="0" />
+                            <stop offset="0%" stopColor="#7CA5B8" stopOpacity="0.52" />
+                            <stop offset="50%" stopColor="#7CA5B8" stopOpacity="0.16" />
+                            <stop offset="100%" stopColor="#7CA5B8" stopOpacity="0" />
                           </linearGradient>
                         </defs>
                         <polygon points="15,12 205,155 115,210" fill="url(#beam-suomi)" />
-                        <line x1="15" y1="12" x2="165" y2="185" stroke="#00D9F5" strokeOpacity="0.34" strokeWidth="1" strokeDasharray="4 5" />
+                        <line x1="15" y1="12" x2="165" y2="185" stroke="#7CA5B8" strokeOpacity="0.34" strokeWidth="1" strokeDasharray="4 5" />
                       </svg>
 
                       <div className="mb-sat-float-c relative">
                         <div className="relative -rotate-[12deg]">
                           <div
-                            className="absolute inset-6 -z-10 rounded-full bg-[radial-gradient(circle_at_35%_35%,rgba(56,189,248,0.22),transparent_70%)] blur-2xl"
+                            className="absolute inset-6 -z-10 rounded-full bg-[radial-gradient(circle_at_35%_35%,rgba(124,165,184,0.22),transparent_70%)] blur-2xl"
                             aria-hidden="true"
                           />
                           <Image
@@ -996,30 +996,17 @@ export function MissionBriefingLanding({
                             alt="Satélite NASA/NOAA Suomi NPP con sensor VIIRS apuntando hacia la Tierra"
                             width={900}
                             height={682}
+                            priority
                             sizes="(max-width: 1024px) 205px, 270px"
                             className="h-auto w-full object-contain brightness-[0.95] contrast-[1.06] saturate-[0.86] drop-shadow-[0_20px_36px_rgba(0,0,0,0.85)]"
-                          />
-                          <div
-                            aria-hidden="true"
-                            style={{
-                              maskImage: "url(/nasa/suomi-npp-cutout.png)",
-                              WebkitMaskImage: "url(/nasa/suomi-npp-cutout.png)",
-                              maskSize: "contain",
-                              WebkitMaskSize: "contain",
-                              maskRepeat: "no-repeat",
-                              WebkitMaskRepeat: "no-repeat",
-                              maskPosition: "center",
-                              WebkitMaskPosition: "center",
-                            }}
-                            className="pointer-events-none absolute inset-0 bg-[linear-gradient(135deg,rgba(224,247,255,0.44)_0%,rgba(56,189,248,0.16)_36%,transparent_66%)] mix-blend-screen"
                           />
                         </div>
                       </div>
 
                       {/* Leader-line callout (no box) */}
-                      <span className="mt-2 inline-flex items-center gap-2 font-mono text-[10px] font-semibold tracking-[0.16em] text-slate-100 drop-shadow-[0_2px_8px_rgba(0,0,0,0.95)] transition-colors group-hover:text-[#00D9F5] sm:text-[11px]">
-                        <span className="h-1.5 w-1.5 rounded-full bg-[#00D9F5] shadow-[0_0_8px_#00D9F5]" aria-hidden="true" />
-                        <span className="h-px w-7 bg-gradient-to-r from-[#00D9F5] to-[#00D9F5]/25 transition-all duration-300 group-hover:w-10" aria-hidden="true" />
+                      <span className="mt-2 inline-flex items-center gap-2 font-mono text-[10px] font-semibold tracking-[0.16em] text-[#E4DFD5] drop-shadow-[0_2px_8px_rgba(0,0,0,0.95)] transition-colors group-hover:text-[#7CA5B8] sm:text-[11px]">
+                        <span className="h-1.5 w-1.5 rounded-full bg-[#7CA5B8] shadow-[0_0_8px_#7CA5B8]" aria-hidden="true" />
+                        <span className="h-px w-7 bg-gradient-to-r from-[#7CA5B8] to-[#7CA5B8]/25 transition-all duration-300 group-hover:w-10" aria-hidden="true" />
                         SUOMI NPP · VIIRS
                       </span>
                     </button>
@@ -1038,7 +1025,7 @@ export function MissionBriefingLanding({
                       type="button"
                       onClick={() => setSelectedSatelliteId("sentinel1")}
                       aria-label="Inspeccionar telemetría del satélite Copernicus Sentinel-1"
-                      className="group relative block w-full cursor-pointer rounded-2xl text-left transition-transform duration-300 hover:scale-[1.04] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00D9F5] focus-visible:ring-offset-4 focus-visible:ring-offset-[#03070D]"
+                      className="group relative block w-full cursor-pointer rounded-2xl text-left transition-transform duration-300 hover:scale-[1.04] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C5A36D] focus-visible:ring-offset-4 focus-visible:ring-offset-[#101321]"
                     >
                       {/* Nadir Reflector / C-SAR Scan Cone pointing down-left toward Earth */}
                       <svg
@@ -1048,13 +1035,13 @@ export function MissionBriefingLanding({
                       >
                         <defs>
                           <linearGradient id="beam-sentinel" x1="100%" y1="0%" x2="10%" y2="95%">
-                            <stop offset="0%" stopColor="#00D9F5" stopOpacity="0.52" />
-                            <stop offset="45%" stopColor="#38BDF8" stopOpacity="0.18" />
-                            <stop offset="100%" stopColor="#00D9F5" stopOpacity="0" />
+                            <stop offset="0%" stopColor="#7CA5B8" stopOpacity="0.52" />
+                            <stop offset="45%" stopColor="#7CA5B8" stopOpacity="0.18" />
+                            <stop offset="100%" stopColor="#7CA5B8" stopOpacity="0" />
                           </linearGradient>
                         </defs>
                         <polygon points="210,10 10,155 95,215" fill="url(#beam-sentinel)" />
-                        <line x1="210" y1="10" x2="50" y2="188" stroke="#00D9F5" strokeOpacity="0.34" strokeWidth="1" strokeDasharray="4 5" />
+                        <line x1="210" y1="10" x2="50" y2="188" stroke="#7CA5B8" strokeOpacity="0.34" strokeWidth="1" strokeDasharray="4 5" />
                       </svg>
 
                       <div
@@ -1063,7 +1050,7 @@ export function MissionBriefingLanding({
                       >
                         <div className="relative -rotate-[14deg]">
                           <div
-                            className="absolute inset-6 -z-10 rounded-full bg-[radial-gradient(circle_at_35%_35%,rgba(56,189,248,0.22),transparent_70%)] blur-2xl"
+                            className="absolute inset-6 -z-10 rounded-full bg-[radial-gradient(circle_at_35%_35%,rgba(124,165,184,0.22),transparent_70%)] blur-2xl"
                             aria-hidden="true"
                           />
                           <Image
@@ -1075,27 +1062,13 @@ export function MissionBriefingLanding({
                             sizes="(max-width: 640px) 170px, (max-width: 1024px) 245px, 330px"
                             className="h-auto w-full object-contain brightness-[1.18] contrast-[1.05] saturate-[0.92] drop-shadow-[0_24px_42px_rgba(0,0,0,0.88)]"
                           />
-                          <div
-                            aria-hidden="true"
-                            style={{
-                              maskImage: "url(/nasa/sentinel1-cutout.png)",
-                              WebkitMaskImage: "url(/nasa/sentinel1-cutout.png)",
-                              maskSize: "contain",
-                              WebkitMaskSize: "contain",
-                              maskRepeat: "no-repeat",
-                              WebkitMaskRepeat: "no-repeat",
-                              maskPosition: "center",
-                              WebkitMaskPosition: "center",
-                            }}
-                            className="pointer-events-none absolute inset-0 bg-[linear-gradient(135deg,rgba(224,247,255,0.48)_0%,rgba(56,189,248,0.18)_36%,transparent_66%)] mix-blend-screen"
-                          />
                         </div>
                       </div>
 
                       {/* Leader-line callout (no box) */}
-                      <span className="mt-1 inline-flex items-center gap-2 font-mono text-[10px] font-semibold tracking-[0.16em] text-slate-100 drop-shadow-[0_2px_8px_rgba(0,0,0,0.95)] transition-colors group-hover:text-[#00D9F5] sm:text-[11px]">
-                        <span className="h-1.5 w-1.5 rounded-full bg-[#00D9F5] shadow-[0_0_8px_#00D9F5]" aria-hidden="true" />
-                        <span className="h-px w-7 bg-gradient-to-r from-[#00D9F5] to-[#00D9F5]/25 transition-all duration-300 group-hover:w-10" aria-hidden="true" />
+                      <span className="mt-1 inline-flex items-center gap-2 font-mono text-[10px] font-semibold tracking-[0.16em] text-[#E4DFD5] drop-shadow-[0_2px_8px_rgba(0,0,0,0.95)] transition-colors group-hover:text-[#7CA5B8] sm:text-[11px]">
+                        <span className="h-1.5 w-1.5 rounded-full bg-[#7CA5B8] shadow-[0_0_8px_#7CA5B8]" aria-hidden="true" />
+                        <span className="h-px w-7 bg-gradient-to-r from-[#7CA5B8] to-[#7CA5B8]/25 transition-all duration-300 group-hover:w-10" aria-hidden="true" />
                         SENTINEL-1 · C-SAR
                       </span>
                     </button>
@@ -1114,7 +1087,7 @@ export function MissionBriefingLanding({
                       type="button"
                       onClick={() => setSelectedSatelliteId("landsat9")}
                       aria-label="Inspeccionar telemetría del satélite NASA/USGS Landsat 9"
-                      className="group relative block w-full cursor-pointer rounded-2xl text-left transition-transform duration-300 hover:scale-[1.03] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00D9F5] focus-visible:ring-offset-4 focus-visible:ring-offset-[#03070D]"
+                      className="group relative block w-full cursor-pointer rounded-2xl text-left transition-transform duration-300 hover:scale-[1.03] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C5A36D] focus-visible:ring-offset-4 focus-visible:ring-offset-[#101321]"
                     >
                       {/* Nadir Reflector / OLI-2 + TIRS-2 Scan Cone pointing up-left toward centered Earth */}
                       <svg
@@ -1124,19 +1097,19 @@ export function MissionBriefingLanding({
                       >
                         <defs>
                           <linearGradient id="beam-landsat" x1="95%" y1="75%" x2="5%" y2="20%">
-                            <stop offset="0%" stopColor="#00D9F5" stopOpacity="0.54" />
-                            <stop offset="45%" stopColor="#38BDF8" stopOpacity="0.18" />
-                            <stop offset="100%" stopColor="#00D9F5" stopOpacity="0" />
+                            <stop offset="0%" stopColor="#7CA5B8" stopOpacity="0.54" />
+                            <stop offset="45%" stopColor="#7CA5B8" stopOpacity="0.18" />
+                            <stop offset="100%" stopColor="#7CA5B8" stopOpacity="0" />
                           </linearGradient>
                         </defs>
                         <polygon points="250,140 8,25 22,125" fill="url(#beam-landsat)" />
-                        <line x1="250" y1="140" x2="18" y2="75" stroke="#00D9F5" strokeOpacity="0.34" strokeWidth="1" strokeDasharray="4 5" />
+                        <line x1="250" y1="140" x2="18" y2="75" stroke="#7CA5B8" strokeOpacity="0.34" strokeWidth="1" strokeDasharray="4 5" />
                       </svg>
 
                       <div className="mb-sat-float-a relative">
                         <div className="relative rotate-[18deg]">
                           <div
-                            className="absolute inset-6 -z-10 rounded-full bg-[radial-gradient(circle_at_35%_35%,rgba(56,189,248,0.24),transparent_68%)] blur-2xl"
+                            className="absolute inset-6 -z-10 rounded-full bg-[radial-gradient(circle_at_35%_35%,rgba(124,165,184,0.24),transparent_68%)] blur-2xl"
                             aria-hidden="true"
                           />
                           <Image
@@ -1148,27 +1121,13 @@ export function MissionBriefingLanding({
                             sizes="(max-width: 640px) 240px, (max-width: 1024px) 340px, 450px"
                             className="h-auto w-full object-contain brightness-[1.08] contrast-[1.05] saturate-[0.95] drop-shadow-[0_28px_48px_rgba(0,0,0,0.92)]"
                           />
-                          <div
-                            aria-hidden="true"
-                            style={{
-                              maskImage: "url(/nasa/landsat9-cutout.png)",
-                              WebkitMaskImage: "url(/nasa/landsat9-cutout.png)",
-                              maskSize: "contain",
-                              WebkitMaskSize: "contain",
-                              maskRepeat: "no-repeat",
-                              WebkitMaskRepeat: "no-repeat",
-                              maskPosition: "center",
-                              WebkitMaskPosition: "center",
-                            }}
-                            className="pointer-events-none absolute inset-0 bg-[linear-gradient(135deg,rgba(224,247,255,0.48)_0%,rgba(56,189,248,0.18)_36%,transparent_66%)] mix-blend-screen"
-                          />
                         </div>
                       </div>
 
                       {/* Leader-line callout (no box, right-aligned) */}
-                      <span className="mt-2 flex w-full items-center justify-end gap-2 pr-2 font-mono text-[10px] font-semibold tracking-[0.16em] text-[#F1F5F9] drop-shadow-[0_2px_8px_rgba(0,0,0,0.95)] transition-colors group-hover:text-[#00D9F5] sm:pr-6 sm:text-[11px]">
-                        <span className="h-1.5 w-1.5 rounded-full bg-[#00D9F5] shadow-[0_0_8px_#00D9F5]" aria-hidden="true" />
-                        <span className="h-px w-8 bg-gradient-to-r from-[#00D9F5] to-[#00D9F5]/25 transition-all duration-300 group-hover:w-11" aria-hidden="true" />
+                      <span className="mt-2 flex w-full items-center justify-end gap-2 pr-2 font-mono text-[10px] font-semibold tracking-[0.16em] text-[#E4DFD5] drop-shadow-[0_2px_8px_rgba(0,0,0,0.95)] transition-colors group-hover:text-[#7CA5B8] sm:pr-6 sm:text-[11px]">
+                        <span className="h-1.5 w-1.5 rounded-full bg-[#7CA5B8] shadow-[0_0_8px_#7CA5B8]" aria-hidden="true" />
+                        <span className="h-px w-8 bg-gradient-to-r from-[#7CA5B8] to-[#7CA5B8]/25 transition-all duration-300 group-hover:w-11" aria-hidden="true" />
                         LANDSAT 9 · OLI-2 / TIRS-2
                       </span>
                     </button>
@@ -1196,7 +1155,7 @@ export function MissionBriefingLanding({
                         Somewhere between Earth and the stars.
                       </p>
 
-                      <p className="mx-auto mt-3 max-w-xl text-base font-medium leading-snug text-slate-100 drop-shadow-[0_2px_10px_rgba(0,0,0,0.9)] sm:text-xl">
+                      <p className="mx-auto mt-3 max-w-xl text-base font-medium leading-snug text-[#E4DFD5] drop-shadow-[0_2px_10px_rgba(0,0,0,0.9)] sm:text-xl">
                         Para explorar otros mundos, primero desciframos el nuestro.
                       </p>
                     </div>
@@ -1206,7 +1165,7 @@ export function MissionBriefingLanding({
                       <div className="mb-4 flex flex-wrap items-center justify-center gap-4">
                         <Link
                           href="/explorer"
-                          className="inline-flex min-h-12 items-center gap-3 rounded-full bg-[#C5A36D] px-7 py-3.5 text-sm font-bold text-[#101321] shadow-lg transition-all hover:bg-[#E4DFD5]"
+                          className="inline-flex min-h-12 items-center gap-3 rounded-full bg-[#C5A36D] px-7 py-3.5 text-sm font-bold text-[#101321] shadow-lg transition-all hover:bg-[#d4b47e]"
                         >
                           <span>Iniciar exploración</span>
                           <ArrowUpRight className="h-4 w-4 stroke-[2.5]" aria-hidden="true" />
@@ -1214,34 +1173,34 @@ export function MissionBriefingLanding({
 
                         <a
                           href="#el-desafio"
-                          className="inline-flex min-h-12 items-center gap-2.5 rounded-full border border-white/25 bg-[#03070D]/75 px-6 py-3.5 text-sm font-semibold text-slate-100 backdrop-blur-md transition-colors hover:border-[#00D9F5] hover:text-[#00D9F5]"
+                          className="inline-flex min-h-12 items-center gap-2.5 rounded-full border border-[#55527D]/35 bg-[#181B2C]/85 px-6 py-3.5 text-sm font-semibold text-[#E4DFD5] backdrop-blur-md transition-colors hover:border-[#7CA5B8] hover:text-[#7CA5B8]"
                         >
                           <span>Conocer la misión</span>
                           <ArrowDown
-                            className="h-4 w-4 text-[#00D9F5]"
+                            className="h-4 w-4 text-[#7CA5B8]"
                             aria-hidden="true"
                           />
                         </a>
                       </div>
 
                       {/* High-contrast frosted bottom telemetry bar */}
-                      <div className="flex flex-wrap items-center justify-between gap-4 rounded-xl border border-white/15 bg-[#03070D]/80 px-4 py-3 text-xs text-slate-200 backdrop-blur-md sm:text-sm">
+                      <div className="flex flex-wrap items-center justify-between gap-4 rounded-xl border border-[#55527D]/35 bg-[#121626]/85 px-4 py-3 text-xs text-[#E4DFD5] backdrop-blur-md sm:text-sm">
                       <div className="flex flex-wrap items-center gap-6 font-mono">
                         <span>
                           CATÁLOGO:{" "}
-                          <strong className="font-bold text-[#00D9F5]">
+                          <strong className="font-bold text-[#7CA5B8]">
                             {dataset.sites.length} SITIOS TERRESTRES
                           </strong>
                         </span>
                         <span>
                           REFERENCIAS PDS:{" "}
-                          <strong className="font-bold text-[#F5B82E]">
+                          <strong className="font-bold text-[#C5A36D]">
                             {Object.keys(dataset.references).length} ESCENARIOS
                             (LUNA Y MARTE)
                           </strong>
                         </span>
                       </div>
-                      <span className="font-mono text-xs font-semibold tracking-[0.16em] text-slate-200 uppercase">
+                      <span className="font-mono text-xs font-semibold tracking-[0.16em] text-[#E4DFD5] uppercase">
                         Desplaza para aproximarte a la Tierra ↓
                       </span>
                       </div>
@@ -1259,19 +1218,19 @@ export function MissionBriefingLanding({
                   >
                     <div className="my-auto">
                       <div className="max-w-3xl">
-                        <p className="font-mono text-xs font-medium tracking-[0.24em] text-[#00D9F5] uppercase">
+                        <p className="font-mono text-xs font-medium tracking-[0.24em] text-[#7CA5B8] uppercase">
                           02 / APROXIMACIÓN A LA TIERRA · EL DESAFÍO CIENTÍFICO
                         </p>
-                        <h2 className="mt-4 text-3xl font-semibold tracking-tight text-[#F1F5F9] sm:text-5xl lg:text-[3.35rem] lg:leading-[1.06]">
+                        <h2 className="mt-4 text-3xl font-semibold tracking-tight text-[#E4DFD5] sm:text-5xl lg:text-[3.35rem] lg:leading-[1.06]">
                           Aprender en la Tierra antes de despegar.
                         </h2>
-                        <p className="mt-4 max-w-2xl text-sm leading-relaxed text-[#CBD5E1] sm:text-base">
+                        <p className="mt-4 max-w-2xl text-sm leading-relaxed text-[#E4DFD5] sm:text-base">
                           Desiertos hiperáridos, campos volcánicos y cráteres polares funcionan como laboratorios naturales para ensayar misiones lunares y marcianas.
                         </p>
                       </div>
 
                       {/* Three Open Editorial Columns (Hairline dividers, no boxy cards) */}
-                      <div className="mt-8 grid grid-cols-1 gap-6 border-t border-white/15 pt-6 lg:grid-cols-3 lg:gap-10">
+                      <div className="mt-8 grid grid-cols-1 gap-6 border-t border-[#55527D]/35 pt-6 lg:grid-cols-3 lg:gap-10">
                         {challengeCards.map((item, idx) => (
                           <div
                             key={item.id}
@@ -1279,24 +1238,24 @@ export function MissionBriefingLanding({
                           >
                             <div>
                               <div className="flex items-center justify-between gap-2">
-                                <span className="font-mono text-xs font-semibold tracking-wider text-[#00D9F5] uppercase">
+                                <span className="font-mono text-xs font-semibold tracking-wider text-[#7CA5B8] uppercase">
                                   0{idx + 1} · {item.tag}
                                 </span>
                                 <ScientificIcon
                                   concept={item.concept}
-                                  className="h-4 w-4 text-slate-400"
+                                  className="h-4 w-4 text-[#A3A1BD]"
                                 />
                               </div>
-                              <h3 className="mt-2.5 text-lg font-bold leading-snug text-slate-100">
+                              <h3 className="mt-2.5 text-lg font-bold leading-snug text-[#E4DFD5]">
                                 {item.question}
                               </h3>
-                              <p className="mt-2 text-sm leading-relaxed text-slate-200">
+                              <p className="mt-2 text-sm leading-relaxed text-[#E4DFD5]">
                                 {item.shortAnswer}
                               </p>
                             </div>
 
-                            <div className="mt-4 border-t border-white/10 pt-3">
-                              <span className="rounded-md border border-white/15 bg-white/5 px-2.5 py-1 font-mono text-xs text-slate-200 tabular-nums">
+                            <div className="mt-4 border-t border-[#55527D]/30 pt-3">
+                              <span className="rounded-md border border-[#55527D]/35 bg-[#181B2C]/85 px-2.5 py-1 font-mono text-xs text-[#E4DFD5] tabular-nums">
                                 {item.metricValue}
                               </span>
                             </div>
@@ -1305,13 +1264,13 @@ export function MissionBriefingLanding({
                       </div>
                     </div>
 
-                    <div className="flex items-center justify-between border-t border-white/10 pt-3 font-mono text-[11px] text-[#94A3B8]">
+                    <div className="flex items-center justify-between border-t border-[#55527D]/30 pt-3 font-mono text-[11px] text-[#A3A1BD]">
                       <span>
                         TELEMETRÍA ORBITAL · ESCALA PLANETARIA CONTINUA
                       </span>
                       <a
                         href="#capas-del-terreno"
-                        className="text-[#00D9F5] hover:underline"
+                        className="text-[#7CA5B8] hover:underline"
                       >
                         Descender a las capas del terreno ↓
                       </a>
@@ -1327,7 +1286,7 @@ export function MissionBriefingLanding({
               <section
                 id="capas-del-terreno"
                 aria-label="Capítulo 03: Capas del Terreno y Arquitectura de Evaluación"
-                className="relative snap-start snap-always border-t border-white/10"
+                className="relative snap-start snap-always border-t border-[#55527D]/30"
               >
                 <TerrainLayers
                   layerSeparation={scrollState.layerSeparation}
@@ -1352,7 +1311,7 @@ export function MissionBriefingLanding({
                 subtitle="Comparamos regiones terrestres con entornos de la Luna y Marte mediante variables medibles."
               >
                 {/* Clean Editorial Selector Bar */}
-                <div className="flex flex-wrap items-center justify-between gap-6 border-b border-white/10 pb-6">
+                <div className="flex flex-wrap items-center justify-between gap-6 border-b border-[#55527D]/30 pb-6">
                   <div
                     role="tablist"
                     aria-label="Seleccionar cuerpo planetario a comparar"
@@ -1368,8 +1327,8 @@ export function MissionBriefingLanding({
                       }}
                       className={`pb-2 text-sm font-semibold tracking-wider uppercase transition-colors ${
                         activeBodyTab === "Moon"
-                          ? "border-b-2 border-[#00D9F5] text-[#F1F5F9]"
-                          : "text-[#94A3B8] hover:text-[#F1F5F9]"
+                          ? "border-b-2 border-[#7CA5B8] text-[#E4DFD5]"
+                          : "text-[#A3A1BD] hover:text-[#E4DFD5]"
                       }`}
                     >
                       Análogos Lunares (Luna)
@@ -1384,8 +1343,8 @@ export function MissionBriefingLanding({
                       }}
                       className={`pb-2 text-sm font-semibold tracking-wider uppercase transition-colors ${
                         activeBodyTab === "Mars"
-                          ? "border-b-2 border-[#F5B82E] text-[#F1F5F9]"
-                          : "text-[#94A3B8] hover:text-[#F1F5F9]"
+                          ? "border-b-2 border-[#C5A36D] text-[#E4DFD5]"
+                          : "text-[#A3A1BD] hover:text-[#E4DFD5]"
                       }`}
                     >
                       Análogos Marcianos (Marte)
@@ -1405,8 +1364,8 @@ export function MissionBriefingLanding({
                           onClick={() => setActiveExampleId(ex.id)}
                           className={`rounded-full px-4 py-1.5 text-xs font-medium transition-colors ${
                             active
-                              ? "bg-[#F1F5F9] text-[#03070D]"
-                              : "border border-white/15 text-[#94A3B8] hover:border-white/35 hover:text-[#F1F5F9]"
+                              ? "bg-[#27233E] text-[#C5A36D]"
+                              : "border border-[#55527D]/35 text-[#A3A1BD] hover:border-[#55527D]/35 hover:text-[#E4DFD5]"
                           }`}
                         >
                           {ex.pairTitle}
@@ -1430,23 +1389,23 @@ export function MissionBriefingLanding({
                             sizes="(max-width: 1024px) 100vw, 50vw"
                             className="object-cover transition-transform duration-700 group-hover:scale-[1.02]"
                           />
-                          <div className="absolute inset-0 bg-gradient-to-t from-[#03070D] via-transparent to-transparent" />
+                          <div className="absolute inset-0 bg-gradient-to-t from-[#101321] via-transparent to-transparent" />
                           <div className="absolute bottom-4 left-5 right-5 flex items-end justify-between gap-4">
                             <div>
-                              <span className="font-mono text-[11px] tracking-[0.18em] text-[#00D9F5] uppercase">
+                              <span className="font-mono text-[11px] tracking-[0.18em] text-[#7CA5B8] uppercase">
                                 TIERRA · {activeComparativeSite.country}
                               </span>
-                              <h3 className="mt-1 text-2xl font-bold text-[#F1F5F9]">
+                              <h3 className="mt-1 text-2xl font-bold text-[#E4DFD5]">
                                 {activeComparativeSite.name}
                               </h3>
                             </div>
-                            <span className="font-mono text-xs text-[#CBD5E1] tabular-nums">
+                            <span className="font-mono text-xs text-[#E4DFD5] tabular-nums">
                               {activeComparativeSite.latitude.toFixed(2)}°,{" "}
                               {activeComparativeSite.longitude.toFixed(2)}°
                             </span>
                           </div>
                         </div>
-                        <figcaption className="mt-3 flex items-center justify-between text-xs text-[#94A3B8]">
+                        <figcaption className="mt-3 flex items-center justify-between text-xs text-[#A3A1BD]">
                           <span>{activeComparativeExample.earthCredit}</span>
                           <span className="font-mono">
                             NASA ID: {activeComparativeExample.earthNasaId}
@@ -1470,29 +1429,29 @@ export function MissionBriefingLanding({
                             sizes="(max-width: 1024px) 100vw, 50vw"
                             className="object-cover transition-transform duration-700 group-hover:scale-[1.02]"
                           />
-                          <div className="absolute inset-0 bg-gradient-to-t from-[#03070D] via-transparent to-transparent" />
+                          <div className="absolute inset-0 bg-gradient-to-t from-[#101321] via-transparent to-transparent" />
                           <div className="absolute bottom-4 left-5 right-5 flex items-end justify-between gap-4">
                             <div>
-                              <span className="font-mono text-[11px] tracking-[0.18em] text-[#F5B82E] uppercase">
+                              <span className="font-mono text-[11px] tracking-[0.18em] text-[#C5A36D] uppercase">
                                 {activeComparativeExample.bodyLabel} · OBJETIVO
                                 DE REFERENCIA
                               </span>
-                              <h3 className="mt-1 text-2xl font-bold text-[#F1F5F9]">
+                              <h3 className="mt-1 text-2xl font-bold text-[#E4DFD5]">
                                 {activeComparativeTarget.name}
                               </h3>
                             </div>
-                            <span className="font-mono text-xs text-[#CBD5E1] tabular-nums">
+                            <span className="font-mono text-xs text-[#E4DFD5] tabular-nums">
                               {activeComparativeTarget.instrument ?? "NASA PDS"}
                             </span>
                           </div>
                         </div>
-                        <figcaption className="mt-3 flex items-center justify-between text-xs text-[#94A3B8]">
+                        <figcaption className="mt-3 flex items-center justify-between text-xs text-[#A3A1BD]">
                           <span>
                             {TARGET_MEDIA[activeComparativeTarget.id]?.credit}
                           </span>
                           <span className="font-mono">
                             ASI REAL:{" "}
-                            <strong className="text-[#F1F5F9] tabular-nums">
+                            <strong className="text-[#E4DFD5] tabular-nums">
                               {(
                                 activeComparativeSite.scores[
                                   activeComparativeTarget.id
@@ -1507,19 +1466,19 @@ export function MissionBriefingLanding({
                     </div>
 
                     {/* Clean Hairline Comparison Rows (Zero Card Borders) */}
-                    <div className="border-t border-white/15">
-                      <div className="hidden grid-cols-12 gap-6 border-b border-white/10 py-3 font-mono text-[11px] tracking-[0.16em] text-[#94A3B8] uppercase md:grid">
+                    <div className="border-t border-[#55527D]/35">
+                      <div className="hidden grid-cols-12 gap-6 border-b border-[#55527D]/30 py-3 font-mono text-[11px] tracking-[0.16em] text-[#A3A1BD] uppercase md:grid">
                         <div className="col-span-3">Dimensión evaluada</div>
-                        <div className="col-span-4 text-[#00D9F5]">
+                        <div className="col-span-4 text-[#7CA5B8]">
                           Condición en la Tierra ({activeComparativeSite.name})
                         </div>
-                        <div className="col-span-5 text-[#F5B82E]">
+                        <div className="col-span-5 text-[#C5A36D]">
                           Condición en {activeComparativeExample.bodyLabel} (
                           {activeComparativeTarget.name})
                         </div>
                       </div>
 
-                      <div className="divide-y divide-white/10">
+                      <div className="divide-y divide-[#55527D]/30">
                         {activeComparativeExample.characteristics.map(
                           (row) => (
                             <div
@@ -1529,23 +1488,23 @@ export function MissionBriefingLanding({
                               <div className="flex items-center gap-2.5 md:col-span-3">
                                 <ScientificIcon
                                   concept={row.concept}
-                                  className="h-4 w-4 shrink-0 text-[#00D9F5]"
+                                  className="h-4 w-4 shrink-0 text-[#7CA5B8]"
                                 />
                                 <div>
-                                  <p className="text-sm font-semibold text-[#F1F5F9]">
+                                  <p className="text-sm font-semibold text-[#E4DFD5]">
                                     {row.label}
                                   </p>
-                                  <p className="font-mono text-xs text-slate-300">
+                                  <p className="font-mono text-xs text-[#A3A1BD]">
                                     {row.sourceTag}
                                   </p>
                                 </div>
                               </div>
 
-                              <div className="font-mono text-sm font-medium text-slate-100 tabular-nums md:col-span-4">
+                              <div className="font-mono text-sm font-medium text-[#E4DFD5] tabular-nums md:col-span-4">
                                 {row.earthValue}
                               </div>
 
-                              <div className="font-mono text-sm font-medium text-slate-100 tabular-nums md:col-span-5">
+                              <div className="font-mono text-sm font-medium text-[#E4DFD5] tabular-nums md:col-span-5">
                                 {row.planetaryValue}
                               </div>
                             </div>
@@ -1561,29 +1520,29 @@ export function MissionBriefingLanding({
                 ============================================================= */}
                 <div
                   id="similitud-asi"
-                  className="mt-28 snap-start border-t border-white/15 pt-24"
+                  className="mt-28 snap-start border-t border-[#55527D]/35 pt-24"
                 >
                   <div className="max-w-3xl">
-                    <p className="font-mono text-xs font-semibold tracking-wider text-[#00D9F5] uppercase">
+                    <p className="font-mono text-xs font-semibold tracking-wider text-[#7CA5B8] uppercase">
                       ÍNDICE DE SIMILITUD ANÁLOGA (ASI) · ESCALA 0 – 100
                     </p>
-                    <h3 className="mt-3 text-3xl font-semibold tracking-tight text-[#F1F5F9] sm:text-4xl">
+                    <h3 className="mt-3 text-3xl font-semibold tracking-tight text-[#E4DFD5] sm:text-4xl">
                       Similitud cuantitativa por misión
                     </h3>
-                    <p className="mt-3 text-base leading-relaxed text-slate-200">
+                    <p className="mt-3 text-base leading-relaxed text-[#E4DFD5]">
                       Pondera 5 dimensiones según el destino:{" "}
-                      <span className="inline-flex items-center rounded-md border border-[#00D9F5]/40 bg-[#00D9F5]/10 px-2.5 py-1 font-mono text-xs font-semibold text-[#00D9F5]">
+                      <span className="inline-flex items-center rounded-md border border-[#7CA5B8]/40 bg-[#7CA5B8]/10 px-2.5 py-1 font-mono text-xs font-semibold text-[#7CA5B8]">
                         ASI Global = Σ (Peso[d] × Afinidad[d])
                       </span>
                     </p>
                   </div>
 
                   {/* Minimal Site & Target Selectors */}
-                  <div className="mt-10 grid grid-cols-1 gap-6 border-y border-white/10 py-6 md:grid-cols-2">
+                  <div className="mt-10 grid grid-cols-1 gap-6 border-y border-[#55527D]/30 py-6 md:grid-cols-2">
                     <div>
                       <label
                         htmlFor="asi-site-select"
-                        className="block font-mono text-[11px] tracking-[0.16em] text-[#00D9F5] uppercase"
+                        className="block font-mono text-[11px] tracking-[0.16em] text-[#7CA5B8] uppercase"
                       >
                         1. Sitio análogo terrestre ({translatedSites.length}{" "}
                         sitios)
@@ -1601,13 +1560,13 @@ export function MissionBriefingLanding({
                             setSelectedAsiTargetId(siteObj.best_target);
                           }
                         }}
-                        className="mt-2 w-full border-b border-white/25 bg-transparent py-2.5 text-base font-medium text-[#F1F5F9] focus:border-[#00D9F5] focus:outline-none"
+                        className="mt-2 w-full border-b border-[#55527D]/35 bg-transparent py-2.5 text-base font-medium text-[#E4DFD5] focus:border-[#7CA5B8] focus:outline-none"
                       >
                         {translatedSites.map((s) => (
                           <option
                             key={s.id}
                             value={s.id}
-                            className="bg-[#050B13] text-[#F1F5F9]"
+                            className="bg-[#101321] text-[#E4DFD5]"
                           >
                             {s.name} ({s.country}) — Mejor ASI:{" "}
                             {s.overall_asi.toFixed(1)}
@@ -1619,7 +1578,7 @@ export function MissionBriefingLanding({
                     <div>
                       <label
                         htmlFor="asi-target-select"
-                        className="block font-mono text-[11px] tracking-[0.16em] text-[#F5B82E] uppercase"
+                        className="block font-mono text-[11px] tracking-[0.16em] text-[#C5A36D] uppercase"
                       >
                         2. Escenario extraterrestre de referencia (6 destinos
                         PDS)
@@ -1628,7 +1587,7 @@ export function MissionBriefingLanding({
                         id="asi-target-select"
                         value={selectedAsiTargetId}
                         onChange={(e) => setSelectedAsiTargetId(e.target.value)}
-                        className="mt-2 w-full border-b border-white/25 bg-transparent py-2.5 text-base font-medium text-[#F1F5F9] focus:border-[#F5B82E] focus:outline-none"
+                        className="mt-2 w-full border-b border-[#55527D]/35 bg-transparent py-2.5 text-base font-medium text-[#E4DFD5] focus:border-[#C5A36D] focus:outline-none"
                       >
                         {referenceList.map((ref) => {
                           const pairScore =
@@ -1637,7 +1596,7 @@ export function MissionBriefingLanding({
                             <option
                               key={ref.id}
                               value={ref.id}
-                              className="bg-[#050B13] text-[#F1F5F9]"
+                              className="bg-[#101321] text-[#E4DFD5]"
                             >
                               [{ref.body === "Moon" ? "Luna" : "Marte"}]{" "}
                               {ref.name}
@@ -1658,21 +1617,21 @@ export function MissionBriefingLanding({
                       <div className="mt-12 grid grid-cols-1 gap-12 lg:grid-cols-12 lg:items-start">
                         {/* Left 5 Columns: Large Typographic ASI Score + Radar */}
                         <div className="lg:col-span-5">
-                          <div className="flex items-baseline justify-between border-b border-white/10 pb-6">
+                          <div className="flex items-baseline justify-between border-b border-[#55527D]/30 pb-6">
                             <div>
-                              <span className="font-mono text-xs tracking-[0.18em] text-[#94A3B8] uppercase">
+                              <span className="font-mono text-xs tracking-[0.18em] text-[#A3A1BD] uppercase">
                                 ÍNDICE ASI GLOBAL
                               </span>
-                              <div className="mt-1 font-mono text-6xl font-bold tracking-tight text-[#F1F5F9] tabular-nums sm:text-7xl">
+                              <div className="mt-1 font-mono text-6xl font-bold tracking-tight text-[#E4DFD5] tabular-nums sm:text-7xl">
                                 {currentAsiValue.toFixed(2)}
-                                <span className="ml-2 text-lg font-normal text-[#94A3B8]">
+                                <span className="ml-2 text-lg font-normal text-[#A3A1BD]">
                                   / 100
                                 </span>
                               </div>
                             </div>
                             <Link
                               href={`/explorer?body=${selectedAsiTarget.body}&target=${selectedAsiTarget.id}&site=${selectedAsiSite.id}`}
-                              className="inline-flex items-center gap-1.5 font-mono text-xs text-[#00D9F5] hover:underline"
+                              className="inline-flex items-center gap-1.5 font-mono text-xs text-[#7CA5B8] hover:underline"
                             >
                               <span>Abrir par en /explorer</span>
                               <ArrowUpRight
@@ -1693,7 +1652,7 @@ export function MissionBriefingLanding({
 
                         {/* Right 7 Columns: 5 Dimension Hairlines + Breakdowns */}
                         <div className="space-y-8 lg:col-span-7">
-                          <div className="divide-y divide-white/10 border-t border-b border-white/10">
+                          <div className="divide-y divide-[#55527D]/30 border-t border-b border-[#55527D]/30">
                             {DIMENSION_LABELS.map((dim) => {
                               const scoreVal =
                                 selectedAsiScore.dimensions[dim.key];
@@ -1707,29 +1666,29 @@ export function MissionBriefingLanding({
                                     <div className="flex items-center gap-2.5">
                                       <ScientificIcon
                                         concept={dim.concept}
-                                        className="h-4 w-4 text-[#00D9F5]"
+                                        className="h-4 w-4 text-[#7CA5B8]"
                                       />
-                                      <span className="text-sm font-semibold text-[#F1F5F9]">
+                                      <span className="text-sm font-semibold text-[#E4DFD5]">
                                         {dim.label}
                                       </span>
                                     </div>
                                     <div className="flex items-center gap-4 font-mono text-xs tabular-nums">
-                                      <span className="text-[#94A3B8]">
+                                      <span className="text-[#A3A1BD]">
                                         Peso:{" "}
                                         {(weightVal * 100).toFixed(0)}%
                                       </span>
-                                      <span className="text-[#00D9F5]">
+                                      <span className="text-[#7CA5B8]">
                                         +{weightedContribution.toFixed(1)} pts
                                       </span>
-                                      <span className="font-bold text-[#F1F5F9]">
+                                      <span className="font-bold text-[#E4DFD5]">
                                         {scoreVal.toFixed(1)} / 100
                                       </span>
                                     </div>
                                   </div>
 
-                                  <div className="mt-2.5 h-1 w-full overflow-hidden bg-white/10">
+                                  <div className="mt-2.5 h-1 w-full overflow-hidden bg-[#27233E]">
                                     <div
-                                      className="h-full bg-[#00D9F5]"
+                                      className="h-full bg-[#7CA5B8]"
                                       style={{
                                         width: `${Math.max(
                                           0,
@@ -1745,7 +1704,7 @@ export function MissionBriefingLanding({
 
                           {/* Mandatory Analogy Breakdowns (Honest scientific limits) */}
                           <div>
-                            <div className="flex items-center gap-2 font-mono text-xs font-semibold tracking-wider text-[#F5B82E] uppercase">
+                            <div className="flex items-center gap-2 font-mono text-xs font-semibold tracking-wider text-[#C5A36D] uppercase">
                               <ShieldAlert
                                 className="h-4 w-4"
                                 aria-hidden="true"
@@ -1760,7 +1719,7 @@ export function MissionBriefingLanding({
                                 )
                               </span>
                             </div>
-                            <ul className="mt-3 space-y-2 text-sm leading-relaxed text-slate-200">
+                            <ul className="mt-3 space-y-2 text-sm leading-relaxed text-[#E4DFD5]">
                               {Object.entries(
                                 selectedAsiScore.analogy_breakdowns
                               ).map(([key, msg]) => (
@@ -1769,7 +1728,7 @@ export function MissionBriefingLanding({
                                   className="flex items-start gap-2.5"
                                 >
                                   <span
-                                    className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-[#F5B82E]"
+                                    className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-[#C5A36D]"
                                     aria-hidden="true"
                                   />
                                   <span>{msg}</span>
@@ -1787,14 +1746,14 @@ export function MissionBriefingLanding({
                 ============================================================= */}
                 <div
                   id="explora-los-destinos"
-                  className="mt-28 snap-start border-t border-white/15 pt-24"
+                  className="mt-28 snap-start border-t border-[#55527D]/35 pt-24"
                 >
                   <div className="flex flex-col justify-between gap-6 lg:flex-row lg:items-end">
                     <div className="max-w-2xl">
-                      <p className="font-mono text-xs font-medium tracking-[0.22em] text-[#00D9F5] uppercase">
+                      <p className="font-mono text-xs font-medium tracking-[0.22em] text-[#7CA5B8] uppercase">
                         CATÁLOGO PLANETARIO · 6 ESCENARIOS DE REFERENCIA
                       </p>
-                      <h3 className="mt-3 text-3xl font-semibold tracking-tight text-[#F1F5F9] sm:text-4xl">
+                      <h3 className="mt-3 text-3xl font-semibold tracking-tight text-[#E4DFD5] sm:text-4xl">
                         Explora los destinos lunares y marcianos
                       </h3>
                     </div>
@@ -1819,8 +1778,8 @@ export function MissionBriefingLanding({
                             onClick={() => setDestinationFilter(filterVal)}
                             className={`rounded-full px-4 py-2 text-xs font-semibold tracking-wider uppercase transition-colors ${
                               active
-                                ? "bg-[#F1F5F9] text-[#03070D]"
-                                : "border border-white/15 text-[#94A3B8] hover:text-[#F1F5F9]"
+                                ? "bg-[#27233E] text-[#C5A36D]"
+                                : "border border-[#55527D]/35 text-[#A3A1BD] hover:text-[#E4DFD5]"
                             }`}
                           >
                             {label}
@@ -1846,13 +1805,13 @@ export function MissionBriefingLanding({
                       return (
                         <article
                           key={target.id}
-                          className="group flex flex-col justify-between border-t border-white/15 pt-5"
+                          className="group flex flex-col justify-between border-t border-[#55527D]/35 pt-5"
                         >
                           <div>
-                            <div className="flex items-center justify-between font-mono text-[11px] text-[#94A3B8]">
+                            <div className="flex items-center justify-between font-mono text-[11px] text-[#A3A1BD]">
                               <span
                                 className={
-                                  isMars ? "text-[#F5B82E]" : "text-[#00D9F5]"
+                                  isMars ? "text-[#D47A61]" : "text-[#7CA5B8]"
                                 }
                               >
                                 {isMars ? "MARTE" : "LUNA"}
@@ -1862,7 +1821,7 @@ export function MissionBriefingLanding({
                               </span>
                             </div>
 
-                            <h4 className="mt-2 text-2xl font-bold text-[#F1F5F9]">
+                            <h4 className="mt-2 text-2xl font-bold text-[#E4DFD5]">
                               {target.name}
                             </h4>
 
@@ -1878,20 +1837,20 @@ export function MissionBriefingLanding({
                               </div>
                             )}
 
-                            <p className="mt-4 text-sm leading-relaxed text-[#94A3B8]">
+                            <p className="mt-4 text-sm leading-relaxed text-[#A3A1BD]">
                               {target.context}
                             </p>
                           </div>
 
-                          <div className="mt-6 border-t border-white/10 pt-4">
+                          <div className="mt-6 border-t border-[#55527D]/30 pt-4">
                             <div className="flex items-center justify-between font-mono text-xs">
-                              <span className="text-[#94A3B8]">
+                              <span className="text-[#A3A1BD]">
                                 Mejor análogo:{" "}
-                                <strong className="font-normal text-[#F1F5F9]">
+                                <strong className="font-normal text-[#E4DFD5]">
                                   {topAnalog?.site.name}
                                 </strong>
                               </span>
-                              <span className="font-bold text-[#00D9F5] tabular-nums">
+                              <span className="font-bold text-[#7CA5B8] tabular-nums">
                                 {topAnalog?.score.toFixed(1)}
                               </span>
                             </div>
@@ -1900,7 +1859,7 @@ export function MissionBriefingLanding({
                               href={`/explorer?body=${target.body}&target=${target.id}${
                                 topAnalog ? `&site=${topAnalog.site.id}` : ""
                               }`}
-                              className="mt-4 inline-flex items-center gap-2 text-xs font-semibold tracking-wider text-[#F1F5F9] uppercase transition-colors hover:text-[#00D9F5]"
+                              className="mt-4 inline-flex items-center gap-2 text-xs font-semibold tracking-wider text-[#E4DFD5] uppercase transition-colors hover:text-[#7CA5B8]"
                             >
                               <span>Inspeccionar en el explorador</span>
                               <ArrowUpRight
@@ -1934,24 +1893,24 @@ export function MissionBriefingLanding({
                   SCIENTIFIC CREDITS & BRAND ATTRIBUTION FOOTER
                   Official logos presented cleanly in their dedicated section
               =============================================================== */}
-              <footer className="snap-start border-t border-white/10 bg-[#020509] py-20">
+              <footer className="snap-start border-t border-[#55527D]/30 bg-[#101321] py-20">
                 <div className="mx-auto max-w-[1440px] px-6 sm:px-10 lg:px-16">
                   <div className="grid grid-cols-1 gap-12 lg:grid-cols-12">
                     <div className="lg:col-span-5">
                       <AtlaniaLockup size="lg" showTagline className="mb-5" />
-                      <p className="font-mono text-xs tracking-[0.2em] text-[#00D9F5] uppercase">
+                      <p className="font-mono text-xs tracking-[0.2em] text-[#7CA5B8] uppercase">
                         RIGOR CIENTÍFICO Y TRANSPARENCIA
                       </p>
-                      <h2 className="mt-3 text-2xl font-semibold text-[#F1F5F9]">
+                      <h2 className="mt-3 text-2xl font-semibold text-[#E4DFD5]">
                         Fuentes oficiales y tecnologías utilizadas
                       </h2>
-                      <p className="mt-3 text-sm leading-relaxed text-[#94A3B8]">
+                      <p className="mt-3 text-sm leading-relaxed text-[#A3A1BD]">
                         Proyecto desarrollado para el desafío{" "}
                         <a
                           href="https://www.spaceappschallenge.org/2026/challenges/permanent-moon-base-locations-and-mars/"
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-[#F1F5F9] underline decoration-white/30 underline-offset-4 hover:text-[#00D9F5]"
+                          className="text-[#E4DFD5] underline decoration-[#55527D]/35 underline-offset-4 hover:text-[#7CA5B8]"
                         >
                           Identify Earth Locations that Analog the Permanent Moon
                           Base Locations and Mars
@@ -1963,7 +1922,7 @@ export function MissionBriefingLanding({
                     </div>
 
                     <div className="lg:col-span-7">
-                      <p className="font-mono text-[11px] tracking-[0.18em] text-[#94A3B8] uppercase">
+                      <p className="font-mono text-[11px] tracking-[0.18em] text-[#A3A1BD] uppercase">
                         ENTIDADES DE DATOS E INFRAESTRUCTURA TÉCNICA
                       </p>
                       <div className="mt-4 flex flex-wrap items-center gap-3">
@@ -1978,7 +1937,7 @@ export function MissionBriefingLanding({
                         <BrandLogo brand="github" size="sm" />
                       </div>
 
-                      <div className="mt-8 flex flex-wrap items-center justify-between gap-4 border-t border-white/10 pt-6 text-xs text-[#94A3B8]">
+                      <div className="mt-8 flex flex-wrap items-center justify-between gap-4 border-t border-[#55527D]/30 pt-6 text-xs text-[#A3A1BD]">
                         <span>
                           ATLANIA · Motor ASI v{dataset.methodology.version}
                         </span>
@@ -1987,7 +1946,7 @@ export function MissionBriefingLanding({
                             href="https://github.com/FakeCxbas/nasa-space-apps-2026"
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1.5 text-[#F1F5F9] hover:text-[#00D9F5]"
+                            className="inline-flex items-center gap-1.5 text-[#E4DFD5] hover:text-[#7CA5B8]"
                           >
                             <span>Repositorio GitHub</span>
                             <ExternalLink
@@ -1997,7 +1956,7 @@ export function MissionBriefingLanding({
                           </a>
                           <Link
                             href="/explorer"
-                            className="font-semibold text-[#00D9F5] hover:underline"
+                            className="font-semibold text-[#7CA5B8] hover:underline"
                           >
                             Ir a /explorer →
                           </Link>
@@ -2022,26 +1981,26 @@ export function MissionBriefingLanding({
             role="dialog"
             aria-modal="true"
             aria-labelledby="sat-modal-title"
-            className="fixed inset-0 z-[70] flex items-center justify-center bg-[#03070D]/80 p-4 backdrop-blur-md"
+            className="fixed inset-0 z-[70] flex items-center justify-center bg-[#101321]/80 p-4 backdrop-blur-md"
             onClick={() => setSelectedSatelliteId(null)}
           >
             <div
               onClick={(e) => e.stopPropagation()}
-              className="relative w-full max-w-2xl overflow-hidden rounded-2xl border border-slate-800/80 bg-[#0D1424]/95 shadow-[0_32px_90px_rgba(0,0,0,0.85)] backdrop-blur-xl"
+              className="relative w-full max-w-2xl overflow-hidden rounded-2xl border border-[#55527D]/35 bg-[#121626]/92 shadow-[0_32px_90px_rgba(0,0,0,0.85)] backdrop-blur-xl"
             >
               {/* Top HUD header */}
-              <div className="flex items-start justify-between gap-4 border-b border-slate-800/80 bg-[#060913]/80 px-6 py-4">
+              <div className="flex items-start justify-between gap-4 border-b border-[#55527D]/35 bg-[#121626]/85 px-6 py-4">
                 <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-[#00D9F5]/35 bg-[#00D9F5]/10 text-[#00D9F5]">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-[#7CA5B8]/35 bg-[#7CA5B8]/10 text-[#7CA5B8]">
                     <Satellite className="h-5 w-5" aria-hidden="true" />
                   </div>
                   <div>
-                    <p className="font-mono text-[11px] font-semibold tracking-[0.18em] text-[#00D9F5] uppercase">
+                    <p className="font-mono text-[11px] font-semibold tracking-[0.18em] text-[#7CA5B8] uppercase">
                       OBSERVATORIO ORBITAL · {sat.agency}
                     </p>
                     <h2
                       id="sat-modal-title"
-                      className="text-xl font-semibold text-[#F1F5F9]"
+                      className="text-xl font-semibold text-[#E4DFD5]"
                     >
                       {sat.name}
                     </h2>
@@ -2051,7 +2010,7 @@ export function MissionBriefingLanding({
                   type="button"
                   onClick={() => setSelectedSatelliteId(null)}
                   aria-label="Cerrar ficha de satélite"
-                  className="inline-flex min-h-11 min-w-11 cursor-pointer items-center justify-center rounded-xl border border-slate-800 bg-[#060913] text-slate-300 transition-colors hover:border-[#00D9F5]/50 hover:text-[#F1F5F9] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00D9F5]"
+                  className="inline-flex min-h-11 min-w-11 cursor-pointer items-center justify-center rounded-xl border border-[#55527D]/35 bg-[#181B2C] text-[#A3A1BD] transition-colors hover:border-[#7CA5B8]/50 hover:text-[#E4DFD5] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C5A36D]"
                 >
                   <X className="h-5 w-5" aria-hidden="true" />
                 </button>
@@ -2060,9 +2019,9 @@ export function MissionBriefingLanding({
               {/* Body */}
               <div className="grid grid-cols-1 gap-6 p-6 sm:grid-cols-12">
                 {/* Satellite Cutout Preview */}
-                <div className="relative flex items-center justify-center rounded-xl border border-slate-800/80 bg-[#060913] p-4 sm:col-span-5">
+                <div className="relative flex items-center justify-center rounded-xl border border-[#55527D]/35 bg-[#181B2C] p-4 sm:col-span-5">
                   <div
-                    className="pointer-events-none absolute inset-4 rounded-full bg-[radial-gradient(circle_at_35%_35%,rgba(56,189,248,0.2),transparent_70%)] blur-xl"
+                    className="pointer-events-none absolute inset-4 rounded-full bg-[radial-gradient(circle_at_35%_35%,rgba(124,165,184,0.2),transparent_70%)] blur-xl"
                     aria-hidden="true"
                   />
                   <Image
@@ -2076,34 +2035,34 @@ export function MissionBriefingLanding({
 
                 {/* Telemetry Specs */}
                 <div className="space-y-3 sm:col-span-7">
-                  <div className="rounded-xl border border-slate-800/80 bg-[#060913]/75 p-3">
-                    <p className="flex items-center gap-1.5 font-mono text-[10px] tracking-[0.16em] text-slate-400 uppercase">
-                      <Radio className="h-3.5 w-3.5 text-[#00D9F5]" aria-hidden="true" />
+                  <div className="rounded-xl border border-[#55527D]/35 bg-[#181B2C]/85 p-3">
+                    <p className="flex items-center gap-1.5 font-mono text-[10px] tracking-[0.16em] text-[#A3A1BD] uppercase">
+                      <Radio className="h-3.5 w-3.5 text-[#7CA5B8]" aria-hidden="true" />
                       Instrumento y espectro
                     </p>
-                    <p className="mt-1 text-sm font-medium text-[#F1F5F9]">
+                    <p className="mt-1 text-sm font-medium text-[#E4DFD5]">
                       {sat.instrument}
                     </p>
-                    <p className="mt-0.5 font-mono text-xs tabular-nums text-slate-400">
+                    <p className="mt-0.5 font-mono text-xs tabular-nums text-[#A3A1BD]">
                       {sat.spectrum}
                     </p>
                   </div>
 
                   <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                    <div className="rounded-xl border border-slate-800/80 bg-[#060913]/75 p-3">
-                      <p className="flex items-center gap-1.5 font-mono text-[10px] tracking-[0.16em] text-slate-400 uppercase">
-                        <Orbit className="h-3.5 w-3.5 text-[#00D9F5]" aria-hidden="true" />
+                    <div className="rounded-xl border border-[#55527D]/35 bg-[#181B2C]/85 p-3">
+                      <p className="flex items-center gap-1.5 font-mono text-[10px] tracking-[0.16em] text-[#A3A1BD] uppercase">
+                        <Orbit className="h-3.5 w-3.5 text-[#7CA5B8]" aria-hidden="true" />
                         Órbita
                       </p>
-                      <p className="mt-1 font-mono text-xs tabular-nums text-slate-200">
+                      <p className="mt-1 font-mono text-xs tabular-nums text-[#E4DFD5]">
                         {sat.orbit}
                       </p>
                     </div>
-                    <div className="rounded-xl border border-slate-800/80 bg-[#060913]/75 p-3">
-                      <p className="font-mono text-[10px] tracking-[0.16em] text-slate-400 uppercase">
+                    <div className="rounded-xl border border-[#55527D]/35 bg-[#181B2C]/85 p-3">
+                      <p className="font-mono text-[10px] tracking-[0.16em] text-[#A3A1BD] uppercase">
                         Resolución
                       </p>
-                      <p className="mt-1 font-mono text-xs tabular-nums text-slate-200">
+                      <p className="mt-1 font-mono text-xs tabular-nums text-[#E4DFD5]">
                         {sat.resolution}
                       </p>
                     </div>
@@ -2112,35 +2071,35 @@ export function MissionBriefingLanding({
               </div>
 
               {/* Scientific Role & Analog Sites */}
-              <div className="space-y-3 border-t border-slate-800/80 px-6 py-4">
+              <div className="space-y-3 border-t border-[#55527D]/35 px-6 py-4">
                 <div>
-                  <p className="font-mono text-[10px] tracking-[0.16em] text-[#00D9F5] uppercase">
+                  <p className="font-mono text-[10px] tracking-[0.16em] text-[#7CA5B8] uppercase">
                     Uso en ATLANIA sobre puntos análogos
                   </p>
-                  <p className="mt-1 text-sm leading-relaxed text-slate-200">
+                  <p className="mt-1 text-sm leading-relaxed text-[#E4DFD5]">
                     {sat.roleInAtlania}
                   </p>
-                  <p className="mt-1.5 font-mono text-xs text-slate-400">
-                    Sitios clave: <span className="text-slate-200">{sat.analogSites}</span>
+                  <p className="mt-1.5 font-mono text-xs text-[#A3A1BD]">
+                    Sitios clave: <span className="text-[#E4DFD5]">{sat.analogSites}</span>
                   </p>
                 </div>
 
-                <div className="flex items-start gap-2.5 rounded-xl border border-amber-500/25 bg-amber-500/5 p-3">
-                  <ShieldAlert className="mt-0.5 h-4 w-4 shrink-0 text-amber-400" aria-hidden="true" />
-                  <p className="text-xs leading-relaxed text-slate-300">
-                    <span className="font-semibold text-amber-300">Límites físicos:</span>{" "}
+                <div className="flex items-start gap-2.5 rounded-xl border border-[#C5A36D]/50 bg-[#27233E]/80 p-3">
+                  <ShieldAlert className="mt-0.5 h-4 w-4 shrink-0 text-[#C5A36D]" aria-hidden="true" />
+                  <p className="text-xs leading-relaxed text-[#A3A1BD]">
+                    <span className="font-semibold text-[#C5A36D]">Límites físicos:</span>{" "}
                     {sat.limitations}
                   </p>
                 </div>
               </div>
 
               {/* Footer Actions */}
-              <div className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-800/80 bg-[#060913]/80 px-6 py-4">
+              <div className="flex flex-wrap items-center justify-between gap-3 border-t border-[#55527D]/35 bg-[#121626]/85 px-6 py-4">
                 <a
                   href={sat.officialUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex min-h-11 items-center gap-1.5 text-xs font-semibold text-slate-300 underline decoration-slate-600 underline-offset-4 transition-colors hover:text-[#00D9F5]"
+                  className="inline-flex min-h-11 items-center gap-1.5 text-xs font-semibold text-[#A3A1BD] underline decoration-[#55527D] underline-offset-4 transition-colors hover:text-[#7CA5B8]"
                 >
                   <span>Documentación oficial de la misión</span>
                   <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" />
@@ -2150,13 +2109,13 @@ export function MissionBriefingLanding({
                   <button
                     type="button"
                     onClick={() => setSelectedSatelliteId(null)}
-                    className="inline-flex min-h-11 cursor-pointer items-center rounded-full border border-slate-700 px-4 py-2 text-xs font-semibold text-slate-200 transition-colors hover:border-slate-500 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00D9F5]"
+                    className="inline-flex min-h-11 cursor-pointer items-center rounded-full border border-[#55527D]/35 px-4 py-2 text-xs font-semibold text-[#E4DFD5] transition-colors hover:border-[#55527D]/35 hover:text-[#E4DFD5] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C5A36D]"
                   >
                     Cerrar ficha
                   </button>
                   <Link
                     href="/explorer"
-                    className="inline-flex min-h-11 items-center gap-2 rounded-full bg-[#00D9F5] px-5 py-2 text-xs font-semibold tracking-wider text-[#03070D] uppercase transition-transform hover:scale-[1.02]"
+                    className="inline-flex min-h-11 items-center gap-2 rounded-full bg-[#C5A36D] hover:bg-[#d4b47e] px-5 py-2 text-xs font-semibold tracking-wider text-[#101321] uppercase transition-transform hover:scale-[1.02]"
                   >
                     <span>Explorar sitios en 3D</span>
                     <ArrowUpRight className="h-3.5 w-3.5" aria-hidden="true" />
@@ -2170,7 +2129,7 @@ export function MissionBriefingLanding({
       {/* Floating Up/Down Phase Arrow Navigator */}
       <nav
         aria-label="Navegación por fases con flechas"
-        className="fixed right-5 bottom-5 z-40 flex items-center gap-1.5 rounded-full border border-white/15 bg-[#03070D]/85 p-1.5 shadow-2xl backdrop-blur-md"
+        className="fixed right-5 bottom-5 z-40 flex items-center gap-1.5 rounded-full border border-[#55527D]/40 bg-[#121626]/92 text-[#E4DFD5] p-1.5 shadow-2xl backdrop-blur-md"
       >
         <button
           type="button"
@@ -2178,12 +2137,12 @@ export function MissionBriefingLanding({
           disabled={currentPhaseIdx <= 0}
           aria-label="Subir a la fase anterior"
           title="Fase anterior (↑)"
-          className="inline-flex h-11 w-11 cursor-pointer items-center justify-center rounded-full text-slate-200 transition-colors hover:bg-white/10 hover:text-[#00D9F5] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00D9F5] disabled:cursor-not-allowed disabled:opacity-35"
+          className="inline-flex h-11 w-11 cursor-pointer items-center justify-center rounded-full text-[#E4DFD5] transition-colors hover:bg-[#27233E] hover:text-[#7CA5B8] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C5A36D] disabled:cursor-not-allowed disabled:opacity-35"
         >
           <ChevronUp className="h-5 w-5" aria-hidden="true" />
         </button>
 
-        <span className="hidden px-2 font-mono text-[11px] font-semibold tracking-wider text-slate-200 uppercase sm:inline">
+        <span className="hidden px-2 font-mono text-[11px] font-semibold tracking-wider text-[#E4DFD5] uppercase sm:inline">
           {LANDING_PHASES[currentPhaseIdx]?.label}
         </span>
 
@@ -2193,7 +2152,7 @@ export function MissionBriefingLanding({
           disabled={currentPhaseIdx >= LANDING_PHASES.length - 1}
           aria-label="Bajar a la siguiente fase"
           title="Siguiente fase (↓)"
-          className="inline-flex h-11 w-11 cursor-pointer items-center justify-center rounded-full bg-[#00D9F5]/15 text-[#00D9F5] transition-colors hover:bg-[#00D9F5]/25 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00D9F5] disabled:cursor-not-allowed disabled:opacity-35"
+          className="inline-flex h-11 w-11 cursor-pointer items-center justify-center rounded-full border border-[#C5A36D]/45 bg-[#27233E] text-[#C5A36D] transition-colors hover:bg-[#C5A36D]/25 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C5A36D] disabled:cursor-not-allowed disabled:opacity-35"
         >
           <ChevronDown className="h-5 w-5" aria-hidden="true" />
         </button>

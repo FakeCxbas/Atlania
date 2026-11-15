@@ -312,7 +312,7 @@ export function BrandLogo({
           className={`inline-flex items-center gap-2 ${className}`}
           title="Open-Meteo Elevation API"
         >
-          <span className="inline-flex items-center rounded border border-slate-700 bg-[#0A1624] px-2 py-0.5 font-mono text-[10px] font-semibold tracking-wider text-[#00D9F5]">
+          <span className="inline-flex items-center rounded border border-[#55527D]/40 bg-[#181B2C] px-2 py-0.5 font-mono text-[10px] font-semibold tracking-wider text-[#7CA5B8]">
             Open-Meteo DEM
           </span>
         </span>
