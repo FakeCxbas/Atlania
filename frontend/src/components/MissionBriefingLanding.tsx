@@ -20,8 +20,6 @@ import { ExplorerTransition } from "@/components/briefing/ExplorerTransition";
 import {
   ArrowDown,
   ArrowUpRight,
-  ChevronDown,
-  ChevronUp,
   ExternalLink,
   Orbit,
   Radio,
@@ -2001,37 +1999,6 @@ export function MissionBriefingLanding({
           </div>
         );
       })()}
-      {/* Floating Up/Down Phase Arrow Navigator */}
-      <nav
-        aria-label="Navegación por fases con flechas"
-        className="fixed right-5 bottom-5 z-40 flex items-center gap-1.5 rounded-full border border-[#55527D]/40 bg-[#121626]/92 text-[#E4DFD5] p-1.5 shadow-2xl backdrop-blur-md"
-      >
-        <button
-          type="button"
-          onClick={() => navigatePhase(-1)}
-          disabled={currentPhaseIdx <= 0}
-          aria-label="Subir a la fase anterior"
-          title="Fase anterior (↑)"
-          className="inline-flex h-11 w-11 cursor-pointer items-center justify-center rounded-full text-[#E4DFD5] transition-colors hover:bg-[#27233E] hover:text-[#7CA5B8] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C5A36D] disabled:cursor-not-allowed disabled:opacity-35"
-        >
-          <ChevronUp className="h-5 w-5" aria-hidden="true" />
-        </button>
-
-        <span className="hidden px-2 font-mono text-[11px] font-semibold tracking-wider text-[#E4DFD5] uppercase sm:inline">
-          {LANDING_PHASES[currentPhaseIdx]?.label}
-        </span>
-
-        <button
-          type="button"
-          onClick={() => navigatePhase(1)}
-          disabled={currentPhaseIdx >= LANDING_PHASES.length - 1}
-          aria-label="Bajar a la siguiente fase"
-          title="Siguiente fase (↓)"
-          className="inline-flex h-11 w-11 cursor-pointer items-center justify-center rounded-full border border-[#C5A36D]/45 bg-[#27233E] text-[#C5A36D] transition-colors hover:bg-[#C5A36D]/25 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C5A36D] disabled:cursor-not-allowed disabled:opacity-35"
-        >
-          <ChevronDown className="h-5 w-5" aria-hidden="true" />
-        </button>
-      </nav>
     </div>
   );
 }
