@@ -584,27 +584,35 @@ export function MissionBriefingLanding({
       {/* =====================================================================
           FLOATING MINIMAL NAVIGATION OVERLAY (NO HEAVY BORDER / NO BOX)
       ===================================================================== */}
-      <header className="fixed inset-x-0 top-0 z-50 bg-gradient-to-b from-[#03070D]/80 via-[#03070D]/30 to-transparent backdrop-blur-[2px]">
-        <div className="mx-auto flex max-w-[1440px] items-center justify-between px-6 py-5 sm:px-10 lg:px-16">
-          {/* Brand Wordmark */}
-          <Link
-            href="/"
-            className="flex items-center gap-3 text-sm font-semibold tracking-[0.25em] text-[#E4DFD5] uppercase transition-opacity hover:opacity-80"
-          >
-            <Compass className="h-4 w-4 text-[#C5A36D]" aria-hidden="true" />
-            <span className="font-serif tracking-widest text-lg font-semibold text-[#E4DFD5]">
-              ATLANIA
+      <header className="fixed inset-x-0 top-0 z-50 border-b border-white/10 bg-[#03070D]/80 backdrop-blur-md">
+        <div className="mx-auto flex max-w-[1440px] items-center justify-between px-6 py-4 sm:px-10 lg:px-16">
+          {/* Brand Wordmark + Route Breadcrumb */}
+          <div className="flex items-center gap-3">
+            <Link
+              href="/"
+              className="flex items-center gap-2.5 text-sm font-semibold tracking-[0.25em] text-[#E4DFD5] uppercase transition-opacity hover:opacity-80"
+            >
+              <Compass className="h-4 w-4 text-[#C5A36D]" aria-hidden="true" />
+              <span className="font-serif tracking-widest text-lg font-semibold text-[#E4DFD5]">
+                ATLANIA
+              </span>
+            </Link>
+            <span className="hidden items-center gap-1.5 font-mono text-xs text-slate-400 sm:inline-flex">
+              <span className="text-slate-600">/</span>
+              <span className="rounded border border-[#00D9F5]/30 bg-[#00D9F5]/10 px-2 py-0.5 font-semibold text-[#00D9F5]">
+                Inicio
+              </span>
             </span>
-          </Link>
+          </div>
 
           {/* Minimal Chapter Links (Desktop) */}
           <nav
             aria-label="Capítulos del viaje espacial"
-            className="hidden items-center gap-8 text-xs font-medium tracking-[0.14em] text-[#94A3B8] uppercase lg:flex"
+            className="hidden items-center gap-7 text-xs font-semibold tracking-[0.14em] text-slate-300 uppercase lg:flex"
           >
             <a
               href="#capitulo-1"
-              className="transition-colors hover:text-[#F1F5F9]"
+              className="text-[#00D9F5] transition-colors hover:text-[#F1F5F9]"
             >
               01 · Inicio
             </a>
@@ -762,9 +770,13 @@ export function MissionBriefingLanding({
                   id="capitulo-1"
                   className="sticky top-0 h-screen w-full overflow-hidden"
                 >
-                  {/* Subtle left-side vignette strictly for editorial text legibility over space */}
+                  {/* Directional scrims for strict WCAG AA text legibility over 3D Earth */}
                   <div
-                    className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_74%_48%,transparent_18%,rgba(3,7,13,0.45)_58%,rgba(3,7,13,0.88)_100%)]"
+                    className="pointer-events-none absolute inset-0 bg-gradient-to-r from-[#03070D]/90 via-[#03070D]/55 to-transparent"
+                    aria-hidden="true"
+                  />
+                  <div
+                    className="pointer-events-none absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-[#03070D]/95 via-[#03070D]/60 to-transparent"
                     aria-hidden="true"
                   />
 
@@ -799,34 +811,43 @@ export function MissionBriefingLanding({
                       transform: `translate3d(0, ${ch1TranslateY}px, 0)`,
                       pointerEvents: ch1Opacity < 0.15 ? "none" : "auto",
                     }}
-                    className="relative z-20 mx-auto flex h-full max-w-[1440px] flex-col justify-between px-6 pt-28 pb-10 will-change-transform sm:px-10 lg:px-16 lg:pt-32 lg:pb-12"
+                    className="relative z-20 mx-auto flex h-full max-w-[1440px] flex-col justify-between px-6 pt-28 pb-8 will-change-transform sm:px-10 lg:px-16 lg:pt-32 lg:pb-10"
                   >
                     <div className="my-auto max-w-2xl">
-                      <p className="font-mono text-xs font-medium tracking-[0.28em] text-[#C5A36D] uppercase">
+                      <p className="font-mono text-xs font-semibold tracking-[0.24em] text-[#C5A36D] uppercase sm:text-sm">
                         NASA SPACE APPS CHALLENGE · OBSERVATORIO PLANETARIO
                       </p>
 
-                      <h1 className="mt-5 font-serif text-6xl font-normal tracking-wide text-[#E4DFD5] sm:text-7xl lg:text-[6.5rem] lg:leading-[0.96]">
+                      <h1 className="mt-4 font-serif text-6xl font-normal tracking-wide text-[#E4DFD5] sm:text-7xl lg:text-[6.5rem] lg:leading-[0.96]">
                         ATLANIA
                       </h1>
 
-                      <p className="mt-3 font-display italic text-base tracking-wide text-[#C5A36D] sm:text-lg">
+                      <p className="mt-3 font-display italic text-lg tracking-wide text-[#C5A36D] sm:text-xl">
                         Somewhere between Earth and the stars.
                       </p>
 
-                      <p className="mt-5 max-w-xl text-xl font-light leading-snug text-[#E4DFD5]/90 sm:text-2xl">
+                      <p className="mt-5 max-w-xl text-xl font-medium leading-snug text-slate-100 sm:text-2xl">
                         ¿Y si para comprender otros planetas primero tuviéramos que volver a descubrir el nuestro?
                       </p>
 
-                      <p className="mt-5 max-w-lg text-sm leading-relaxed text-[#A3A1BD] sm:text-base">
-                        Un atlas dedicado a explorar los territorios extraordinarios de la Tierra y descubrir sus semejanzas con los paisajes de la Luna y Marte mediante teledetección satelital, geomorfología y datos ambientales.
-                      </p>
+                      {/* Palabras clave claras de alto contraste (UX) */}
+                      <div className="mt-6 flex flex-wrap items-center gap-2.5">
+                        <span className="rounded-full border border-[#00D9F5]/45 bg-[#03070D]/80 px-4 py-1.5 text-xs font-semibold tracking-wide text-[#00D9F5] backdrop-blur-md sm:text-sm">
+                          Teledetección Satelital
+                        </span>
+                        <span className="rounded-full border border-[#C5A36D]/50 bg-[#03070D]/80 px-4 py-1.5 text-xs font-semibold tracking-wide text-[#E4DFD5] backdrop-blur-md sm:text-sm">
+                          Índice Científico ASI
+                        </span>
+                        <span className="rounded-full border border-[#E07A5F]/45 bg-[#03070D]/80 px-4 py-1.5 text-xs font-semibold tracking-wide text-[#E07A5F] backdrop-blur-md sm:text-sm">
+                          Análogos Luna y Marte
+                        </span>
+                      </div>
 
                       {/* Primary CTAs */}
-                      <div className="mt-9 flex flex-wrap items-center gap-4">
+                      <div className="mt-8 flex flex-wrap items-center gap-4">
                         <Link
                           href="/explorer"
-                          className="inline-flex min-h-12 items-center gap-3 rounded-full bg-[#C5A36D] px-7 py-3.5 text-sm font-semibold text-[#101321] transition-all hover:bg-[#E4DFD5]"
+                          className="inline-flex min-h-12 items-center gap-3 rounded-full bg-[#C5A36D] px-7 py-3.5 text-sm font-bold text-[#101321] shadow-lg transition-all hover:bg-[#E4DFD5]"
                         >
                           <span>Iniciar exploración</span>
                           <ArrowUpRight className="h-4 w-4 stroke-[2.5]" aria-hidden="true" />
@@ -834,7 +855,7 @@ export function MissionBriefingLanding({
 
                         <a
                           href="#el-desafio"
-                          className="inline-flex min-h-12 items-center gap-2.5 rounded-full border border-white/20 bg-white/[0.03] px-6 py-3.5 text-sm font-medium text-[#F1F5F9] backdrop-blur-sm transition-colors hover:border-[#00D9F5] hover:text-[#00D9F5]"
+                          className="inline-flex min-h-12 items-center gap-2.5 rounded-full border border-white/25 bg-[#03070D]/75 px-6 py-3.5 text-sm font-semibold text-slate-100 backdrop-blur-md transition-colors hover:border-[#00D9F5] hover:text-[#00D9F5]"
                         >
                           <span>Conocer la misión</span>
                           <ArrowDown
@@ -845,24 +866,24 @@ export function MissionBriefingLanding({
                       </div>
                     </div>
 
-                    {/* Minimal bottom editorial bar */}
-                    <div className="flex flex-wrap items-end justify-between gap-4 border-t border-white/10 pt-4 text-xs text-[#94A3B8]">
+                    {/* High-contrast frosted bottom telemetry bar */}
+                    <div className="flex flex-wrap items-center justify-between gap-4 rounded-xl border border-white/15 bg-[#03070D]/80 px-4 py-3 text-xs text-slate-200 backdrop-blur-md sm:text-sm">
                       <div className="flex flex-wrap items-center gap-6 font-mono">
                         <span>
                           CATÁLOGO:{" "}
-                          <strong className="font-normal text-[#F1F5F9]">
+                          <strong className="font-bold text-[#00D9F5]">
                             {dataset.sites.length} SITIOS TERRESTRES
                           </strong>
                         </span>
                         <span>
                           REFERENCIAS PDS:{" "}
-                          <strong className="font-normal text-[#F1F5F9]">
+                          <strong className="font-bold text-[#F5B82E]">
                             {Object.keys(dataset.references).length} ESCENARIOS
                             (LUNA Y MARTE)
                           </strong>
                         </span>
                       </div>
-                      <span className="font-mono text-[11px] tracking-[0.2em] text-[#94A3B8] uppercase">
+                      <span className="font-mono text-xs font-semibold tracking-[0.16em] text-slate-200 uppercase">
                         Desplaza para aproximarte a la Tierra ↓
                       </span>
                     </div>
