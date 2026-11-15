@@ -792,7 +792,7 @@ export function MissionBriefingLanding({
 
                 <div
                   id="capitulo-1"
-                  className="sticky top-0 min-h-screen w-full overflow-x-hidden"
+                  className="sticky top-0 min-h-screen w-full overflow-x-clip"
                 >
                   {/* Subtle left-only gradient for editorial text legibility without darkening the 3D scene */}
                   <div
