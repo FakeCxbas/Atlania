@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { evaluateCoordinate } from "@/lib/evaluateCoordinate";
 
+export const maxDuration = 60;
+
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const latRaw = searchParams.get("lat");

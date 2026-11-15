@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { evaluateRegion, validateRegionBounds } from '@/lib/evaluateRegion';
 
+export const maxDuration = 60;
+
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const minLat = Number(searchParams.get('minLat'));
