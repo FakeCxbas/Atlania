@@ -32,24 +32,6 @@
 
 ---
 
-## Identidad Visual y Simbología
-
-<p align="center">
-  <img src="docs/assets/branding/atlania_isotipo_realistic.jpg" alt="Isotipo Oficial ATLANIA" width="220" />
-</p>
-
-El isotipo de **ATLANIA** sintetiza el puente de exploración científica entre nuestro planeta y los destinos extraterrestres:
-- **La estrella superior guía (*Polaris*):** Representa la telemetría, la orientación y el horizonte de navegación espacial.
-- **La estructura piramidal / Letra "A":** Arquitectura de la estación observatorio, enlazando la curvatura de la atmósfera terrestre con las formaciones geológicas de entrenamiento.
-- **Topografía terrestre:** Verde vegetal, estratos de dunas áridas y paleosuelos como laboratorio análogo vivo.
-- **Los mundos objetivo:** La **Luna** (polo sur, trampas frías de regolito) a la izquierda y **Marte** (óxidos ferrosos y volcanismo en escudo) a la derecha.
-
-| Isotipo Realista 3D | Isotipo Vectorial Flat | Isotipo Minimalista | Isotipo Monocromo |
-| :---: | :---: | :---: | :---: |
-| <img src="docs/assets/branding/atlania_isotipo_realistic.jpg" width="130" /> | <img src="docs/assets/branding/atlania_isotipo_flat_full.jpg" width="130" /> | <img src="docs/assets/branding/atlania_isotipo_minimal.jpg" width="130" /> | <img src="docs/assets/branding/atlania_isotipo_monochrome.jpg" width="130" /> |
-
----
-
 ## System Architecture
 
 ```mermaid
