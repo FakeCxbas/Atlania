@@ -24,7 +24,6 @@
 
   color-scheme: dark;
   accent-color: var(--accent-gold);
-  scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
 }
 
 @theme inline {
@@ -45,18 +44,24 @@
   --color-lunar-grey: #899095;
 }
 
-@supports not (scrollbar-color: auto) {
-  *::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
-  }
-  *::-webkit-scrollbar-thumb {
-    background: var(--scrollbar-thumb);
-    border-radius: 4px;
-  }
-  *::-webkit-scrollbar-track {
-    background: var(--scrollbar-track);
-  }
+html,
+body,
+main,
+div,
+section {
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+}
+
+html::-webkit-scrollbar,
+body::-webkit-scrollbar,
+main::-webkit-scrollbar,
+div::-webkit-scrollbar,
+section::-webkit-scrollbar {
+  width: 0px !important;
+  height: 0px !important;
+  display: none !important;
+  background: transparent !important;
 }
 
 html {
