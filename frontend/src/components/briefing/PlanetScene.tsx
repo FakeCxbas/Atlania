@@ -549,33 +549,30 @@ export function PlanetScene({
       terrainGroup.visible = prevVis;
     }, 120);
 
-    // Tectonic crust fracture group (dark basalt shards + warm magma point light as the 3D crust block emerges)
+    // Luminous geodesic extraction outline anchored to the emerging crust plate.
     const fractureGroup = new THREE.Group();
-    fractureGroup.position.set(1.25, -0.32, 3.65);
+    fractureGroup.position.set(1.05, -0.42, 2.65);
+    fractureGroup.rotation.set(-1.16, 0, 0.74);
     fractureGroup.visible = false;
     scene.add(fractureGroup);
 
-    const fractureGlowLight = new THREE.PointLight(0xf97316, 0, 3.5, 1.5);
+    const fractureGlowLight = new THREE.PointLight(0x00d9f5, 0, 3.5, 1.5);
     fractureGroup.add(fractureGlowLight);
 
-    const shardGeo = new THREE.DodecahedronGeometry(0.065, 0);
-    const shardMat = new THREE.MeshStandardMaterial({
-      color: 0x2a231e,
-      emissive: 0xea580c,
-      emissiveIntensity: 0.28,
-      roughness: 0.92,
-      metalness: 0.08,
+    const fractureGeo = new THREE.BufferGeometry().setFromPoints([
+      new THREE.Vector3(-0.625, -0.625, 0),
+      new THREE.Vector3(0.625, -0.625, 0),
+      new THREE.Vector3(0.625, 0.625, 0),
+      new THREE.Vector3(-0.625, 0.625, 0),
+    ]);
+    const fractureMat = new THREE.LineBasicMaterial({
+      color: 0x00d9f5,
+      blending: THREE.AdditiveBlending,
       transparent: true,
       opacity: 0,
+      depthWrite: false,
     });
-    const fractureShards: { mesh: THREE.Mesh; angle: number; speed: number }[] = [];
-    for (let i = 0; i < 12; i++) {
-      const angle = (i / 12) * Math.PI * 2 + (i % 3) * 0.18;
-      const mesh = new THREE.Mesh(shardGeo, shardMat);
-      mesh.scale.set(0.75 + (i % 3) * 0.35, 0.55 + ((i + 1) % 3) * 0.25, 0.85);
-      fractureGroup.add(mesh);
-      fractureShards.push({ mesh, angle, speed: 0.85 + (i % 3) * 0.25 });
-    }
+    fractureGroup.add(new THREE.LineLoop(fractureGeo, fractureMat));
 
     // Smooth camera & object interpolation vectors
     const currentCamPos = new THREE.Vector3(0, 0.35, 9.2);
@@ -660,12 +657,11 @@ export function PlanetScene({
         targetCamPos.set(0.1, 0.05, 5.35 - t * 0.25);
         targetLookAt.set(0.15, 0.0, 1.5);
 
-        // Earth expands slightly as its crust cracks open, then fades out smoothly
-        targetEarthPos.set(0.75, -2.05, 0.25);
-        targetEarthScale = 1.15;
-        const earthFade = Math.min(1, Math.max(0, (terrainPresence - 0.25) / 0.65));
-        targetEarthOpacity = 1 - earthFade;
-        targetAtmoIntensity = (1 - earthFade) * 1.85;
+        // Earth recedes smoothly while the extracted crust plate comes forward.
+        targetEarthPos.set(-0.65, -4.8, -2.4);
+        targetEarthScale = 0.92;
+        targetEarthOpacity = 0;
+        targetAtmoIntensity = 0;
 
         targetMoonPos.set(-6.4, 2.8, -5.2);
         targetMarsPos.set(6.4, 3.0, -6.5);
@@ -777,27 +773,15 @@ export function PlanetScene({
         terrainDamp
       );
 
-      // Tectonic fracture burst animation as Earth cracks open (peaks around terrainPresence = 0.4)
+      // Extraction outline brightens and fades as the crust plate emerges.
       const fractureProgress = Math.min(
         1,
         Math.max(0, (terrainPresence - 0.02) / 0.78)
       );
       const fractureBurst = Math.sin(fractureProgress * Math.PI);
       fractureGroup.visible = fractureBurst > 0.01 && !prefersReducedMotion;
-      if (fractureGroup.visible) {
-        fractureGlowLight.intensity = fractureBurst * 3.2;
-        shardMat.opacity = fractureBurst * 0.95;
-        const radialSpread = 0.24 + terrainPresence * 1.35;
-        for (const s of fractureShards) {
-          s.mesh.position.set(
-            Math.cos(s.angle) * radialSpread * s.speed,
-            Math.sin(s.angle) * radialSpread * 0.75 * s.speed,
-            terrainPresence * 0.65 * s.speed
-          );
-          s.mesh.rotation.x += dt * 2.4 * s.speed;
-          s.mesh.rotation.y += dt * 1.9 * s.speed;
-        }
-      }
+      fractureGlowLight.intensity = fractureGroup.visible ? fractureBurst * 3.2 : 0;
+      fractureMat.opacity = fractureBurst * 0.95;
 
       const isTerrainVisible = terrainPresence > 0.008;
       if (isTerrainVisible && !terrainRefs) {
@@ -823,17 +807,23 @@ export function PlanetScene({
           dampFactor(dt, 5.2)
         );
 
-        const maxGap = 0.62;
-        const targetGap = currentSep * maxGap;
+        const maxGap = 0.35;
+        const targetGap = currentSep * maxGap * Math.max(0, (easedPresence - 0.3) / 0.7);
         const deployRatio = targetGap / maxGap;
         const stratumDamp = dampFactor(dt, 6.0);
 
         // Emerge directly out of the fractured crust on Earth's front surface
-        terrainGroup.scale.setScalar(0.32 + 0.54 * easedPresence);
+        terrainGroup.scale.setScalar(
+          THREE.MathUtils.lerp(0.20, 0.64 - deployRatio * 0.08, easedPresence)
+        );
         terrainGroup.position.set(
-          THREE.MathUtils.lerp(1.25, 1.45, easedPresence),
-          THREE.MathUtils.lerp(-0.32, -0.06, easedPresence),
-          THREE.MathUtils.lerp(3.72, 1.45, easedPresence)
+          THREE.MathUtils.lerp(1.05, 1.36, easedPresence),
+          THREE.MathUtils.lerp(
+            -0.42,
+            0.12 + deployRatio * 0.12 + (fLayer > 0 ? (fLayer - 2.5) * 0.06 : 0),
+            easedPresence
+          ),
+          THREE.MathUtils.lerp(2.65, 1.45, easedPresence)
         );
 
         const reliefScaleZ = 0.14 + deployRatio * 0.86;
@@ -958,8 +948,9 @@ export function PlanetScene({
       marsGeo.dispose();
       marsMat.dispose();
       fractureGlowLight.dispose();
-      shardGeo.dispose();
-      shardMat.dispose();
+      fractureGeo.dispose();
+      fractureMat.dispose();
+      fractureGroup.clear();
       for (const item of terrainDisposables) {
         item.dispose();
       }
