@@ -739,12 +739,12 @@ export function PlanetScene({
         </div>
       )}
 
-      {/* Subtle left-side editorial gradient so large typography is crisp without boxes */}
+      {/* Subtle left-side editorial gradient so typography is crisp without darkening the globe */}
       <div
         className="absolute inset-0"
         style={{
           background:
-            "linear-gradient(90deg, rgba(5,11,19,0.78) 0%, rgba(5,11,19,0.38) 48%, rgba(5,11,19,0.12) 100%)",
+            "linear-gradient(90deg, rgba(5,11,19,0.52) 0%, rgba(5,11,19,0.16) 40%, transparent 72%)",
         }}
       />
     </div>

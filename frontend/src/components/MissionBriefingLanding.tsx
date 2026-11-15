@@ -614,9 +614,9 @@ export function MissionBriefingLanding({
       </a>
 
       {/* =====================================================================
-          FLOATING MINIMAL NAVIGATION OVERLAY (NO HEAVY BORDER / NO BOX)
+          SINGLE CLEAN FIXED NAVIGATION BAR (z-40, below z-50 modals)
       ===================================================================== */}
-      <header className="fixed inset-x-0 top-0 z-50 bg-gradient-to-b from-[#03070D]/80 via-[#03070D]/30 to-transparent backdrop-blur-[2px]">
+      <header className="fixed inset-x-0 top-0 z-40 border-b border-white/10 bg-[#03070D]/90 backdrop-blur-md">
         <div className="mx-auto flex max-w-[1440px] items-center justify-between px-6 py-5 sm:px-10 lg:px-16">
           {/* Brand Wordmark */}
           <Link
@@ -794,9 +794,9 @@ export function MissionBriefingLanding({
                   id="capitulo-1"
                   className="sticky top-0 min-h-screen w-full overflow-x-hidden"
                 >
-                  {/* Subtle left-side vignette strictly for editorial text legibility over space */}
+                  {/* Subtle left-only gradient for editorial text legibility without darkening the 3D scene */}
                   <div
-                    className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_74%_48%,transparent_18%,rgba(3,7,13,0.45)_58%,rgba(3,7,13,0.88)_100%)]"
+                    className="pointer-events-none absolute inset-0 bg-gradient-to-r from-[#03070D]/35 via-transparent to-transparent"
                     aria-hidden="true"
                   />
 
