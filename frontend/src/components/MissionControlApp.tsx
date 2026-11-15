@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import type { AnalogDataset, AnalogSite } from "@/types/analog";
 import {
   buildSiteRationale,
@@ -26,7 +27,6 @@ import {
   ChevronUp,
   Compass,
   Download,
-  Globe2,
   Home,
   ListFilter,
   MapPin,
@@ -566,7 +566,9 @@ export function MissionControlApp({ dataset }: MissionControlAppProps) {
                   : "text-slate-400 hover:text-slate-200"
               }`}
             >
-              <Globe2 className="h-3.5 w-3.5 text-[#00D9F5]" aria-hidden="true" />
+              <span aria-hidden="true" className="relative h-5 w-5 shrink-0 overflow-hidden rounded-full bg-black shadow-[0_0_7px_rgba(255,255,255,0.12)]">
+                <Image src="/nasa/earth-blue-marble.jpg" alt="" fill sizes="24px" className="object-cover scale-[1.18]" />
+              </span>
               <span>Tierra</span>
             </button>
 
@@ -580,7 +582,9 @@ export function MissionControlApp({ dataset }: MissionControlAppProps) {
                   : "text-slate-400 hover:text-slate-200"
               }`}
             >
-              <Moon className="h-3.5 w-3.5 text-slate-300" aria-hidden="true" />
+              <span aria-hidden="true" className="relative h-5 w-5 shrink-0 overflow-hidden rounded-full bg-black shadow-[0_0_7px_rgba(255,255,255,0.12)]">
+                <Image src="/nasa/moon-navigation.jpg" alt="" fill sizes="24px" className="object-cover scale-[1.1]" />
+              </span>
               <span>Luna</span>
             </button>
 
@@ -594,7 +598,9 @@ export function MissionControlApp({ dataset }: MissionControlAppProps) {
                   : "text-slate-400 hover:text-slate-200"
               }`}
             >
-              <Orbit className="h-3.5 w-3.5 text-[#E07A5F]" aria-hidden="true" />
+              <span aria-hidden="true" className="relative h-5 w-5 shrink-0 overflow-hidden rounded-full bg-black shadow-[0_0_7px_rgba(255,255,255,0.12)]">
+                <Image src="/nasa/mars-orb.jpg" alt="" fill sizes="24px" className="object-cover scale-[1.02]" />
+              </span>
               <span>Marte</span>
             </button>
           </nav>
