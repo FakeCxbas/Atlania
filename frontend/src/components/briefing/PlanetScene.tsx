@@ -539,6 +539,44 @@ export function PlanetScene({
       };
     };
 
+    // Pre-build & compile Chapter 3 terrain shaders shortly after mount to eliminate scroll micro-stutter
+    const warmupTimer = window.setTimeout(() => {
+      if (disposed || terrainRefs) return;
+      ensureTerrainBuilt();
+      const prevVis = terrainGroup.visible;
+      terrainGroup.visible = true;
+      renderer.compile(scene, camera);
+      terrainGroup.visible = prevVis;
+    }, 120);
+
+    // Tectonic crust fracture group (dark basalt shards + warm magma point light as the 3D crust block emerges)
+    const fractureGroup = new THREE.Group();
+    fractureGroup.position.set(1.25, -0.32, 3.65);
+    fractureGroup.visible = false;
+    scene.add(fractureGroup);
+
+    const fractureGlowLight = new THREE.PointLight(0xf97316, 0, 3.5, 1.5);
+    fractureGroup.add(fractureGlowLight);
+
+    const shardGeo = new THREE.DodecahedronGeometry(0.065, 0);
+    const shardMat = new THREE.MeshStandardMaterial({
+      color: 0x2a231e,
+      emissive: 0xea580c,
+      emissiveIntensity: 0.28,
+      roughness: 0.92,
+      metalness: 0.08,
+      transparent: true,
+      opacity: 0,
+    });
+    const fractureShards: { mesh: THREE.Mesh; angle: number; speed: number }[] = [];
+    for (let i = 0; i < 12; i++) {
+      const angle = (i / 12) * Math.PI * 2 + (i % 3) * 0.18;
+      const mesh = new THREE.Mesh(shardGeo, shardMat);
+      mesh.scale.set(0.75 + (i % 3) * 0.35, 0.55 + ((i + 1) % 3) * 0.25, 0.85);
+      fractureGroup.add(mesh);
+      fractureShards.push({ mesh, angle, speed: 0.85 + (i % 3) * 0.25 });
+    }
+
     // Smooth camera & object interpolation vectors
     const currentCamPos = new THREE.Vector3(0, 0.35, 9.2);
     const targetCamPos = new THREE.Vector3(0, 0.35, 9.2);
@@ -548,6 +586,7 @@ export function PlanetScene({
     const targetEarthPos = new THREE.Vector3(0.35, -3.15, 0.2);
     const targetMoonPos = new THREE.Vector3(-4.35, 1.85, -2.4);
     const targetMarsPos = new THREE.Vector3(4.5, 2.25, -4.8);
+    let targetEarthScale = 1;
     let targetMoonScale = 1;
     let targetMarsScale = 1;
     let targetAtmoIntensity = 1.05;
@@ -589,6 +628,7 @@ export function PlanetScene({
       // CONTINUOUS CAMERA & PLANET CHOREOGRAPHY ACROSS CHAPTERS 1 -> 5
       // =======================================================================
       let targetEarthOpacity = 1;
+      targetEarthScale = 1;
       if (ch <= 2) {
         // Chapters 1 & 2 shared continuous orbital approach:
         const t = Math.max(0, Math.min(1, introP));
@@ -615,14 +655,17 @@ export function PlanetScene({
         targetMoonScale = 1 - t * 0.18;
         targetMarsScale = 1 - t * 0.18;
       } else if (ch === 3) {
-        // Chapter 3: Camera descends to the 3D Stratified Terrain Block on the right
+        // Chapter 3: Camera dives into Earth's crust as it fractures open & extracts the 3D block
         const t = Math.max(0, Math.min(1, terrP));
         targetCamPos.set(0.1, 0.05, 5.35 - t * 0.25);
         targetLookAt.set(0.15, 0.0, 1.5);
 
-        targetEarthPos.set(-1.35, -6.8, -2.5);
-        targetAtmoIntensity = 0;
-        targetEarthOpacity = 0;
+        // Earth expands slightly as its crust cracks open, then fades out smoothly
+        targetEarthPos.set(0.75, -2.05, 0.25);
+        targetEarthScale = 1.15;
+        const earthFade = Math.min(1, Math.max(0, (terrainPresence - 0.25) / 0.65));
+        targetEarthOpacity = 1 - earthFade;
+        targetAtmoIntensity = (1 - earthFade) * 1.85;
 
         targetMoonPos.set(-6.4, 2.8, -5.2);
         targetMarsPos.set(6.4, 3.0, -6.5);
@@ -668,6 +711,12 @@ export function PlanetScene({
       camera.lookAt(currentLookAt);
 
       earthGroup.position.lerp(targetEarthPos, bodyDamp);
+      const nextEarthScale = THREE.MathUtils.lerp(
+        earthGroup.scale.x,
+        targetEarthScale,
+        bodyDamp
+      );
+      earthGroup.scale.setScalar(nextEarthScale);
       earthMat.opacity = THREE.MathUtils.lerp(
         earthMat.opacity,
         targetEarthOpacity,
@@ -728,6 +777,28 @@ export function PlanetScene({
         terrainDamp
       );
 
+      // Tectonic fracture burst animation as Earth cracks open (peaks around terrainPresence = 0.4)
+      const fractureProgress = Math.min(
+        1,
+        Math.max(0, (terrainPresence - 0.02) / 0.78)
+      );
+      const fractureBurst = Math.sin(fractureProgress * Math.PI);
+      fractureGroup.visible = fractureBurst > 0.01 && !prefersReducedMotion;
+      if (fractureGroup.visible) {
+        fractureGlowLight.intensity = fractureBurst * 3.2;
+        shardMat.opacity = fractureBurst * 0.95;
+        const radialSpread = 0.24 + terrainPresence * 1.35;
+        for (const s of fractureShards) {
+          s.mesh.position.set(
+            Math.cos(s.angle) * radialSpread * s.speed,
+            Math.sin(s.angle) * radialSpread * 0.75 * s.speed,
+            terrainPresence * 0.65 * s.speed
+          );
+          s.mesh.rotation.x += dt * 2.4 * s.speed;
+          s.mesh.rotation.y += dt * 1.9 * s.speed;
+        }
+      }
+
       const isTerrainVisible = terrainPresence > 0.008;
       if (isTerrainVisible && !terrainRefs) {
         ensureTerrainBuilt();
@@ -757,11 +828,12 @@ export function PlanetScene({
         const deployRatio = targetGap / maxGap;
         const stratumDamp = dampFactor(dt, 6.0);
 
-        terrainGroup.scale.setScalar(0.62 + 0.24 * easedPresence);
+        // Emerge directly out of the fractured crust on Earth's front surface
+        terrainGroup.scale.setScalar(0.32 + 0.54 * easedPresence);
         terrainGroup.position.set(
-          1.45 + (1 - easedPresence) * 1.15,
-          -0.06 - (1 - easedPresence) * 0.45,
-          1.45 - (1 - easedPresence) * 1.2
+          THREE.MathUtils.lerp(1.25, 1.45, easedPresence),
+          THREE.MathUtils.lerp(-0.32, -0.06, easedPresence),
+          THREE.MathUtils.lerp(3.72, 1.45, easedPresence)
         );
 
         const reliefScaleZ = 0.14 + deployRatio * 0.86;
@@ -872,6 +944,7 @@ export function PlanetScene({
 
     return () => {
       disposed = true;
+      window.clearTimeout(warmupTimer);
       window.removeEventListener("resize", handleResize);
       window.cancelAnimationFrame(animationFrameId);
       starGeo.dispose();
@@ -884,6 +957,9 @@ export function PlanetScene({
       moonMat.dispose();
       marsGeo.dispose();
       marsMat.dispose();
+      fractureGlowLight.dispose();
+      shardGeo.dispose();
+      shardMat.dispose();
       for (const item of terrainDisposables) {
         item.dispose();
       }
