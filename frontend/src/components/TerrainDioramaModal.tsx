@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import {
@@ -397,11 +398,11 @@ export function TerrainDioramaModal({ target, onClose }: TerrainDioramaModalProp
     return dataset.widthMeters / Math.max(1, grid - 1);
   }, [dataset]);
 
-  if (!target) return null;
+  if (!target || typeof document === "undefined") return null;
 
-  return (
+  return createPortal(
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-3 backdrop-blur-sm md:p-6"
+      className="fixed inset-0 z-[120] flex items-center justify-center bg-black/80 p-3 backdrop-blur-sm md:p-6"
       role="dialog"
       aria-modal="true"
       aria-label={`Gemelo Topográfico 3D HD de ${target.name}`}
@@ -728,6 +729,7 @@ export function TerrainDioramaModal({ target, onClose }: TerrainDioramaModalProp
           </aside>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
