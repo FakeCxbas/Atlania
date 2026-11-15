@@ -6,18 +6,11 @@ export interface StratumTextureSet {
   roughnessMap: THREE.CanvasTexture;
 }
 
-export interface LavaTubeTextureSet {
-  map: THREE.CanvasTexture;
-  normalMap: THREE.CanvasTexture;
-  emissiveMap: THREE.CanvasTexture;
-}
-
 export interface TerrainStrataTextureBundle {
   layer1: StratumTextureSet;
   layer2: StratumTextureSet;
   layer3: StratumTextureSet;
   layer4: StratumTextureSet;
-  lavaTube: LavaTubeTextureSet;
   dispose: () => void;
 }
 
@@ -299,58 +292,19 @@ export function createTerrainStrataTextures(
     };
   });
 
-  // Layer 4: Deep dark basaltic subsurface with cryosphere ice veins
-  const layer4 = makeLayerMaps(4.6, (u, v) => {
-    const rock = fbm(u * 10, v * 10, 401, 5);
-    const vein = ridgedMultifractal(u * 7.5, v * 7.5, 419, 5);
-    let rgb = mixRgb([20, 23, 30], [46, 50, 62], rock);
-    let rough = 0.86;
-    if (vein > 0.74) {
-      const ice = Math.min(1, (vein - 0.74) * 3.8);
-      rgb = mixRgb(rgb, [132, 210, 248], ice * 0.75);
-      rough = lerp(0.86, 0.22, ice);
+  // Layer 4: Deep rough volcanic basaltic crust with subtle crystalline cryosphere veins
+  const layer4 = makeLayerMaps(5.0, (u, v) => {
+    const rock = fbm(u * 12, v * 12, 401, 5);
+    const fracture = ridgedMultifractal(u * 9.0, v * 9.0, 419, 5);
+    let rgb = mixRgb([16, 18, 23], [38, 41, 49], rock);
+    let rough = 0.9;
+    if (fracture > 0.78) {
+      const crystal = Math.min(1, (fracture - 0.78) * 4.2);
+      rgb = mixRgb(rgb, [112, 168, 204], crystal * 0.55);
+      rough = lerp(0.9, 0.34, crystal);
     }
-    return { rgb, height: rock * 0.6 + vein * 0.4, roughness: rough };
+    return { rgb, height: rock * 0.62 + fracture * 0.38, roughness: rough };
   });
-
-  // Lava tube basaltic crust + warm thermal fissures (512px)
-  const tubeSize = Math.min(512, size);
-  const tubeColorBuf = new Uint8ClampedArray(tubeSize * tubeSize * 4);
-  const tubeEmissiveBuf = new Uint8ClampedArray(tubeSize * tubeSize * 4);
-  const tubeHeights = new Float32Array(tubeSize * tubeSize);
-  for (let y = 0; y < tubeSize; y++) {
-    const v = y / (tubeSize - 1);
-    for (let x = 0; x < tubeSize; x++) {
-      const u = x / (tubeSize - 1);
-      const crust = fbm(u * 12, v * 8, 503, 4);
-      const fissure = ridgedMultifractal(u * 9, v * 6, 521, 4);
-      const pIdx = y * tubeSize + x;
-      const idx = pIdx * 4;
-
-      const rgb = mixRgb([24, 20, 22], [68, 44, 36], crust);
-      tubeColorBuf[idx] = clampByte(rgb[0]);
-      tubeColorBuf[idx + 1] = clampByte(rgb[1]);
-      tubeColorBuf[idx + 2] = clampByte(rgb[2]);
-      tubeColorBuf[idx + 3] = 255;
-
-      let eRgb: [number, number, number] = [18, 5, 2];
-      if (fissure > 0.65) {
-        const glow = Math.min(1, (fissure - 0.65) * 3.1);
-        eRgb = mixRgb([120, 28, 6], [255, 152, 56], glow);
-      }
-      tubeEmissiveBuf[idx] = clampByte(eRgb[0]);
-      tubeEmissiveBuf[idx + 1] = clampByte(eRgb[1]);
-      tubeEmissiveBuf[idx + 2] = clampByte(eRgb[2]);
-      tubeEmissiveBuf[idx + 3] = 255;
-
-      tubeHeights[pIdx] = crust * 0.5 + fissure * 0.5;
-    }
-  }
-  const lavaTube: LavaTubeTextureSet = {
-    map: createCanvasTextureFromBuffer(tubeSize, tubeColorBuf, true),
-    normalMap: buildNormalMapFromHeightfield(tubeSize, tubeHeights, 4.0),
-    emissiveMap: createCanvasTextureFromBuffer(tubeSize, tubeEmissiveBuf, true),
-  };
 
   const allTextures: THREE.CanvasTexture[] = [
     layer1.map,
@@ -365,9 +319,6 @@ export function createTerrainStrataTextures(
     layer4.map,
     layer4.normalMap,
     layer4.roughnessMap,
-    lavaTube.map,
-    lavaTube.normalMap,
-    lavaTube.emissiveMap,
   ];
 
   return {
@@ -375,7 +326,6 @@ export function createTerrainStrataTextures(
     layer2,
     layer3,
     layer4,
-    lavaTube,
     dispose: () => {
       for (const tex of allTextures) {
         tex.dispose();
@@ -521,23 +471,31 @@ float bandRough = strataFbm(vec3(0.0, 0.0, vStrataLocalPos.z * 16.0));
 roughnessFactor = clamp(mix(0.45, 0.94, bandRough), 0.4, 0.96);
 `;
     } else {
-      // subsurface: deep dark basalt + crystalline cryosphere ice veins + subtle thermal cavity glow
+      // subsurface: deep rough volcanic basalt + subtle crystalline cryosphere mineral veins + faint geothermal grotto glow
       colorInjection = /* glsl */ `
-float rockGrain = strataFbm(vStrataLocalPos * 28.0);
-float iceNoise = 1.0 - abs(strataNoise3D(vStrataLocalPos * 9.5 + vec3(1.7)) * 2.0 - 1.0);
-float iceVein = smoothstep(0.84, 0.97, iceNoise);
-vec3 deepBasalt = vec3(0.08, 0.09, 0.12) * (0.75 + 0.5 * rockGrain);
-vec3 cryoIce = vec3(0.48, 0.82, 0.98);
-vec3 subCol = mix(deepBasalt, cryoIce, iceVein * 0.72);
-float sideDist = max(abs(vStrataLocalPos.x), abs(vStrataLocalPos.y));
-float tubeHint = smoothstep(0.36, 0.05, length(vStrataLocalPos.xy - vec2(0.15, -0.1)) + abs(vStrataLocalPos.z + 0.14) * 1.8) * smoothstep(0.75, 0.98, sideDist);
-subCol += vec3(0.75, 0.24, 0.04) * tubeHint * 0.55;
-diffuseColor.rgb = mix(diffuseColor.rgb, subCol, 0.76);
+float rockGrain = strataFbm(vStrataLocalPos * 32.0);
+float microPit = strataFbm(vStrataLocalPos * 64.0);
+float iceNoise = 1.0 - abs(strataNoise3D(vStrataLocalPos * 10.5 + vec3(1.7)) * 2.0 - 1.0);
+float iceVein = smoothstep(0.87, 0.98, iceNoise);
+vec3 deepBasalt = vec3(0.065, 0.072, 0.088) * (0.68 + 0.62 * rockGrain) * (0.85 + 0.3 * microPit);
+vec3 cryoCrystal = vec3(0.42, 0.68, 0.84);
+vec3 subCol = mix(deepBasalt, cryoCrystal, iceVein * 0.52);
+
+// Subtle warm geothermal glow inside sculpted cross-section grottos
+float frontWall = smoothstep(0.72, 0.98, -vStrataLocalPos.y);
+float rightWall = smoothstep(0.72, 0.98, vStrataLocalPos.x);
+float grottoA = exp(-pow((vStrataLocalPos.x + 0.25) * 4.2, 2.0) - pow((vStrataLocalPos.z + 0.16) * 8.5, 2.0)) * frontWall;
+float grottoB = exp(-pow((vStrataLocalPos.y - 0.18) * 4.5, 2.0) - pow((vStrataLocalPos.z + 0.17) * 8.5, 2.0)) * rightWall;
+float grottoMask = clamp(grottoA + grottoB, 0.0, 1.0);
+subCol = mix(subCol, vec3(0.03, 0.02, 0.02), grottoMask * 0.72);
+subCol += vec3(0.55, 0.18, 0.04) * pow(grottoMask, 1.8) * 0.65;
+
+diffuseColor.rgb = mix(diffuseColor.rgb, subCol, 0.84);
 `;
       roughnessInjection = /* glsl */ `
-float iceN = 1.0 - abs(strataNoise3D(vStrataLocalPos * 9.5 + vec3(1.7)) * 2.0 - 1.0);
-float iceV = smoothstep(0.84, 0.97, iceN);
-roughnessFactor = mix(clamp(roughnessFactor, 0.72, 0.95), 0.18, iceV * 0.85);
+float iceN = 1.0 - abs(strataNoise3D(vStrataLocalPos * 10.5 + vec3(1.7)) * 2.0 - 1.0);
+float iceV = smoothstep(0.87, 0.98, iceN);
+roughnessFactor = mix(clamp(roughnessFactor, 0.78, 0.97), 0.28, iceV * 0.75);
 `;
     }
 

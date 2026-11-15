@@ -215,8 +215,13 @@ export function PlanetScene({
     );
     const earthMat = new THREE.MeshStandardMaterial({
       map: earthTexture,
-      roughness: 0.58,
-      metalness: 0.1,
+      emissiveMap: earthTexture,
+      emissive: new THREE.Color(0x1b365d),
+      emissiveIntensity: 0.34,
+      roughness: 0.65,
+      metalness: 0.06,
+      transparent: true,
+      opacity: 1,
     });
     const earthMesh = new THREE.Mesh(earthGeo, earthMat);
     earthMesh.rotation.z = 0.18;
@@ -291,7 +296,8 @@ export function PlanetScene({
 
     // 5. Chapter 3 High-Density Photorealistic 4-Layer 3D Terrain Block
     const terrainGroup = new THREE.Group();
-    terrainGroup.position.set(1.18, 0.02, 2.25);
+    terrainGroup.position.set(1.55, -0.05, 1.55);
+    terrainGroup.scale.setScalar(0.86);
     terrainGroup.rotation.x = -1.16;
     terrainGroup.rotation.z = 0.58;
     terrainGroup.visible = false;
@@ -302,14 +308,17 @@ export function PlanetScene({
     const terrainDisposables: Array<{ dispose: () => void }> = [];
 
     // Builds 4 watertight vertical cross-section walls matching the 180x180 top terrain edge contour
+    // When carveGrottos is true (Layer 4), carves natural arched subterranean cavities into front & right cuts
     const buildSkirtGeometry = (
       size: number,
       segs: number,
       heightScale: number,
       phase: number,
-      bottomZ: number
+      bottomZ: number,
+      carveGrottos = false
     ) => {
       const halfSize = size * 0.5;
+      const vSegs = carveGrottos ? 14 : 1;
       const positions: number[] = [];
       const uvs: number[] = [];
       const indices: number[] = [];
@@ -317,31 +326,50 @@ export function PlanetScene({
 
       const addWall = (
         getCoord: (t: number) => [number, number],
-        uOffset: number
+        inwardDir: [number, number],
+        uOffset: number,
+        wallIndex: number
       ) => {
-        for (let i = 0; i <= segs; i++) {
-          const t = i / segs;
-          const [wx, wy] = getCoord(t);
-          const topZ = evalTerrainHeight(wx, wy, heightScale, phase);
-          const u = uOffset + t;
-          positions.push(wx, wy, topZ, wx, wy, bottomZ);
-          uvs.push(u, 1, u, 0);
+        for (let row = 0; row <= vSegs; row++) {
+          const v = row / vSegs; // 0 = bottom, 1 = top
+          for (let i = 0; i <= segs; i++) {
+            const t = i / segs;
+            let [wx, wy] = getCoord(t);
+            const topZ = evalTerrainHeight(wx, wy, heightScale, phase);
+            const wz = bottomZ + (topZ - bottomZ) * v;
+
+            if (carveGrottos && (wallIndex === 0 || wallIndex === 1)) {
+              const grottoCenterT = wallIndex === 0 ? 0.38 : 0.6;
+              const archSpan = Math.exp(-Math.pow((t - grottoCenterT) * 7.2, 2));
+              const archHeight = Math.sin(Math.min(1, v / 0.72) * Math.PI) * (v < 0.72 ? 1 : 0);
+              const recess = archSpan * archHeight * 0.28;
+              wx += inwardDir[0] * recess;
+              wy += inwardDir[1] * recess;
+            }
+
+            const u = uOffset + t;
+            positions.push(wx, wy, wz);
+            uvs.push(u, v);
+          }
         }
-        for (let i = 0; i < segs; i++) {
-          const a = vertOffset + i * 2;
-          const b = a + 1;
-          const c = a + 2;
-          const d = a + 3;
-          indices.push(a, b, c, c, b, d);
+        const stride = segs + 1;
+        for (let row = 0; row < vSegs; row++) {
+          for (let i = 0; i < segs; i++) {
+            const a = vertOffset + row * stride + i;
+            const b = a + 1;
+            const c = a + stride;
+            const d = c + 1;
+            indices.push(a, c, b, b, c, d);
+          }
         }
-        vertOffset += (segs + 1) * 2;
+        vertOffset += (vSegs + 1) * stride;
       };
 
       // Front (-Y), Right (+X), Back (+Y), Left (-X)
-      addWall((t) => [-halfSize + t * size, -halfSize], 0);
-      addWall((t) => [halfSize, -halfSize + t * size], 1);
-      addWall((t) => [halfSize - t * size, halfSize], 2);
-      addWall((t) => [-halfSize, halfSize - t * size], 3);
+      addWall((t) => [-halfSize + t * size, -halfSize], [0, 1], 0, 0);
+      addWall((t) => [halfSize, -halfSize + t * size], [-1, 0], 1, 1);
+      addWall((t) => [halfSize - t * size, halfSize], [0, -1], 2, 2);
+      addWall((t) => [-halfSize, halfSize - t * size], [1, 0], 3, 3);
 
       const geo = new THREE.BufferGeometry();
       geo.setAttribute(
@@ -365,6 +393,7 @@ export function PlanetScene({
       topTextures?: StratumTextureSet;
       sideTextures?: StratumTextureSet;
       atmosphereVeil?: boolean;
+      carveGrottos?: boolean;
     }) => {
       const group = new THREE.Group();
 
@@ -446,7 +475,8 @@ export function PlanetScene({
         gridSegs,
         options.heightScale,
         options.phase,
-        bottomZ
+        bottomZ,
+        Boolean(options.carveGrottos)
       );
       terrainDisposables.push(skirtGeo);
 
@@ -521,62 +551,24 @@ export function PlanetScene({
       sideTextures: strataTextures?.layer3,
     });
 
-    // Layer 4 (Bottom): Subsuelo, Criósfera y Tubos de Lava
+    // Layer 4 (Bottom): Subsuelo, Criósfera y Cavidades Basálticas Esculpidas
     const layer4Subsurface = createRealisticStratum({
-      fallbackColor: 0x1e222b,
+      fallbackColor: 0x1a1d24,
       heightScale: 0.34,
-      slabThickness: 0.32,
+      slabThickness: 0.36,
       phase: 2.05,
-      roughness: 0.88,
-      normalScale: 1.5,
+      roughness: 0.9,
+      normalScale: 1.6,
       shaderMode: "subsurface",
       topTextures: strataTextures?.layer4,
       sideTextures: strataTextures?.layer4,
+      carveGrottos: true,
     });
 
-    // Realistic organic subterranean lava tube conduits visible in Layer 4 cross-section
-    const mainTubeCurve = new THREE.CatmullRomCurve3([
-      new THREE.Vector3(-0.98, -0.32, -0.16),
-      new THREE.Vector3(-0.34, -0.06, -0.14),
-      new THREE.Vector3(0.32, 0.2, -0.17),
-      new THREE.Vector3(0.98, 0.4, -0.15),
-    ]);
-    const tubeGeo = new THREE.TubeGeometry(mainTubeCurve, 40, 0.095, 18, false);
-
-    const branchTubeCurve = new THREE.CatmullRomCurve3([
-      new THREE.Vector3(-0.15, -0.02, -0.15),
-      new THREE.Vector3(0.18, -0.45, -0.17),
-      new THREE.Vector3(0.62, -0.96, -0.16),
-    ]);
-    const branchTubeGeo = new THREE.TubeGeometry(
-      branchTubeCurve,
-      28,
-      0.065,
-      14,
-      false
-    );
-
-    const tubeMat = new THREE.MeshStandardMaterial({
-      color: 0x2b211f,
-      map: strataTextures?.lavaTube.map ?? null,
-      normalMap: strataTextures?.lavaTube.normalMap ?? null,
-      normalScale: new THREE.Vector2(1.2, 1.2),
-      emissive: 0xf97316,
-      emissiveMap: strataTextures?.lavaTube.emissiveMap ?? null,
-      emissiveIntensity: 0.95,
-      roughness: 0.82,
-      metalness: 0.06,
-      transparent: true,
-      opacity: 0.98,
-    });
-    const tubeMesh = new THREE.Mesh(tubeGeo, tubeMat);
-    const branchTubeMesh = new THREE.Mesh(branchTubeGeo, tubeMat);
-
-    // Subtle warm thermal light inside the lava tube cavity
-    const lavaGlowLight = new THREE.PointLight(0xf97316, 0.85, 1.9, 2);
-    lavaGlowLight.position.set(0.1, 0.05, -0.14);
-    layer4Subsurface.group.add(tubeMesh, branchTubeMesh, lavaGlowLight);
-    terrainDisposables.push(branchTubeGeo);
+    // Very subtle warm geothermal glow inside Layer 4's sculpted cross-section grottos
+    const lavaGlowLight = new THREE.PointLight(0xea580c, 0.45, 1.5, 2);
+    lavaGlowLight.position.set(-0.22, -0.82, -0.18);
+    layer4Subsurface.group.add(lavaGlowLight);
 
     terrainGroup.add(layer1Surface.group);
     terrainGroup.add(layer2Relief.group);
@@ -610,22 +602,21 @@ export function PlanetScene({
       // =======================================================================
       // CONTINUOUS CAMERA & PLANET CHOREOGRAPHY ACROSS CHAPTERS 1 -> 5
       // =======================================================================
+      let earthFade = 1.0;
+
       if (ch <= 2) {
-        // Chapters 1 & 2 shared continuous orbital approach:
-        // As introP goes 0 -> 1:
-        // - Camera advances directly toward Earth (z: 9.2 -> 4.95)
-        // - Earth rises and grows in the frame, atmosphere intensifies
-        // - Moon and Mars drift outward in parallax depth
+        // Chapters 1 & 2 shared continuous orbital approach into Earth's atmosphere:
         const t = Math.max(0, Math.min(1, introP));
-        targetCamPos.set(0.18 * t, 0.35 - t * 0.55, 9.2 - t * 4.25);
-        targetLookAt.set(0.25 * t, -0.55 - t * 0.35, 0);
+        targetCamPos.set(0.18 * t, 0.35 - t * 0.52, 9.2 - t * 4.55);
+        targetLookAt.set(0.25 * t, -0.55 - t * 0.3, 0);
 
         earthGroup.position.set(
-          THREE.MathUtils.lerp(0.35, 0.75, t),
-          THREE.MathUtils.lerp(-3.15, -2.05, t),
-          THREE.MathUtils.lerp(0.2, 0.75, t)
+          THREE.MathUtils.lerp(0.35, 0.82, t),
+          THREE.MathUtils.lerp(-3.15, -1.95, t),
+          THREE.MathUtils.lerp(0.2, 0.9, t)
         );
-        atmoUniforms.uIntensity.value = 1.05 + t * 0.65;
+        atmoUniforms.uIntensity.value = 1.05 + t * 0.85;
+        earthFade = t > 0.86 ? Math.max(0.25, 1.0 - (t - 0.86) * 3.5) : 1.0;
 
         moonMesh.position.set(
           -4.35 - t * 1.4,
@@ -638,14 +629,15 @@ export function PlanetScene({
           -4.8 - t * 1.5
         );
       } else if (ch === 3) {
-        // Chapter 3: Camera descends to the 3D Stratified Terrain Block on the right
+        // Chapter 3: Atmospheric descent into the 3D Stratified Terrain Block framed on the right
         const t = Math.max(0, Math.min(1, terrP));
-        targetCamPos.set(0.1, 0.05, 5.35 - t * 0.25);
-        targetLookAt.set(0.15, 0.0, 1.5);
+        targetCamPos.set(-0.32, 0.08, 6.75 - t * 0.3);
+        targetLookAt.set(-0.28, 0.0, 1.4);
 
-        // Push Earth limb lower/back so the 3D terrain block sits in clear dark space on the right
-        earthGroup.position.lerp(new THREE.Vector3(-1.35, -3.95, -1.2), 0.12);
-        atmoUniforms.uIntensity.value = 1.35;
+        // Earth smoothly fades away with atmospheric bloom as the 3D strata emerge
+        earthFade = Math.max(0, 1.0 - t * 4.5);
+        earthGroup.position.lerp(new THREE.Vector3(-1.35, -3.55, -0.8), 0.08);
+        atmoUniforms.uIntensity.value = 1.45 * earthFade;
       } else if (ch === 4) {
         // Chapter 4: Planetary Comparison (Earth on left, Moon or Mars on right)
         targetCamPos.set(0, 0.1, 6.8);
@@ -670,6 +662,9 @@ export function PlanetScene({
         marsMesh.position.lerp(new THREE.Vector3(4.4, 2.1, -4.5), 0.08);
       }
 
+      earthMat.opacity = THREE.MathUtils.lerp(earthMat.opacity, earthFade, 0.14);
+      earthGroup.visible = earthMat.opacity > 0.015;
+
       const lerpFactor = prefersReducedMotion ? 0.25 : 0.09;
       currentCamPos.lerp(targetCamPos, lerpFactor);
       currentLookAt.lerp(targetLookAt, lerpFactor);
@@ -692,40 +687,44 @@ export function PlanetScene({
         marsMesh.rotation.y = elapsed * 0.045 + p * 1.6;
       }
 
-      // Chapter 3 Volumetric 3D Terrain Layers separation & rotation
-      const showTerrain = ch === 3;
+      // Chapter 3 Volumetric 3D Terrain Layers separation, staggered atmospheric reveal & rotation
+      const showTerrain = ch === 3 || (ch === 2 && introP > 0.88);
       terrainGroup.visible = showTerrain;
       if (showTerrain) {
-        terrainGroup.position.set(1.18, 0.02, 2.25);
-        // Vertical spacing between adjacent strata in 3D space: from 0.22 (compact) to 0.78 (expanded)
-        const stepZ = 0.22 + Math.max(0, Math.min(1, sep)) * 0.56;
+        terrainGroup.position.set(1.55, -0.05, 1.55);
+        const revealProgress =
+          ch === 2 ? Math.max(0, (introP - 0.88) / 0.12) * 0.25 : 0.25 + terrP * 0.75;
+        const effectiveSep = ch === 2 ? 0 : Math.max(0, Math.min(1, sep));
+
+        // Wide vertical spacing between adjacent strata: 0.44 (compact) -> 1.22 (expanded)
+        const stepZ = 0.44 + effectiveSep * 0.78;
 
         layer1Surface.group.position.z = THREE.MathUtils.lerp(
           layer1Surface.group.position.z,
-          stepZ * 1.5,
+          stepZ * 1.55,
           0.12
         );
         layer2Relief.group.position.z = THREE.MathUtils.lerp(
           layer2Relief.group.position.z,
-          stepZ * 0.5,
+          stepZ * 0.52,
           0.12
         );
         layer3Geology.group.position.z = THREE.MathUtils.lerp(
           layer3Geology.group.position.z,
-          -stepZ * 0.5,
+          -stepZ * 0.52,
           0.12
         );
         layer4Subsurface.group.position.z = THREE.MathUtils.lerp(
           layer4Subsurface.group.position.z,
-          -stepZ * 1.5,
+          -stepZ * 1.55,
           0.12
         );
 
         // Rotate terrain block gently with scroll + time to reveal 3D relief & thickness
         terrainGroup.rotation.z =
           0.52 +
-          sep * 0.38 +
-          (prefersReducedMotion ? 0 : Math.sin(elapsed * 0.35) * 0.06);
+          effectiveSep * 0.42 +
+          (prefersReducedMotion ? 0 : Math.sin(elapsed * 0.35) * 0.05);
 
         const applyFocusOpacity = (
           stratum: {
@@ -735,11 +734,18 @@ export function PlanetScene({
           },
           idx: 1 | 2 | 3 | 4
         ) => {
+          const staggerStart = (idx - 1) * 0.12;
+          const staggerFade = Math.max(
+            0,
+            Math.min(1, (revealProgress - staggerStart) / 0.22)
+          );
           const active = fLayer === 0 || fLayer === idx;
-          stratum.surfaceMat.opacity = active ? 0.98 : 0.14;
-          stratum.sideMat.opacity = active ? 0.98 : 0.12;
+          const targetAlpha = (active ? 0.98 : 0.14) * staggerFade;
+          stratum.surfaceMat.opacity = targetAlpha;
+          stratum.sideMat.opacity = (active ? 0.98 : 0.12) * staggerFade;
           if (stratum.atmoVeilUniforms) {
-            stratum.atmoVeilUniforms.uOpacity.value = active ? 0.22 : 0.03;
+            stratum.atmoVeilUniforms.uOpacity.value =
+              (active ? 0.22 : 0.03) * staggerFade;
           }
         };
 
@@ -749,8 +755,8 @@ export function PlanetScene({
         applyFocusOpacity(layer4Subsurface, 4);
 
         const layer4Active = fLayer === 0 || fLayer === 4;
-        tubeMat.opacity = layer4Active ? 0.98 : 0.18;
-        lavaGlowLight.intensity = layer4Active ? 0.85 : 0.1;
+        const layer4Fade = Math.max(0, Math.min(1, (revealProgress - 0.36) / 0.22));
+        lavaGlowLight.intensity = (layer4Active ? 0.45 : 0.06) * layer4Fade;
       }
 
       renderer.render(scene, camera);
@@ -786,8 +792,6 @@ export function PlanetScene({
         item.dispose();
       }
       strataTextures?.dispose();
-      tubeGeo.dispose();
-      tubeMat.dispose();
       earthTexture.dispose();
       moonTexture.dispose();
       marsTexture.dispose();
