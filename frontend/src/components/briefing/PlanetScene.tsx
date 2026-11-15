@@ -114,12 +114,14 @@ export function PlanetScene({
     );
     camera.position.set(0, 0.35, 9.2);
 
-    // Physically convincing space illumination: strong solar key light + deep space fill
-    const ambientLight = new THREE.AmbientLight(0x0f172a, 0.95);
+    // Physically convincing space illumination: single warm solar key light + subtle deep-space fill
+    const sunDirection = new THREE.Vector3(9.5, 6.8, 2.2).normalize();
+
+    const ambientLight = new THREE.AmbientLight(0x0b1120, 0.52);
     scene.add(ambientLight);
 
-    const sunLight = new THREE.DirectionalLight(0xfffbeb, 3.2);
-    sunLight.position.set(8, 6, 7);
+    const sunLight = new THREE.DirectionalLight(0xfff4dc, 3.6);
+    sunLight.position.copy(sunDirection).multiplyScalar(14);
     if (!isLowPowerDevice) {
       sunLight.castShadow = true;
       sunLight.shadow.mapSize.width = 1024;
@@ -135,9 +137,9 @@ export function PlanetScene({
     }
     scene.add(sunLight);
 
-    const earthshineLight = new THREE.DirectionalLight(0x00d9f5, 1.15);
-    earthshineLight.position.set(-7, -3, 4);
-    scene.add(earthshineLight);
+    const spaceFillLight = new THREE.DirectionalLight(0x475569, 0.34);
+    spaceFillLight.position.set(-7, -3, 4);
+    scene.add(spaceFillLight);
 
     // 1. Multi-depth Parallax Starfield
     const starCount = isLowPowerDevice ? 800 : 1800;
@@ -202,53 +204,91 @@ export function PlanetScene({
     earthMesh.rotation.y = -1.35;
     earthGroup.add(earthMesh);
 
-    // Custom Fresnel Atmospheric Scattering Shader (FrontSide hugging Earth limb cleanly)
-    const atmoUniforms = {
-      uAtmosphereColor: { value: new THREE.Color(0x00d9f5) },
-      uHorizonColor: { value: new THREE.Color(0x38bdf8) },
-      uIntensity: { value: 1.05 },
+    // Sun-aligned Volumetric Atmospheric & Rim Scattering Helper
+    const createVolumetricScatterMat = (opts: {
+      horizonColor: number;
+      atmosphereColor: number;
+      terminatorColor: number;
+      intensity: number;
+      fresnelPower: number;
+      nightFloor: number;
+    }) => {
+      const uniforms = {
+        uSunDir: { value: sunDirection },
+        uHorizonColor: { value: new THREE.Color(opts.horizonColor) },
+        uAtmosphereColor: { value: new THREE.Color(opts.atmosphereColor) },
+        uTerminatorColor: { value: new THREE.Color(opts.terminatorColor) },
+        uIntensity: { value: opts.intensity },
+        uPower: { value: opts.fresnelPower },
+        uNightFloor: { value: opts.nightFloor },
+      };
+      const material = new THREE.ShaderMaterial({
+        uniforms,
+        vertexShader: `
+          varying vec3 vViewNormal;
+          varying vec3 vWorldNormal;
+          varying vec3 vViewPosition;
+          void main() {
+            vViewNormal = normalize(normalMatrix * normal);
+            vWorldNormal = normalize(mat3(modelMatrix) * normal);
+            vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
+            vViewPosition = -mvPosition.xyz;
+            gl_Position = projectionMatrix * mvPosition;
+          }
+        `,
+        fragmentShader: `
+          uniform vec3 uSunDir;
+          uniform vec3 uHorizonColor;
+          uniform vec3 uAtmosphereColor;
+          uniform vec3 uTerminatorColor;
+          uniform float uIntensity;
+          uniform float uPower;
+          uniform float uNightFloor;
+          varying vec3 vViewNormal;
+          varying vec3 vWorldNormal;
+          varying vec3 vViewPosition;
+          void main() {
+            vec3 viewDir = normalize(vViewPosition);
+            float ndotv = max(dot(normalize(vViewNormal), viewDir), 0.0);
+            float fresnel = pow(1.0 - ndotv, uPower);
+
+            float sunAlign = dot(normalize(vWorldNormal), normalize(uSunDir));
+            float dayMask = smoothstep(-0.32, 0.58, sunAlign);
+            float terminator = smoothstep(-0.26, 0.06, sunAlign) * (1.0 - smoothstep(0.06, 0.52, sunAlign));
+
+            vec3 baseCol = mix(uHorizonColor, uAtmosphereColor, fresnel);
+            vec3 col = mix(baseCol, uTerminatorColor, terminator * 0.65);
+            float edgeFade = smoothstep(0.02, 0.42, ndotv);
+            float alpha = fresnel * edgeFade * mix(uNightFloor, 1.0, dayMask) * uIntensity;
+            gl_FragColor = vec4(col, alpha);
+          }
+        `,
+        transparent: true,
+        blending: THREE.AdditiveBlending,
+        side: THREE.FrontSide,
+        depthWrite: false,
+      });
+      return { material, uniforms };
     };
+
+    const { material: atmoMat, uniforms: atmoUniforms } =
+      createVolumetricScatterMat({
+        horizonColor: 0x38bdf8,
+        atmosphereColor: 0x00d9f5,
+        terminatorColor: 0xfde68a,
+        intensity: 1.05,
+        fresnelPower: 3.1,
+        nightFloor: 0.08,
+      });
     const atmoGeo = new THREE.SphereGeometry(
-      earthRadius * 1.022,
+      earthRadius * 1.028,
       sphereSegments,
       sphereSegments
     );
-    const atmoMat = new THREE.ShaderMaterial({
-      uniforms: atmoUniforms,
-      vertexShader: `
-        varying vec3 vNormal;
-        varying vec3 vViewPosition;
-        void main() {
-          vNormal = normalize(normalMatrix * normal);
-          vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
-          vViewPosition = -mvPosition.xyz;
-          gl_Position = projectionMatrix * mvPosition;
-        }
-      `,
-      fragmentShader: `
-        uniform vec3 uAtmosphereColor;
-        uniform vec3 uHorizonColor;
-        uniform float uIntensity;
-        varying vec3 vNormal;
-        varying vec3 vViewPosition;
-        void main() {
-          vec3 viewDir = normalize(vViewPosition);
-          float ndotv = max(dot(normalize(vNormal), viewDir), 0.0);
-          float fresnel = pow(1.0 - ndotv, 3.4);
-          vec3 col = mix(uHorizonColor, uAtmosphereColor, fresnel);
-          gl_FragColor = vec4(col, fresnel * 0.72 * uIntensity);
-        }
-      `,
-      transparent: true,
-      blending: THREE.AdditiveBlending,
-      side: THREE.FrontSide,
-      depthWrite: false,
-    });
     const atmoMesh = new THREE.Mesh(atmoGeo, atmoMat);
     earthGroup.add(atmoMesh);
 
-    // 4. Moon & Mars in Distinct Depth Planes (No competing with Hero text)
-    // Moon: Mid-ground upper-left orbital plane
+    // 4. Moon & Mars in Distinct Depth Planes (Sun-aligned volumetric rim & dust haze)
     const moonGeo = new THREE.SphereGeometry(0.46, 40, 40);
     const moonMat = new THREE.MeshStandardMaterial({
       map: moonTexture,
@@ -257,9 +297,20 @@ export function PlanetScene({
     });
     const moonMesh = new THREE.Mesh(moonGeo, moonMat);
     moonMesh.position.set(-4.35, 1.85, -2.4);
+    const { material: moonRimMat } = createVolumetricScatterMat({
+      horizonColor: 0xe2e8f0,
+      atmosphereColor: 0xf8fafc,
+      terminatorColor: 0xfef3c7,
+      intensity: 0.42,
+      fresnelPower: 4.0,
+      nightFloor: 0.02,
+    });
+    moonMesh.add(
+      new THREE.Mesh(new THREE.SphereGeometry(0.46 * 1.032, 40, 40), moonRimMat)
+    );
     scene.add(moonMesh);
 
-    // Mars: Deep-background upper-right orbital plane
+    // Mars: Deep-background upper-right orbital plane + dusty golden-amber atmosphere
     const marsGeo = new THREE.SphereGeometry(0.46, 40, 40);
     const marsMat = new THREE.MeshStandardMaterial({
       map: marsTexture,
@@ -268,6 +319,17 @@ export function PlanetScene({
     });
     const marsMesh = new THREE.Mesh(marsGeo, marsMat);
     marsMesh.position.set(4.5, 2.25, -4.8);
+    const { material: marsAtmoMat } = createVolumetricScatterMat({
+      horizonColor: 0xe07a5f,
+      atmosphereColor: 0xf5b971,
+      terminatorColor: 0xfef08a,
+      intensity: 0.88,
+      fresnelPower: 2.8,
+      nightFloor: 0.05,
+    });
+    marsMesh.add(
+      new THREE.Mesh(new THREE.SphereGeometry(0.46 * 1.048, 40, 40), marsAtmoMat)
+    );
     scene.add(marsMesh);
 
     // 5. Chapter 3 Volumetric 4-Layer 3D Terrain Block (Surface/Climate, Relief/DEM, Geology, Subsurface)
