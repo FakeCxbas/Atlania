@@ -174,7 +174,7 @@ export function ScrollScene({
       {/* Minimalist 5-Chapter Progress Dots (Desktop, no floating labels over cards) */}
       <aside
         aria-label="Progreso de capítulos del viaje espacial"
-        className="fixed top-1/2 right-5 z-30 hidden -translate-y-1/2 flex-col items-end gap-3 xl:flex"
+        className="fixed top-1/2 right-6 z-30 hidden -translate-y-1/2 flex-col items-end gap-3 opacity-100 lg:flex"
       >
         {CHAPTER_MARKERS.map((ch) => {
           const isCurrent = scrollState.activeChapter === ch.index;

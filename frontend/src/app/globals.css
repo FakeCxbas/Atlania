@@ -45,23 +45,14 @@
 }
 
 html,
-body,
-main,
-div,
-section {
-  scrollbar-width: none !important;
-  -ms-overflow-style: none !important;
+body {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
 }
 
 html::-webkit-scrollbar,
-body::-webkit-scrollbar,
-main::-webkit-scrollbar,
-div::-webkit-scrollbar,
-section::-webkit-scrollbar {
-  width: 0px !important;
-  height: 0px !important;
-  display: none !important;
-  background: transparent !important;
+body::-webkit-scrollbar {
+  display: none;
 }
 
 html {
