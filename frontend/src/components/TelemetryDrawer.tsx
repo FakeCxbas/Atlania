@@ -21,6 +21,7 @@ import {
   Layers,
   Sparkles,
   ChevronDown,
+  ChevronRight,
   Maximize2,
   Minimize2,
   Satellite,
@@ -138,12 +139,24 @@ export function TelemetryDrawer({
       <div className="relative border-b border-[rgba(100,180,210,0.22)] bg-[#071018]/80 p-3.5 sm:p-4">
         <div className="flex items-start justify-between gap-2.5">
           <div className="min-w-0 flex-1">
+            {/* Breadcrumb de ubicación jerárquica */}
+            <nav
+              aria-label="Ruta de contexto del sitio"
+              className="mb-1.5 flex items-center gap-1 font-mono text-xs text-slate-400"
+            >
+              <span className="text-slate-300">Tierra</span>
+              <ChevronRight className="h-3 w-3 shrink-0 text-slate-600" aria-hidden="true" />
+              <span className="text-slate-300">{site.country}</span>
+              <ChevronRight className="h-3 w-3 shrink-0 text-slate-600" aria-hidden="true" />
+              <span className="truncate font-semibold text-[#00D9F5]">{site.name}</span>
+            </nav>
+
             <div className="flex flex-wrap items-center gap-1.5">
-              <span className="inline-flex items-center rounded border border-[#F5B82E]/40 bg-[#F5B82E]/15 px-2 py-0.5 text-[10px] font-semibold tracking-wider text-[#F5B82E] uppercase">
+              <span className="inline-flex items-center rounded border border-[#F5B82E]/40 bg-[#F5B82E]/15 px-2 py-0.5 text-xs font-semibold tracking-wider text-[#F5B82E] uppercase">
                 {site.country}
               </span>
               <span
-                className={`inline-flex items-center rounded border px-2 py-0.5 text-[10px] font-medium ${
+                className={`inline-flex items-center rounded border px-2 py-0.5 text-xs font-semibold ${
                   bestTarget?.body === "Mars"
                     ? "border-[#E07A5F]/40 bg-[#E07A5F]/15 text-[#E07A5F]"
                     : "border-[#00D9F5]/40 bg-[#00D9F5]/15 text-[#00D9F5]"
@@ -152,16 +165,16 @@ export function TelemetryDrawer({
                 Mejor: {bestTarget?.body === "Mars" ? "Marte" : "Luna"}
               </span>
               <span
-                className={`inline-flex items-center rounded border px-1.5 py-0.5 font-mono text-[10px] font-semibold ${
+                className={`inline-flex items-center rounded border px-2 py-0.5 font-mono text-xs font-semibold ${
                   isLivePower
                     ? "border-[#34D399]/40 bg-[#34D399]/10 text-[#34D399]"
                     : "border-[#F5B82E]/40 bg-[#F5B82E]/10 text-[#F5B82E]"
                 }`}
               >
-                {isLivePower ? "NASA POWER LIVE" : "FALLBACK"}
+                {isLivePower ? "NASA POWER EN VIVO" : "RESPALDO"}
               </span>
             </div>
-            <h2 className="mt-1.5 text-base font-bold leading-snug tracking-tight text-[#F1F5F9]">
+            <h2 className="mt-2 text-lg font-bold leading-snug tracking-tight text-slate-100">
               {site.name}
             </h2>
           </div>
@@ -205,30 +218,30 @@ export function TelemetryDrawer({
         </div>
 
         {/* Coordenadas, Elevación, ASI y Selector de Objetivo */}
-        <div className="mt-2.5 grid grid-cols-3 gap-2 rounded-lg border border-[rgba(100,180,210,0.2)] bg-[#132434]/60 p-2 text-[11px]">
+        <div className="mt-2.5 grid grid-cols-3 gap-2 rounded-lg border border-[rgba(100,180,210,0.2)] bg-[#132434]/60 p-2.5 text-xs">
           <div>
-            <span className="block text-[10px] text-[#94A3B8]">Coordenadas</span>
-            <span className="font-mono tabular-nums text-[#F1F5F9]">
+            <span className="block text-xs font-medium text-slate-300">Coordenadas</span>
+            <span className="font-mono text-xs font-semibold tabular-nums text-slate-100">
               {site.latitude.toFixed(2)}°, {site.longitude.toFixed(2)}°
             </span>
           </div>
           <div>
-            <span className="block text-[10px] text-[#94A3B8]">Elevación</span>
-            <span className="font-mono tabular-nums text-[#F1F5F9]">
+            <span className="block text-xs font-medium text-slate-300">Elevación</span>
+            <span className="font-mono text-xs font-semibold tabular-nums text-slate-100">
               {site.elevation_m.toLocaleString()} m
             </span>
           </div>
           <div className="text-right">
-            <span className="block text-[10px] text-[#94A3B8]">Índice ASI</span>
-            <span className="font-mono font-bold tabular-nums text-[#F5B82E]">
+            <span className="block text-xs font-medium text-slate-300">Índice ASI</span>
+            <span className="font-mono text-sm font-bold tabular-nums text-[#F5B82E]">
               {activeScore.overall_asi.toFixed(1)}%
             </span>
           </div>
         </div>
 
         {/* Active Target Selector Bar inside Header */}
-        <div className="mt-2 flex items-center justify-between gap-2 rounded-lg border border-[rgba(100,180,210,0.18)] bg-[#071018]/90 px-2.5 py-1.5 text-xs">
-          <span className="shrink-0 text-[10px] font-semibold tracking-wider text-[#94A3B8] uppercase">
+        <div className="mt-2 flex items-center justify-between gap-2 rounded-lg border border-[rgba(100,180,210,0.18)] bg-[#071018]/90 px-3 py-2 text-xs">
+          <span className="shrink-0 text-xs font-semibold tracking-wider text-slate-300 uppercase">
             Objetivo:
           </span>
           <select
@@ -327,17 +340,17 @@ export function TelemetryDrawer({
               </div>
 
               <div className="grid grid-cols-2 gap-2 text-xs">
-                <div className="rounded-lg border border-[rgba(100,180,210,0.16)] bg-[#132434]/65 p-2">
-                  <span className="block text-[10px] text-[#94A3B8]">
+                <div className="rounded-lg border border-[rgba(100,180,210,0.16)] bg-[#132434]/65 p-2.5">
+                  <span className="block text-xs font-medium text-slate-300">
                     1. Temperatura Media
                   </span>
-                  <span className="font-mono text-sm font-bold tabular-nums text-[#F1F5F9]">
+                  <span className="font-mono text-sm font-bold tabular-nums text-slate-100">
                     {meanTemp.toFixed(1)}°C
                   </span>
                 </div>
 
-                <div className="rounded-lg border border-[rgba(100,180,210,0.16)] bg-[#132434]/65 p-2">
-                  <span className="block text-[10px] text-[#94A3B8]">
+                <div className="rounded-lg border border-[rgba(100,180,210,0.16)] bg-[#132434]/65 p-2.5">
+                  <span className="block text-xs font-medium text-slate-300">
                     2. Amplitud Térmica
                   </span>
                   <span className="font-mono text-sm font-bold tabular-nums text-[#00D9F5]">
@@ -345,67 +358,67 @@ export function TelemetryDrawer({
                   </span>
                 </div>
 
-                <div className="rounded-lg border border-[rgba(100,180,210,0.16)] bg-[#132434]/65 p-2">
-                  <span className="flex items-center gap-1 text-[10px] text-[#94A3B8]">
-                    <Droplets className="h-3 w-3" aria-hidden="true" /> 3.
+                <div className="rounded-lg border border-[rgba(100,180,210,0.16)] bg-[#132434]/65 p-2.5">
+                  <span className="flex items-center gap-1 text-xs font-medium text-slate-300">
+                    <Droplets className="h-3 w-3 text-[#38BDF8]" aria-hidden="true" /> 3.
                     Precipitación
                   </span>
-                  <span className="font-mono text-xs font-semibold tabular-nums text-[#F1F5F9]">
+                  <span className="font-mono text-sm font-bold tabular-nums text-slate-100">
                     {site.climatology.precipitation_mm_day.toFixed(2)} mm/d
                   </span>
                 </div>
 
-                <div className="rounded-lg border border-[rgba(100,180,210,0.16)] bg-[#132434]/65 p-2">
-                  <span className="flex items-center gap-1 text-[10px] text-[#94A3B8]">
-                    <Wind className="h-3 w-3" aria-hidden="true" /> 4. Viento y
+                <div className="rounded-lg border border-[rgba(100,180,210,0.16)] bg-[#132434]/65 p-2.5">
+                  <span className="flex items-center gap-1 text-xs font-medium text-slate-300">
+                    <Wind className="h-3 w-3 text-[#38BDF8]" aria-hidden="true" /> 4. Viento y
                     Humedad
                   </span>
-                  <span className="font-mono text-xs font-semibold tabular-nums text-[#F1F5F9]">
+                  <span className="font-mono text-xs font-semibold tabular-nums text-slate-100">
                     {site.climatology.wind_m_s.toFixed(1)} m/s ·{" "}
                     {site.climatology.relative_humidity_pct.toFixed(0)}%
                   </span>
                 </div>
 
-                <div className="rounded-lg border border-[rgba(100,180,210,0.16)] bg-[#132434]/65 p-2">
-                  <span className="block text-[10px] text-[#94A3B8]">
+                <div className="rounded-lg border border-[rgba(100,180,210,0.16)] bg-[#132434]/65 p-2.5">
+                  <span className="block text-xs font-medium text-slate-300">
                     5. Irradiancia Solar
                   </span>
-                  <span className="font-mono text-xs font-semibold tabular-nums text-[#F1F5F9]">
+                  <span className="font-mono text-xs font-semibold tabular-nums text-slate-100">
                     {site.climatology.solar_irradiance_kwh_m2_day.toFixed(2)}{" "}
                     kWh/m²/d
                   </span>
                 </div>
 
-                <div className="rounded-lg border border-[rgba(100,180,210,0.16)] bg-[#132434]/65 p-2">
-                  <span className="block text-[10px] text-[#94A3B8]">
+                <div className="rounded-lg border border-[rgba(100,180,210,0.16)] bg-[#132434]/65 p-2.5">
+                  <span className="block text-xs font-medium text-slate-300">
                     6. Presión Superficial
                   </span>
-                  <span className="font-mono text-xs font-semibold tabular-nums text-[#F1F5F9]">
+                  <span className="font-mono text-xs font-semibold tabular-nums text-slate-100">
                     {site.climatology.surface_pressure_kpa.toFixed(1)} kPa
                   </span>
                 </div>
 
-                <div className="rounded-lg border border-[rgba(100,180,210,0.16)] bg-[#132434]/65 p-2">
-                  <span className="flex items-center gap-1 text-[10px] text-[#94A3B8]">
+                <div className="rounded-lg border border-[rgba(100,180,210,0.16)] bg-[#132434]/65 p-2.5">
+                  <span className="flex items-center gap-1 text-xs font-medium text-slate-300">
                     <Mountain
-                      className="h-3 w-3 text-[#34D399]"
+                      className="h-3.5 w-3.5 text-[#34D399]"
                       aria-hidden="true"
                     />{" "}
                     7. Pendiente DEM
                   </span>
-                  <span className="font-mono text-xs font-bold tabular-nums text-[#F1F5F9]">
+                  <span className="font-mono text-sm font-bold tabular-nums text-slate-100">
                     {site.dem_telemetry.dem_slope_deg.toFixed(1)}°{" "}
-                    <span className="text-[10px] font-normal text-[#94A3B8]">
+                    <span className="text-xs font-normal text-slate-400">
                       ({isLiveDem ? "GLO-90" : "prior"})
                     </span>
                   </span>
                 </div>
 
-                <div className="rounded-lg border border-[rgba(100,180,210,0.16)] bg-[#132434]/65 p-2">
-                  <span className="block text-[10px] text-[#94A3B8]">
+                <div className="rounded-lg border border-[rgba(100,180,210,0.16)] bg-[#132434]/65 p-2.5">
+                  <span className="block text-xs font-medium text-slate-300">
                     8. Relieve DEM (σ)
                   </span>
-                  <span className="font-mono text-xs font-bold tabular-nums text-[#F1F5F9]">
+                  <span className="font-mono text-sm font-bold tabular-nums text-slate-100">
                     {site.dem_telemetry.dem_roughness_m.toFixed(1)} m
                   </span>
                 </div>

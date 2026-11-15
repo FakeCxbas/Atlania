@@ -1001,19 +1001,24 @@ export function AnalogMap({
       for (const feature of regionResult.geojson.features) {
         const { id, rank, best_asi_score, body } = feature.properties;
         const [lon, lat] = feature.geometry.coordinates;
-        const isTop = rank === 1;
+        const isQualified = best_asi_score >= 45;
+        const isTop = rank === 1 && isQualified;
         const isSelected = id === selectedSiteId;
-        const accent = isTop
-          ? "#D4AF37"
+        const accent = !isQualified
+          ? "#899095"
+          : isTop
+          ? "#C5A36D"
           : body === "Mars"
           ? "#E07A5F"
-          : "#06B6D4";
+          : "#38BDF8";
 
         const wrapper = document.createElement("button");
         wrapper.type = "button";
         wrapper.setAttribute(
           "aria-label",
-          `Sector #${rank}, ${best_asi_score.toFixed(1)}% ASI`
+          `Sector #${rank}, ${best_asi_score.toFixed(1)}% ASI, ${
+            isQualified ? "Candidato" : "Sin correlación análoga"
+          }`
         );
         wrapper.style.cssText = [
           "display: flex",
@@ -1027,13 +1032,13 @@ export function AnalogMap({
           "cursor: pointer",
         ].join(";");
 
-        if (isTop || isSelected) {
+        if ((isTop || isSelected) && isQualified) {
           const reticleSvg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
           reticleSvg.setAttribute("width", "26");
           reticleSvg.setAttribute("height", "26");
           reticleSvg.setAttribute("viewBox", "0 0 26 26");
           reticleSvg.setAttribute("aria-hidden", "true");
-          const stroke = isSelected ? "#F8FAFC" : "#D4AF37";
+          const stroke = isSelected ? "#E4DFD5" : "#C5A36D";
           reticleSvg.innerHTML = [
             `<path d="M2 8V2H8 M18 2H24V8 M24 18V24H18 M8 24H2V18" fill="none" stroke="${stroke}" stroke-width="1.8" stroke-linecap="square"/>`,
             `<path d="M13 9V17 M9 13H17" fill="none" stroke="${stroke}" stroke-width="1.2" opacity="0.85"/>`,
@@ -1046,16 +1051,16 @@ export function AnalogMap({
           "display: inline-flex",
           "align-items: center",
           "gap: 5px",
-          "font-family: ui-monospace, SFMono-Regular, Menlo, monospace",
+          "font-family: var(--font-ibm-plex-mono, ui-monospace, SFMono-Regular, Menlo, monospace)",
           "font-variant-numeric: tabular-nums",
           `font-size: ${isTop || isSelected ? "11px" : "10px"}`,
           `font-weight: ${isTop || isSelected ? "700" : "600"}`,
           "line-height: 1",
           `padding: ${isTop || isSelected ? "4px 8px" : "3px 6px"}`,
           "border-radius: 4px",
-          `color: ${isTop || isSelected ? "#F8FAFC" : "#E2E8F0"}`,
-          `background: ${isTop || isSelected ? "rgba(6, 9, 19, 0.92)" : "rgba(6, 9, 19, 0.78)"}`,
-          `border: 1px solid ${isSelected ? "#F8FAFC" : isTop ? "#D4AF37" : "rgba(148, 163, 184, 0.25)"}`,
+          `color: ${!isQualified ? "#899095" : isTop || isSelected ? "#E4DFD5" : "#C5A36D"}`,
+          `background: ${isTop || isSelected ? "rgba(16, 19, 33, 0.94)" : "rgba(16, 19, 33, 0.82)"}`,
+          `border: 1px solid ${isSelected ? "#E4DFD5" : isTop ? "#C5A36D" : "rgba(85, 82, 125, 0.35)"}`,
           `border-left: 2.5px solid ${accent}`,
           "box-shadow: 0 2px 8px rgba(0, 0, 0, 0.55)",
           "backdrop-filter: blur(4px)",
@@ -1063,7 +1068,9 @@ export function AnalogMap({
         ].join(";");
         badge.textContent = isTop
           ? `#1 · ${best_asi_score.toFixed(1)}%`
-          : `S${rank} · ${Math.round(best_asi_score)}%`;
+          : isQualified
+          ? `S${rank} · ${Math.round(best_asi_score)}%`
+          : `S${rank} · ${Math.round(best_asi_score)}% (No análogo)`;
 
         wrapper.appendChild(badge);
 

@@ -27,6 +27,7 @@ import {
   Compass,
   Download,
   Globe2,
+  Home,
   ListFilter,
   MapPin,
   Moon,
@@ -676,8 +677,117 @@ export function MissionControlApp({ dataset }: MissionControlAppProps) {
           </div>
         </div>
 
+        {/* Row 1.5: Ruta de Navegación / Breadcrumbs (Interacción Hombre-Máquina) */}
+        <div className="mt-2 flex flex-wrap items-center justify-between gap-2 border-t border-slate-800/60 pt-1.5 text-xs">
+          <nav
+            aria-label="Ruta de navegación interactiva"
+            className="flex flex-wrap items-center gap-1.5 font-mono text-[11px] text-slate-400"
+          >
+            <Link
+              href="/"
+              title="Volver a la portada de ATLANIA (Mission Briefing)"
+              className="inline-flex items-center gap-1 text-slate-300 transition-colors hover:text-[#00D9F5]"
+            >
+              <Home className="h-3.5 w-3.5 text-[#C5A36D]" aria-hidden="true" />
+              <span>Inicio</span>
+            </Link>
+
+            <ChevronRight className="h-3 w-3 shrink-0 text-slate-600" aria-hidden="true" />
+
+            <button
+              type="button"
+              onClick={() => {
+                setSelectedSiteId(null);
+                setShowDirectory(false);
+                setCameraTarget({ type: "world" });
+              }}
+              title="Restablecer vista general del mapa"
+              className={`transition-colors hover:text-[#00D9F5] ${
+                !selectedSiteId && selectedCountry === "TODOS" && selectedTargetFilter === "ALL"
+                  ? "font-semibold text-[#00D9F5]"
+                  : "text-slate-300"
+              }`}
+            >
+              Explorador 3D
+            </button>
+
+            <ChevronRight className="h-3 w-3 shrink-0 text-slate-600" aria-hidden="true" />
+
+            <button
+              type="button"
+              onClick={() => {
+                if (mainTab === "tierra") handleCountrySelect("TODOS");
+                else setSelectedTargetFilter("ALL");
+                setSelectedSiteId(null);
+              }}
+              title={`Filtrar por ${mainTab === "tierra" ? "Tierra" : mainTab === "luna" ? "Luna" : "Marte"}`}
+              className="font-medium capitalize text-[#F5B82E] transition-colors hover:underline"
+            >
+              {mainTab === "tierra" ? "Tierra" : mainTab === "luna" ? "Luna" : "Marte"}
+            </button>
+
+            {mainTab === "tierra" && selectedCountry !== "TODOS" && (
+              <>
+                <ChevronRight className="h-3 w-3 shrink-0 text-slate-600" aria-hidden="true" />
+                <button
+                  type="button"
+                  onClick={() => setSelectedSiteId(null)}
+                  title={`Ver todos los análogos en ${selectedCountry}`}
+                  className="text-slate-200 transition-colors hover:text-[#00D9F5]"
+                >
+                  {selectedCountry}
+                </button>
+              </>
+            )}
+
+            {mainTab !== "tierra" && selectedTargetFilter !== "ALL" && (
+              <>
+                <ChevronRight className="h-3 w-3 shrink-0 text-slate-600" aria-hidden="true" />
+                <button
+                  type="button"
+                  onClick={() => setSelectedSiteId(null)}
+                  title="Ver análogos para este objetivo"
+                  className="max-w-[160px] truncate text-slate-200 transition-colors hover:text-[#00D9F5] sm:max-w-none"
+                >
+                  {translatedReferences[selectedTargetFilter]?.name.split("/")[0] ?? selectedTargetFilter}
+                </button>
+              </>
+            )}
+
+            {selectedSite && (
+              <>
+                <ChevronRight className="h-3 w-3 shrink-0 text-slate-600" aria-hidden="true" />
+                <span className="max-w-[160px] truncate font-semibold text-[#00D9F5] sm:max-w-[240px]">
+                  {selectedSite.name}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setSelectedSiteId(null)}
+                  title="Cerrar ficha del sitio y volver a la vista de conjunto"
+                  aria-label="Deseleccionar sitio"
+                  className="rounded p-0.5 text-slate-400 transition-colors hover:bg-slate-800 hover:text-slate-100"
+                >
+                  <X className="h-3 w-3" aria-hidden="true" />
+                </button>
+              </>
+            )}
+          </nav>
+
+          {/* Estado de navegación en tiempo real */}
+          <div className="hidden items-center gap-2 font-mono text-[11px] text-slate-400 sm:flex">
+            <span className="h-1.5 w-1.5 rounded-full bg-[#00D9F5] animate-pulse" aria-hidden="true" />
+            <span>
+              {selectedSite
+                ? `Sitio activo: ${selectedSite.name} (${selectedSite.overall_asi.toFixed(1)}% ASI)`
+                : selectedCountry !== "TODOS"
+                  ? `${filteredSites.length} análogos en ${selectedCountry}`
+                  : `${filteredSites.length} análogos en catálogo activo`}
+            </span>
+          </div>
+        </div>
+
         {/* Row 2: Contextual Sub-Filter Bar (Country for Tierra, Targets for Luna/Marte) */}
-        <div className="mt-2.5 flex items-center gap-1.5 overflow-x-auto pt-1 no-scrollbar border-t border-slate-800/60">
+        <div className="mt-2 flex items-center gap-1.5 overflow-x-auto pt-1 no-scrollbar border-t border-slate-800/60">
           {mainTab === "tierra" && (
             <>
               <span className="flex shrink-0 items-center gap-1 text-[11px] font-semibold tracking-wider text-[#D4AF37] uppercase mr-1">

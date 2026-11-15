@@ -7,6 +7,7 @@ import {
   Layers,
   CheckCircle2,
   AlertTriangle,
+  ChevronRight,
   Globe2,
   Moon,
   Orbit,
@@ -209,21 +210,34 @@ export function SideBySideComparison({
       <div className="rounded-xl border border-[rgba(100,180,210,0.22)] bg-[#071018]/90 p-3.5">
         <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[rgba(100,180,210,0.18)] pb-3">
           <div>
+            {/* Breadcrumb contextual de la comparación */}
+            <nav aria-label="Ruta de comparación" className="mb-2 flex flex-wrap items-center gap-1 font-mono text-xs text-slate-400">
+              <span className="text-slate-300">Tierra</span>
+              <ChevronRight className="h-3 w-3 shrink-0 text-slate-600" aria-hidden="true" />
+              <span className="text-slate-300">{site.country}</span>
+              <ChevronRight className="h-3 w-3 shrink-0 text-slate-600" aria-hidden="true" />
+              <span className="font-semibold text-[#00D9F5]">{site.name}</span>
+              <span className="mx-1 font-bold text-slate-500">vs</span>
+              <span className={isMars ? "font-semibold text-[#E07A5F]" : "font-semibold text-[#F5B82E]"}>
+                {bodyLabel} · {target.name.split("/")[0]}
+              </span>
+            </nav>
+
             <div className="flex flex-wrap items-center gap-2">
-              <span className="rounded border border-[#00D9F5]/40 bg-[#00D9F5]/10 px-2 py-0.5 text-[10px] font-semibold tracking-wider text-[#00D9F5] uppercase">
+              <span className="rounded border border-[#00D9F5]/40 bg-[#00D9F5]/10 px-2 py-0.5 text-xs font-semibold tracking-wider text-[#00D9F5] uppercase">
                 Tierra vs. {bodyLabel}
               </span>
               <span
-                className={`inline-flex items-center gap-1 rounded border px-2 py-0.5 font-mono text-[10px] font-semibold ${
+                className={`inline-flex items-center gap-1 rounded border px-2 py-0.5 font-mono text-xs font-semibold ${
                   isLivePower
                     ? "border-[#34D399]/40 bg-[#34D399]/10 text-[#34D399]"
                     : "border-[#F5B82E]/40 bg-[#F5B82E]/10 text-[#F5B82E]"
                 }`}
               >
-                {isLivePower ? "CLIMA: NASA POWER EN VIVO" : "CLIMA: ESCENARIO DE RESPALDO"}
+                {isLivePower ? "CLIMA: NASA POWER EN VIVO" : "CLIMA: RESPALDO"}
               </span>
               <span
-                className={`inline-flex items-center gap-1 rounded border px-2 py-0.5 font-mono text-[10px] font-semibold ${
+                className={`inline-flex items-center gap-1 rounded border px-2 py-0.5 font-mono text-xs font-semibold ${
                   isLiveDem
                     ? "border-[#34D399]/40 bg-[#34D399]/10 text-[#34D399]"
                     : "border-[#F5B82E]/40 bg-[#F5B82E]/10 text-[#F5B82E]"
@@ -232,9 +246,9 @@ export function SideBySideComparison({
                 {isLiveDem ? "DEM: COPERNICUS GLO-90" : "DEM: RESPALDO"}
               </span>
             </div>
-            <p className="mt-1.5 text-xs text-[#94A3B8]">
+            <p className="mt-2 text-sm text-slate-200">
               Comparando{" "}
-              <strong className="text-[#F1F5F9]">{site.name}</strong> ({site.country})
+              <strong className="text-slate-100 font-bold">{site.name}</strong> ({site.country})
               frente a{" "}
               <strong className={targetAccent}>{target.name}</strong>
             </p>

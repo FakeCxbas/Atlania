@@ -370,17 +370,21 @@ export async function evaluateCoordinate(
       subsurface_ops: Number((100 * raw.subsurface_ops).toFixed(2)),
     };
 
-    const overall = Number(
-      (
-        100 *
-        DIMENSIONS.reduce((acc, dim, idx) => acc + raw[dim] * ref.weights[idx], 0)
-      ).toFixed(2)
-    );
+    // Terrestrial biosphere and moisture penalty:
+    // Extraterrestrial surfaces (Moon/Mars) have zero active rainfall and zero humidity.
+    // Persistent rain and humid air degrade analog simulation fidelity (mud, weathering, vegetation).
+    const rainPenalty = Math.max(0, (climatology.precipitation_mm_day - 0.4) / 3.0);
+    const humidityPenalty = Math.max(0, (climatology.relative_humidity_pct - 50) / 50);
+    const biospherePenalty = Math.max(0.2, 1 - 0.5 * rainPenalty - 0.35 * humidityPenalty);
+
+    const baseOverall = 100 * DIMENSIONS.reduce((acc, dim, idx) => acc + raw[dim] * ref.weights[idx], 0);
+    const overall = Number((baseOverall * biospherePenalty).toFixed(2));
 
     const strengths = DIMENSIONS.filter((d) => dimensions[d] >= 70).map(
       (d) => `${d}: ${dimensions[d].toFixed(2)}/100 scenario similarity`
     );
 
+    const isQualified = overall >= 45;
     const breakdowns: Record<string, string> = {
       gravity: `Earth gravity (9.81 m/s2) cannot reproduce ${ref.profile.body} gravity (${
         ref.profile.body === "Moon" ? 1.62 : 3.71
@@ -393,8 +397,9 @@ export async function evaluateCoordinate(
         "Earth atmosphere and magnetic shielding do not reproduce extraterrestrial ionizing radiation.",
       weathering:
         "Liquid water, oxygen and biology alter terrestrial materials differently from space weathering.",
-      site_specific:
-        "On-demand coordinate probe uses neutral geological/ice/subsurface priors; only climate and DEM slope are measured live.",
+      site_specific: isQualified
+        ? "Sondeo con correlación orográfica y térmica aceptable; requiere verificación mineralógica in situ."
+        : `Sin correlación análoga (< 45% ASI): la presencia de lluvia (${climatology.precipitation_mm_day.toFixed(1)} mm/d) y humedad (${climatology.relative_humidity_pct.toFixed(0)}%) rompe la analogía física con ${ref.profile.body}.`,
     };
 
     scores[key] = {
