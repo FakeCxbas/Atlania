@@ -183,8 +183,8 @@ function getBasemapStyle(mode: BasemapMode): string | maplibregl.StyleSpecificat
         maxzoom: 18,
         paint: {
           "raster-fade-duration": 300,
-          "raster-contrast": 0.05,
-          "raster-saturation": 0.05,
+          "raster-contrast": 0.12,
+          "raster-saturation": 0.08,
         },
       },
       {
@@ -330,14 +330,73 @@ export function AnalogMap({
     [getFlyDuration]
   );
 
+  const ensureTerrainSynced = useCallback(
+    (forceEnable = false) => {
+      const map = mapRef.current;
+      if (!map || !map.getStyle()) return;
+
+      const shouldEnableDem = terrain3d && (forceEnable || map.getZoom() >= TERRAIN_MIN_ZOOM);
+
+      if (!shouldEnableDem) {
+        if (map.getTerrain()) {
+          map.setTerrain(null);
+        }
+        if (map.getLayer("terrain-hillshade")) {
+          map.removeLayer("terrain-hillshade");
+        }
+        return;
+      }
+
+      if (!map.getSource("terrain-dem")) {
+        map.addSource("terrain-dem", {
+          type: "raster-dem",
+          tiles: [
+            "https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png",
+          ],
+          tileSize: 256,
+          minzoom: 0,
+          maxzoom: 14,
+          encoding: "terrarium",
+        });
+      }
+
+      if (!map.getLayer("terrain-hillshade")) {
+        map.addLayer(
+          {
+            id: "terrain-hillshade",
+            type: "hillshade",
+            source: "terrain-dem",
+            minzoom: TERRAIN_MIN_ZOOM,
+            paint: {
+              "hillshade-illumination-direction": 315,
+              "hillshade-illumination-anchor": "map",
+              "hillshade-exaggeration": 0.45,
+              "hillshade-shadow-color": "#060c18",
+              "hillshade-highlight-color": "#fff7e6",
+            },
+          },
+          map.getLayer("esri-labels-layer") ? "esri-labels-layer" : undefined
+        );
+      }
+
+      if (!map.getTerrain()) {
+        map.setTerrain({ source: "terrain-dem", exaggeration: 1.6 });
+      }
+    },
+    [terrain3d]
+  );
+
   const flyToSiteCinematographically = useCallback(
     (site: AnalogSite, requestedZoom?: number) => {
       const map = mapRef.current;
       if (!map) return;
 
       const isPolar = Math.abs(site.latitude) > 60;
-      const targetZoom = isPolar ? 7.5 : (requestedZoom ?? 10.0);
-      const targetPitch = terrain3d ? 58 : map.getPitch();
+      const targetZoom = isPolar ? 7.5 : (requestedZoom ?? 12.2);
+      const targetPitch = terrain3d ? 60 : map.getPitch();
+
+      ensureTerrainSynced(targetZoom >= TERRAIN_MIN_ZOOM);
+
       const prefersReducedMotion =
         typeof window !== "undefined" &&
         window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -349,6 +408,7 @@ export function AnalogMap({
           pitch: targetPitch,
           bearing: 0,
         });
+        ensureTerrainSynced(targetZoom >= TERRAIN_MIN_ZOOM);
         return;
       }
 
@@ -362,7 +422,7 @@ export function AnalogMap({
         essential: true,
       });
     },
-    [terrain3d]
+    [ensureTerrainSynced, terrain3d]
   );
 
   // Register tile cache Service Worker once on client
@@ -471,69 +531,25 @@ export function AnalogMap({
     const map = mapRef.current;
     if (!map) return;
 
-    const syncTerrain = () => {
-      if (!map.getStyle()) return;
-
-      const shouldEnableDem = terrain3d && map.getZoom() >= TERRAIN_MIN_ZOOM;
-
-      if (!shouldEnableDem) {
-        if (map.getTerrain()) {
-          map.setTerrain(null);
-        }
-        if (map.getLayer("terrain-hillshade")) {
-          map.removeLayer("terrain-hillshade");
-        }
-        return;
-      }
-
-      if (!map.getSource("terrain-dem")) {
-        map.addSource("terrain-dem", {
-          type: "raster-dem",
-          tiles: [
-            "https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png",
-          ],
-          tileSize: 256,
-          minzoom: 0,
-          maxzoom: 14,
-          encoding: "terrarium",
-        });
-      }
-
-      if (!map.getLayer("terrain-hillshade")) {
-        map.addLayer(
-          {
-            id: "terrain-hillshade",
-            type: "hillshade",
-            source: "terrain-dem",
-            minzoom: TERRAIN_MIN_ZOOM,
-            paint: {
-              "hillshade-exaggeration": 0.28,
-              "hillshade-shadow-color": "rgba(5, 12, 24, 0.45)",
-              "hillshade-highlight-color": "rgba(255, 255, 255, 0.18)",
-            },
-          },
-          map.getLayer("esri-labels-layer") ? "esri-labels-layer" : undefined
-        );
-      }
-
-      if (!map.getTerrain()) {
-        map.setTerrain({ source: "terrain-dem", exaggeration: 1.8 });
-      }
+    const handleSync = () => {
+      ensureTerrainSynced();
     };
 
     if (map.isStyleLoaded()) {
-      syncTerrain();
+      handleSync();
     }
-    map.on("style.load", syncTerrain);
-    map.on("load", syncTerrain);
-    map.on("zoomend", syncTerrain);
+    map.on("style.load", handleSync);
+    map.on("styledata", handleSync);
+    map.on("load", handleSync);
+    map.on("zoomend", handleSync);
 
     return () => {
-      map.off("style.load", syncTerrain);
-      map.off("load", syncTerrain);
-      map.off("zoomend", syncTerrain);
+      map.off("style.load", handleSync);
+      map.off("styledata", handleSync);
+      map.off("load", handleSync);
+      map.off("zoomend", handleSync);
     };
-  }, [terrain3d]);
+  }, [ensureTerrainSynced]);
 
   // Synchronize site markers without destroying/recreating unchanged DOM elements
   useEffect(() => {
