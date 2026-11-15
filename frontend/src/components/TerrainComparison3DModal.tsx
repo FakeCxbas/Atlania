@@ -210,7 +210,7 @@ function mountTerrainRig(params: {
   mesh.receiveShadow = true;
   scene.add(mesh);
 
-  const gridHelper = new THREE.GridHelper(SCENE_WIDTH * 1.15, 12, 0x1e293b, 0x0f172a);
+  const gridHelper = new THREE.GridHelper(SCENE_WIDTH * 1.15, 12, 0x55527d, 0x27233e);
   gridHelper.position.y = -0.5;
   scene.add(gridHelper);
 
@@ -366,7 +366,7 @@ export function TerrainComparison3DModal({
       widthMeters: earthDataset.widthMeters,
       heightMeters: earthDataset.heightMeters,
       realisticTexture: satTex,
-      backgroundColor: 0x060913,
+      backgroundColor: 0x101321,
       solarElevation,
       solarAzimuth,
       exaggeration,
@@ -434,7 +434,7 @@ export function TerrainComparison3DModal({
       widthMeters: extraDataset.widthMeters,
       heightMeters: extraDataset.heightMeters,
       realisticTexture: surfTex,
-      backgroundColor: 0x060913,
+      backgroundColor: 0x101321,
       solarElevation,
       solarAzimuth,
       exaggeration,
@@ -526,22 +526,22 @@ export function TerrainComparison3DModal({
       role="dialog"
       aria-modal="true"
       aria-label={`Comparación visual 3D: ${site.name} frente a ${target.name}`}
-      className="fixed inset-0 z-50 flex flex-col bg-[#060913]/95 backdrop-blur-md"
+      className="fixed inset-0 z-50 flex flex-col bg-[#101321]/95 backdrop-blur-md"
     >
       {/* Header */}
-      <header className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-800/80 bg-[#0D1424]/95 px-4 py-3">
+      <header className="flex flex-wrap items-center justify-between gap-3 border-b border-[#55527D]/35 bg-[#121626]/95 px-4 py-3">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
-            <span className="inline-flex items-center gap-1.5 rounded border border-[#06B6D4]/40 bg-[#06B6D4]/10 px-2 py-0.5 font-mono text-[11px] font-semibold text-[#06B6D4]">
+            <span className="inline-flex items-center gap-1.5 rounded border border-[#7CA5B8]/50 bg-[#7CA5B8]/15 px-2 py-0.5 font-mono text-[11px] font-semibold text-[#7CA5B8]">
               <Globe2 className="h-3.5 w-3.5" aria-hidden="true" />
               {site.name}
             </span>
-            <span className="font-mono text-xs text-slate-500">vs</span>
+            <span className="font-mono text-xs text-[#A3A1BD]">vs</span>
             <span
               className={`inline-flex items-center gap-1.5 rounded border px-2 py-0.5 font-mono text-[11px] font-semibold ${
                 isMars
                   ? "border-[#E07A5F]/40 bg-[#E07A5F]/10 text-[#E07A5F]"
-                  : "border-slate-400/40 bg-slate-400/10 text-slate-200"
+                  : "border-[#7CA5B8]/50 bg-[#7CA5B8]/15 text-[#7CA5B8]"
               }`}
             >
               {isMars ? (
@@ -551,7 +551,7 @@ export function TerrainComparison3DModal({
               )}
               {bodyLabel}: {target.name.split("/")[0].trim()}
             </span>
-            <span className="rounded border border-slate-700 bg-slate-900/90 px-2 py-0.5 font-mono text-xs font-bold tabular-nums text-slate-100">
+            <span className="rounded border border-[#55527D]/35 bg-[#181B2C]/90 px-2 py-0.5 font-mono text-xs font-bold tabular-nums text-[#E4DFD5]">
               ASI {overallAsi.toFixed(1)}
             </span>
           </div>
@@ -565,10 +565,10 @@ export function TerrainComparison3DModal({
                   key={ref.id}
                   type="button"
                   onClick={() => onSelectTarget(ref.id)}
-                  className={`rounded border px-2 py-1 font-mono text-[11px] transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#06B6D4] ${
+                  className={`rounded border px-2 py-1 font-mono text-[11px] transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#7CA5B8] ${
                     active
-                      ? "border-slate-300 bg-slate-200/15 font-semibold text-slate-100"
-                      : "border-slate-800 bg-slate-900/70 text-slate-400 hover:border-slate-600 hover:text-slate-200"
+                      ? "border-[#7CA5B8]/50 bg-[#27233E] font-semibold text-[#7CA5B8]"
+                      : "border-[#55527D]/35 bg-[#181B2C]/70 text-[#A3A1BD] hover:border-[#55527D]/35 hover:text-[#E4DFD5]"
                   }`}
                 >
                   Luna: {ref.name.split("/")[0].trim()}
@@ -584,8 +584,8 @@ export function TerrainComparison3DModal({
                   onClick={() => onSelectTarget(ref.id)}
                   className={`rounded border px-2 py-1 font-mono text-[11px] transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#E07A5F] ${
                     active
-                      ? "border-[#E07A5F] bg-[#E07A5F]/20 font-semibold text-[#F6AD99]"
-                      : "border-slate-800 bg-slate-900/70 text-slate-400 hover:border-[#E07A5F]/50 hover:text-slate-200"
+                      ? "border-[#E07A5F]/50 bg-[#27233E] font-semibold text-[#E07A5F]"
+                      : "border-[#55527D]/35 bg-[#181B2C]/70 text-[#A3A1BD] hover:border-[#E07A5F]/50 hover:text-[#E4DFD5]"
                   }`}
                 >
                   Marte: {ref.name.split("/")[0].trim()}
@@ -599,28 +599,28 @@ export function TerrainComparison3DModal({
           type="button"
           onClick={onClose}
           aria-label="Cerrar comparación 3D"
-          className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-slate-700 bg-slate-900/90 text-slate-300 transition-colors hover:border-slate-500 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#06B6D4]"
+          className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-[#55527D]/35 bg-[#181B2C]/90 text-[#A3A1BD] transition-colors hover:border-[#55527D]/35 hover:text-[#E4DFD5] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#7CA5B8]"
         >
           <X className="h-5 w-5" aria-hidden="true" />
         </button>
       </header>
 
       {/* Dual 3D Viewports */}
-      <main className="grid min-h-0 flex-1 grid-cols-1 gap-px bg-slate-800/80 lg:grid-cols-2">
+      <main className="grid min-h-0 flex-1 grid-cols-1 gap-px bg-[#181B2C]/80 lg:grid-cols-2">
         {/* Left: Earth DEM */}
-        <section className="relative min-h-[260px] bg-[#060913]" aria-label="Visor 3D terrestre">
+        <section className="relative min-h-[260px] bg-[#101321]" aria-label="Visor 3D terrestre">
           <div ref={earthMountRef} className="h-full w-full" />
 
           <div className="pointer-events-none absolute top-3 left-3 right-3 flex flex-wrap items-start justify-between gap-2">
-            <div className="rounded-lg border border-[#06B6D4]/30 bg-[#0D1424]/85 px-3 py-2 backdrop-blur-md">
-              <div className="font-mono text-[10px] font-semibold tracking-wider text-[#06B6D4] uppercase">
+            <div className="rounded-lg border border-[#7CA5B8]/50 bg-[#181B2C]/85 px-3 py-2 backdrop-blur-md">
+              <div className="font-mono text-[10px] font-semibold tracking-wider text-[#7CA5B8] uppercase">
                 Tierra · DEM Real (Terrarium / Satélite HD)
               </div>
-              <div className="mt-0.5 text-sm font-semibold text-slate-100">
+              <div className="mt-0.5 text-sm font-semibold text-[#E4DFD5]">
                 {site.name} ({site.country})
               </div>
               {earthDataset && (
-                <div className="mt-1 flex flex-wrap gap-x-3 gap-y-0.5 font-mono text-[11px] tabular-nums text-slate-300">
+                <div className="mt-1 flex flex-wrap gap-x-3 gap-y-0.5 font-mono text-[11px] tabular-nums text-[#A3A1BD]">
                   <span>Pendiente media: {earthDataset.metrics.meanSlopeDeg.toFixed(1)}°</span>
                   <span>Relieve: {Math.round(earthDataset.metrics.reliefM)} m</span>
                   <span>Transitable ≤15°: {earthDataset.metrics.roverTraversablePct.toFixed(0)}%</span>
@@ -630,19 +630,19 @@ export function TerrainComparison3DModal({
           </div>
 
           {earthLoading && (
-            <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-[#060913]/85">
-              <Loader2 className="h-7 w-7 animate-spin text-[#06B6D4]" aria-hidden="true" />
-              <span className="font-mono text-xs text-slate-300">
+            <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-[#101321]/85">
+              <Loader2 className="h-7 w-7 animate-spin text-[#7CA5B8]" aria-hidden="true" />
+              <span className="font-mono text-xs text-[#A3A1BD]">
                 Descargando elevación DEM y textura satelital...
               </span>
             </div>
           )}
 
           {earthError && (
-            <div className="absolute inset-0 flex items-center justify-center p-6 bg-[#060913]/90">
-              <div className="max-w-sm rounded-lg border border-rose-500/40 bg-[#0D1424] p-4 text-center">
-                <p className="text-sm font-semibold text-rose-300">Error al cargar terreno terrestre</p>
-                <p className="mt-1 font-mono text-xs text-slate-400">{earthError}</p>
+            <div className="absolute inset-0 flex items-center justify-center p-6 bg-[#101321]/90">
+              <div className="max-w-sm rounded-lg border border-[#D47A61]/50 bg-[#181B2C] p-4 text-center">
+                <p className="text-sm font-semibold text-[#D47A61]">Error al cargar terreno terrestre</p>
+                <p className="mt-1 font-mono text-xs text-[#A3A1BD]">{earthError}</p>
               </div>
             </div>
           )}
@@ -650,29 +650,29 @@ export function TerrainComparison3DModal({
 
         {/* Right: Moon or Mars Parametric Surface */}
         <section
-          className="relative min-h-[260px] bg-[#060913]"
+          className="relative min-h-[260px] bg-[#101321]"
           aria-label={`Visor 3D de ${bodyLabel}`}
         >
           <div ref={targetMountRef} className="h-full w-full" />
 
           <div className="pointer-events-none absolute top-3 left-3 right-3 flex flex-wrap items-start justify-between gap-2">
             <div
-              className={`rounded-lg border bg-[#0D1424]/85 px-3 py-2 backdrop-blur-md ${
-                isMars ? "border-[#E07A5F]/35" : "border-slate-500/35"
+              className={`rounded-lg border bg-[#181B2C]/85 px-3 py-2 backdrop-blur-md ${
+                isMars ? "border-[#E07A5F]/50" : "border-[#7CA5B8]/50"
               }`}
             >
               <div
                 className={`font-mono text-[10px] font-semibold tracking-wider uppercase ${
-                  isMars ? "text-[#E07A5F]" : "text-slate-300"
+                  isMars ? "text-[#E07A5F]" : "text-[#7CA5B8]"
                 }`}
               >
                 {bodyLabel} · Síntesis Geomorfológica ({extraDataset?.sourceBadge})
               </div>
-              <div className="mt-0.5 text-sm font-semibold text-slate-100">
+              <div className="mt-0.5 text-sm font-semibold text-[#E4DFD5]">
                 {target.name}
               </div>
               {extraDataset && (
-                <div className="mt-1 flex flex-wrap gap-x-3 gap-y-0.5 font-mono text-[11px] tabular-nums text-slate-300">
+                <div className="mt-1 flex flex-wrap gap-x-3 gap-y-0.5 font-mono text-[11px] tabular-nums text-[#A3A1BD]">
                   <span>Pendiente ref.: {target.terrain?.slope_deg ?? 0}°</span>
                   <span>Media malla: {extraDataset.metrics.meanSlopeDeg.toFixed(1)}°</span>
                   <span>Gravedad: {target.gravity_ms2 ?? (isMars ? 3.71 : 1.62)} m/s²</span>
@@ -680,7 +680,7 @@ export function TerrainComparison3DModal({
                 </div>
               )}
               {extraDataset && (
-                <div className="mt-1 text-[11px] text-slate-400">
+                <div className="mt-1 text-[11px] text-[#A3A1BD]">
                   {extraDataset.morphologyLabel} (modelo paramétrico calibrado al perfil de referencia)
                 </div>
               )}
@@ -690,10 +690,10 @@ export function TerrainComparison3DModal({
       </main>
 
       {/* Shared Controls Footer */}
-      <footer className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-800/80 bg-[#0D1424]/95 px-4 py-2.5">
+      <footer className="flex flex-wrap items-center justify-between gap-3 border-t border-[#55527D]/35 bg-[#121626]/95 px-4 py-2.5">
         {/* Render mode */}
         <div className="flex flex-wrap items-center gap-1.5" role="group" aria-label="Modo de visualización de superficie">
-          <span className="mr-1 inline-flex items-center gap-1 font-mono text-[11px] text-slate-400">
+          <span className="mr-1 inline-flex items-center gap-1 font-mono text-[11px] text-[#A3A1BD]">
             <Layers className="h-3.5 w-3.5" aria-hidden="true" />
             Capa:
           </span>
@@ -708,10 +708,10 @@ export function TerrainComparison3DModal({
               key={m.id}
               type="button"
               onClick={() => setRenderMode(m.id)}
-              className={`rounded border px-2.5 py-1.5 font-mono text-xs transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#06B6D4] ${
+              className={`rounded border px-2.5 py-1.5 font-mono text-xs transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#7CA5B8] ${
                 renderMode === m.id
-                  ? "border-[#06B6D4] bg-[#06B6D4]/20 font-semibold text-[#06B6D4]"
-                  : "border-slate-800 bg-slate-900/70 text-slate-300 hover:border-slate-600"
+                  ? "border-[#7CA5B8] bg-[#27233E] font-semibold text-[#7CA5B8]"
+                  : "border-[#55527D]/35 bg-[#181B2C]/70 text-[#A3A1BD] hover:border-[#55527D]/35"
               }`}
             >
               {m.label}
@@ -721,8 +721,8 @@ export function TerrainComparison3DModal({
 
         {/* Sliders: exaggeration + solar elevation */}
         <div className="flex flex-wrap items-center gap-4">
-          <label className="flex items-center gap-2 font-mono text-xs text-slate-300">
-            <Mountain className="h-3.5 w-3.5 text-[#06B6D4]" aria-hidden="true" />
+          <label className="flex items-center gap-2 font-mono text-xs text-[#A3A1BD]">
+            <Mountain className="h-3.5 w-3.5 text-[#7CA5B8]" aria-hidden="true" />
             <span>Relieve</span>
             <input
               type="range"
@@ -731,14 +731,14 @@ export function TerrainComparison3DModal({
               step={0.1}
               value={exaggeration}
               onChange={(e) => setExaggeration(Number(e.target.value))}
-              className="w-20 accent-[#06B6D4]"
+              className="w-20 accent-[#7CA5B8]"
             />
-            <span className="w-8 tabular-nums text-slate-200">{exaggeration.toFixed(1)}x</span>
+            <span className="w-8 tabular-nums text-[#E4DFD5]">{exaggeration.toFixed(1)}x</span>
           </label>
 
           <div className="flex items-center gap-2">
-            <label className="flex items-center gap-2 font-mono text-xs text-slate-300">
-              <Sun className="h-3.5 w-3.5 text-amber-400" aria-hidden="true" />
+            <label className="flex items-center gap-2 font-mono text-xs text-[#A3A1BD]">
+              <Sun className="h-3.5 w-3.5 text-[#C5A36D]" aria-hidden="true" />
               <span>Sol</span>
               <input
                 type="range"
@@ -747,9 +747,9 @@ export function TerrainComparison3DModal({
                 step={1}
                 value={solarElevation}
                 onChange={(e) => setSolarElevation(Number(e.target.value))}
-                className="w-20 accent-amber-400"
+                className="w-20 accent-[#C5A36D]"
               />
-              <span className="w-8 tabular-nums text-slate-200">{solarElevation}°</span>
+              <span className="w-8 tabular-nums text-[#E4DFD5]">{solarElevation}°</span>
             </label>
             <div className="hidden items-center gap-1 xl:flex">
               {SOLAR_PRESETS.map((p) => (
@@ -760,7 +760,7 @@ export function TerrainComparison3DModal({
                     setSolarElevation(p.elevation);
                     setSolarAzimuth(p.azimuth);
                   }}
-                  className="rounded border border-slate-800 bg-slate-900/70 px-2 py-1 font-mono text-[10px] text-slate-400 hover:border-slate-600 hover:text-slate-200"
+                  className="rounded border border-[#55527D]/35 bg-[#181B2C]/70 px-2 py-1 font-mono text-[10px] text-[#A3A1BD] hover:border-[#55527D]/35 hover:text-[#E4DFD5]"
                 >
                   {p.label}
                 </button>
@@ -774,10 +774,10 @@ export function TerrainComparison3DModal({
           <button
             type="button"
             onClick={() => setSyncCameras((v) => !v)}
-            className={`inline-flex items-center gap-1.5 rounded border px-2.5 py-1.5 font-mono text-xs transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#06B6D4] ${
+            className={`inline-flex items-center gap-1.5 rounded border px-2.5 py-1.5 font-mono text-xs transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#7CA5B8] ${
               syncCameras
-                ? "border-emerald-500/50 bg-emerald-500/15 text-emerald-300"
-                : "border-slate-800 bg-slate-900/70 text-slate-400"
+                ? "border-[#526D62]/50 bg-[#526D62]/20 text-[#8AB8A8]"
+                : "border-[#55527D]/35 bg-[#181B2C]/70 text-[#A3A1BD]"
             }`}
           >
             {syncCameras ? (
@@ -793,8 +793,8 @@ export function TerrainComparison3DModal({
             onClick={() => setWireframe((v) => !v)}
             className={`rounded border px-2.5 py-1.5 font-mono text-xs transition-colors ${
               wireframe
-                ? "border-[#06B6D4] bg-[#06B6D4]/20 text-[#06B6D4]"
-                : "border-slate-800 bg-slate-900/70 text-slate-300 hover:border-slate-600"
+                ? "border-[#7CA5B8] bg-[#27233E] text-[#7CA5B8]"
+                : "border-[#55527D]/35 bg-[#181B2C]/70 text-[#A3A1BD] hover:border-[#55527D]/35"
             }`}
           >
             Malla
@@ -805,8 +805,8 @@ export function TerrainComparison3DModal({
             onClick={() => setAutoRotate((v) => !v)}
             className={`rounded border px-2.5 py-1.5 font-mono text-xs transition-colors ${
               autoRotate
-                ? "border-[#06B6D4] bg-[#06B6D4]/20 text-[#06B6D4]"
-                : "border-slate-800 bg-slate-900/70 text-slate-300 hover:border-slate-600"
+                ? "border-[#7CA5B8] bg-[#27233E] text-[#7CA5B8]"
+                : "border-[#55527D]/35 bg-[#181B2C]/70 text-[#A3A1BD] hover:border-[#55527D]/35"
             }`}
           >
             Auto-rotar
@@ -817,7 +817,7 @@ export function TerrainComparison3DModal({
             onClick={handleResetCameras}
             title="Restablecer cámara"
             aria-label="Restablecer cámaras"
-            className="inline-flex items-center gap-1 rounded border border-slate-800 bg-slate-900/70 px-2.5 py-1.5 font-mono text-xs text-slate-300 hover:border-slate-600"
+            className="inline-flex items-center gap-1 rounded border border-[#55527D]/35 bg-[#181B2C]/70 px-2.5 py-1.5 font-mono text-xs text-[#A3A1BD] hover:border-[#55527D]/35"
           >
             <RotateCcw className="h-3.5 w-3.5" aria-hidden="true" />
             <span>Centrar</span>

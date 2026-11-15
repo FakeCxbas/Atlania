@@ -89,7 +89,7 @@ function AsiCircularGauge({
   const c = 2 * Math.PI * r;
   const clamped = Math.max(0, Math.min(100, score));
   const offset = c - (clamped / 100) * c;
-  const color = isMars ? "#E07A5F" : "#00D9F5";
+  const color = isMars ? "#E07A5F" : "#7CA5B8";
 
   return (
     <div className="relative inline-flex items-center justify-center">
@@ -106,7 +106,7 @@ function AsiCircularGauge({
           cy={size / 2}
           r={r}
           fill="none"
-          stroke="rgba(100, 180, 210, 0.14)"
+          stroke="rgba(85, 82, 125, 0.3)"
           strokeWidth={strokeWidth}
         />
         <circle
@@ -122,10 +122,10 @@ function AsiCircularGauge({
         />
       </svg>
       <div className="Select-none absolute inset-0 flex flex-col items-center justify-center text-center">
-        <span className="font-mono text-2xl font-bold tabular-nums text-[#F1F5F9]">
+        <span className="font-mono text-2xl font-bold tabular-nums text-[#E4DFD5]">
           {clamped.toFixed(1)}%
         </span>
-        <span className="text-[10px] font-semibold tracking-wider text-[#F5B82E] uppercase">
+        <span className="text-[10px] font-semibold tracking-wider text-[#C5A36D] uppercase">
           ASI Global
         </span>
       </div>
@@ -144,9 +144,9 @@ export function SideBySideComparison({
 }: SideBySideComparisonProps) {
   const [show3DComparison, setShow3DComparison] = useState(false);
   const isMars = target.body === "Mars";
-  const targetAccent = isMars ? "text-[#E07A5F]" : "text-[#00D9F5]";
-  const targetBorder = isMars ? "border-[#E07A5F]/40" : "border-[#00D9F5]/40";
-  const targetBar = isMars ? "bg-[#E07A5F]" : "bg-[#00D9F5]";
+  const targetAccent = isMars ? "text-[#E07A5F]" : "text-[#7CA5B8]";
+  const targetBorder = isMars ? "border-[#E07A5F]/40" : "border-[#7CA5B8]/50";
+  const targetBar = isMars ? "bg-[#E07A5F]" : "bg-[#7CA5B8]";
   const bodyLabel = isMars ? "Marte" : "Luna";
 
   // Real computed metrics from site & target data
@@ -209,33 +209,33 @@ export function SideBySideComparison({
   const isLiveDem = site.dem_telemetry.source === "open_meteo";
 
   return (
-    <div className="space-y-5 text-[#F1F5F9]">
+    <div className="space-y-5 text-[#E4DFD5]">
       {/* 1. COMPARISON HEADER & TARGET SELECTOR */}
-      <div className="rounded-xl border border-[rgba(100,180,210,0.22)] bg-[#071018]/90 p-3.5">
-        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[rgba(100,180,210,0.18)] pb-3">
+      <div className="rounded-xl border border-[#55527D]/35 bg-[#181B2C]/90 p-3.5">
+        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[#55527D]/35 pb-3">
           <div>
             {/* Breadcrumb contextual de la comparación */}
-            <nav aria-label="Ruta de comparación" className="mb-2 flex flex-wrap items-center gap-1 font-mono text-xs text-slate-400">
-              <span className="text-slate-300">Tierra</span>
-              <ChevronRight className="h-3 w-3 shrink-0 text-slate-600" aria-hidden="true" />
-              <span className="text-slate-300">{site.country}</span>
-              <ChevronRight className="h-3 w-3 shrink-0 text-slate-600" aria-hidden="true" />
-              <span className="font-semibold text-[#00D9F5]">{site.name}</span>
-              <span className="mx-1 font-bold text-slate-500">vs</span>
-              <span className={isMars ? "font-semibold text-[#E07A5F]" : "font-semibold text-[#F5B82E]"}>
+            <nav aria-label="Ruta de comparación" className="mb-2 flex flex-wrap items-center gap-1 font-mono text-xs text-[#A3A1BD]">
+              <span className="text-[#A3A1BD]">Tierra</span>
+              <ChevronRight className="h-3 w-3 shrink-0 text-[#A3A1BD]" aria-hidden="true" />
+              <span className="text-[#A3A1BD]">{site.country}</span>
+              <ChevronRight className="h-3 w-3 shrink-0 text-[#A3A1BD]" aria-hidden="true" />
+              <span className="font-semibold text-[#7CA5B8]">{site.name}</span>
+              <span className="mx-1 font-bold text-[#A3A1BD]">vs</span>
+              <span className={isMars ? "font-semibold text-[#E07A5F]" : "font-semibold text-[#7CA5B8]"}>
                 {bodyLabel} · {target.name.split("/")[0]}
               </span>
             </nav>
 
             <div className="flex flex-wrap items-center gap-2">
-              <span className="rounded border border-[#00D9F5]/40 bg-[#00D9F5]/10 px-2 py-0.5 text-xs font-semibold tracking-wider text-[#00D9F5] uppercase">
+              <span className="rounded border border-[#7CA5B8]/50 bg-[#7CA5B8]/15 px-2 py-0.5 text-xs font-semibold tracking-wider text-[#7CA5B8] uppercase">
                 Tierra vs. {bodyLabel}
               </span>
               <span
                 className={`inline-flex items-center gap-1 rounded border px-2 py-0.5 font-mono text-xs font-semibold ${
                   isLivePower
-                    ? "border-[#34D399]/40 bg-[#34D399]/10 text-[#34D399]"
-                    : "border-[#F5B82E]/40 bg-[#F5B82E]/10 text-[#F5B82E]"
+                    ? "border-[#526D62]/50 bg-[#526D62]/20 text-[#8AB8A8]"
+                    : "border-[#C5A36D]/50 bg-[#C5A36D]/15 text-[#C5A36D]"
                 }`}
               >
                 {isLivePower ? "CLIMA: NASA POWER EN VIVO" : "CLIMA: RESPALDO"}
@@ -243,16 +243,16 @@ export function SideBySideComparison({
               <span
                 className={`inline-flex items-center gap-1 rounded border px-2 py-0.5 font-mono text-xs font-semibold ${
                   isLiveDem
-                    ? "border-[#34D399]/40 bg-[#34D399]/10 text-[#34D399]"
-                    : "border-[#F5B82E]/40 bg-[#F5B82E]/10 text-[#F5B82E]"
+                    ? "border-[#526D62]/50 bg-[#526D62]/20 text-[#8AB8A8]"
+                    : "border-[#C5A36D]/50 bg-[#C5A36D]/15 text-[#C5A36D]"
                 }`}
               >
                 {isLiveDem ? "DEM: COPERNICUS GLO-90" : "DEM: RESPALDO"}
               </span>
             </div>
-            <p className="mt-2 text-sm text-slate-200">
+            <p className="mt-2 text-sm text-[#E4DFD5]">
               Comparando{" "}
-              <strong className="text-slate-100 font-bold">{site.name}</strong> ({site.country})
+              <strong className="text-[#E4DFD5] font-bold">{site.name}</strong> ({site.country})
               frente a{" "}
               <strong className={targetAccent}>{target.name}</strong>
             </p>
@@ -262,7 +262,7 @@ export function SideBySideComparison({
             <button
               type="button"
               onClick={() => setShow3DComparison(true)}
-              className="inline-flex min-h-[36px] items-center gap-1.5 rounded-lg border border-[#7CA5B8]/55 bg-[#7CA5B8]/15 px-3 py-1.5 text-xs font-semibold text-[#E4DFD5] transition-colors hover:bg-[#7CA5B8]/25 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C5A36D]"
+              className="inline-flex min-h-[36px] items-center gap-1.5 rounded-lg border border-[#7CA5B8]/50 bg-[#7CA5B8]/15 px-3 py-1.5 text-xs font-semibold text-[#E4DFD5] transition-colors hover:bg-[#7CA5B8]/25 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C5A36D]"
             >
               <Mountain className="h-3.5 w-3.5 text-[#7CA5B8]" aria-hidden="true" />
               <span>Comparar superficies en 3D</span>
@@ -292,7 +292,7 @@ export function SideBySideComparison({
 
         {/* Target Selector Grid (All 6 Planetary Targets) */}
         <div className="mt-3">
-          <span className="mb-1.5 block text-[11px] font-semibold tracking-wider text-[#F5B82E] uppercase">
+          <span className="mb-1.5 block text-[11px] font-semibold tracking-wider text-[#C5A36D] uppercase">
             Seleccionar Destino Extraterrestre ({Object.keys(references).length} referencias PDS)
           </span>
           <div
@@ -313,23 +313,23 @@ export function SideBySideComparison({
                   aria-pressed={isSelected}
                   className={`flex flex-col items-start rounded-lg border p-2 text-left transition-colors ${
                     isSelected
-                      ? "border-[#F5B82E] bg-[#F5B82E]/15"
-                      : "border-[rgba(100,180,210,0.18)] bg-[#0D1925]/80 hover:border-[rgba(100,180,210,0.4)]"
+                      ? "border-[#C5A36D]/50 bg-[#27233E]"
+                      : "border-[#55527D]/35 bg-[#181B2C]/80 hover:border-[#55527D]/35"
                   }`}
                 >
                   <div className="flex w-full items-center justify-between text-[10px]">
                     <span
                       className={`font-semibold uppercase ${
-                        refIsMars ? "text-[#E07A5F]" : "text-[#00D9F5]"
+                        refIsMars ? "text-[#E07A5F]" : "text-[#7CA5B8]"
                       }`}
                     >
                       {refIsMars ? "Marte" : "Luna"}
                     </span>
-                    <span className="font-mono font-bold tabular-nums text-[#F1F5F9]">
+                    <span className="font-mono font-bold tabular-nums text-[#E4DFD5]">
                       {score.toFixed(1)}%
                     </span>
                   </div>
-                  <span className="mt-0.5 line-clamp-1 text-[11px] font-medium text-slate-200">
+                  <span className="mt-0.5 line-clamp-1 text-[11px] font-medium text-[#E4DFD5]">
                     {ref.name.split("/")[0]}
                   </span>
                 </button>
@@ -348,24 +348,24 @@ export function SideBySideComparison({
         {/* COLUMN 1 — TIERRA (Sitio Análogo) */}
         <section
           aria-label="Columna Tierra: propiedades del sitio terrestre"
-          className="flex flex-col justify-between rounded-xl border border-[rgba(100,180,210,0.22)] bg-[#0D1925]/90 p-4"
+          className="flex flex-col justify-between rounded-xl border border-[#55527D]/35 bg-[#181B2C]/90 p-4"
         >
           <div className="space-y-4">
-            <div className="flex items-center justify-between border-b border-[rgba(100,180,210,0.18)] pb-2.5">
+            <div className="flex items-center justify-between border-b border-[#55527D]/35 pb-2.5">
               <div className="flex items-center gap-2">
-                <Globe2 className="h-4 w-4 text-[#00D9F5]" aria-hidden="true" />
-                <h3 className="text-xs font-bold tracking-wider text-[#00D9F5] uppercase">
+                <Globe2 className="h-4 w-4 text-[#7CA5B8]" aria-hidden="true" />
+                <h3 className="text-xs font-bold tracking-wider text-[#7CA5B8] uppercase">
                   Columna I · Tierra (Sitio)
                 </h3>
               </div>
-              <span className="rounded bg-[#132434] px-2 py-0.5 text-[10px] font-semibold text-slate-200">
+              <span className="rounded bg-[#181B2C] px-2 py-0.5 text-[10px] font-semibold text-[#E4DFD5]">
                 {site.discovery_tier}
               </span>
             </div>
 
             <div>
-              <h4 className="text-sm font-bold text-[#F1F5F9]">{site.name}</h4>
-              <p className="mt-0.5 font-mono text-xs tabular-nums text-[#94A3B8]">
+              <h4 className="text-sm font-bold text-[#E4DFD5]">{site.name}</h4>
+              <p className="mt-0.5 font-mono text-xs tabular-nums text-[#A3A1BD]">
                 {site.country} · LAT {site.latitude.toFixed(3)}°, LON{" "}
                 {site.longitude.toFixed(3)}° · Elev. {site.elevation_m.toLocaleString()} m
               </p>
@@ -373,55 +373,55 @@ export function SideBySideComparison({
 
             {/* Measured / Sampled Earth Telemetry */}
             <div className="space-y-1.5">
-              <span className="block text-[10px] font-semibold tracking-wider text-[#94A3B8] uppercase">
+              <span className="block text-[10px] font-semibold tracking-wider text-[#A3A1BD] uppercase">
                 Climatología ({site.climatology.source === "nasa_power" ? "NASA POWER 2m" : "Respaldo"})
               </span>
               <div className="grid grid-cols-2 gap-2 font-mono text-xs tabular-nums">
-                <div className="rounded-lg border border-[rgba(100,180,210,0.16)] bg-[#132434]/60 p-2">
-                  <span className="block font-sans text-[10px] text-[#94A3B8]">
+                <div className="rounded-lg border border-[#55527D]/35 bg-[#181B2C]/60 p-2">
+                  <span className="block font-sans text-[10px] text-[#A3A1BD]">
                     Temp. Media Anual
                   </span>
-                  <span className="font-bold text-[#F1F5F9]">
+                  <span className="font-bold text-[#E4DFD5]">
                     {earthMeanTemp.toFixed(1)}°C
                   </span>
                 </div>
-                <div className="rounded-lg border border-[rgba(100,180,210,0.16)] bg-[#132434]/60 p-2">
-                  <span className="block font-sans text-[10px] text-[#94A3B8]">
+                <div className="rounded-lg border border-[#55527D]/35 bg-[#181B2C]/60 p-2">
+                  <span className="block font-sans text-[10px] text-[#A3A1BD]">
                     Rango (Mín / Máx)
                   </span>
-                  <span className="font-bold text-[#F1F5F9]">
+                  <span className="font-bold text-[#E4DFD5]">
                     {site.climatology.tmin_c.toFixed(1)}° / {site.climatology.tmax_c.toFixed(1)}°C
                   </span>
                 </div>
-                <div className="rounded-lg border border-[rgba(100,180,210,0.16)] bg-[#132434]/60 p-2">
-                  <span className="block font-sans text-[10px] text-[#94A3B8]">
+                <div className="rounded-lg border border-[#55527D]/35 bg-[#181B2C]/60 p-2">
+                  <span className="block font-sans text-[10px] text-[#A3A1BD]">
                     Amplitud Térmica ΔT
                   </span>
-                  <span className="font-bold text-[#00D9F5]">
+                  <span className="font-bold text-[#7CA5B8]">
                     {earthTempSwing.toFixed(1)}°C
                   </span>
                 </div>
-                <div className="rounded-lg border border-[rgba(100,180,210,0.16)] bg-[#132434]/60 p-2">
-                  <span className="block font-sans text-[10px] text-[#94A3B8]">
+                <div className="rounded-lg border border-[#55527D]/35 bg-[#181B2C]/60 p-2">
+                  <span className="block font-sans text-[10px] text-[#A3A1BD]">
                     Precipitación
                   </span>
-                  <span className="font-bold text-[#F1F5F9]">
+                  <span className="font-bold text-[#E4DFD5]">
                     {site.climatology.precipitation_mm_day.toFixed(2)} mm/d
                   </span>
                 </div>
-                <div className="rounded-lg border border-[rgba(100,180,210,0.16)] bg-[#132434]/60 p-2">
-                  <span className="block font-sans text-[10px] text-[#94A3B8]">
+                <div className="rounded-lg border border-[#55527D]/35 bg-[#181B2C]/60 p-2">
+                  <span className="block font-sans text-[10px] text-[#A3A1BD]">
                     Presión Superficial
                   </span>
-                  <span className="font-bold text-[#F1F5F9]">
+                  <span className="font-bold text-[#E4DFD5]">
                     {site.climatology.surface_pressure_kpa.toFixed(1)} kPa
                   </span>
                 </div>
-                <div className="rounded-lg border border-[rgba(100,180,210,0.16)] bg-[#132434]/60 p-2">
-                  <span className="block font-sans text-[10px] text-[#94A3B8]">
+                <div className="rounded-lg border border-[#55527D]/35 bg-[#181B2C]/60 p-2">
+                  <span className="block font-sans text-[10px] text-[#A3A1BD]">
                     Irradiancia / Viento
                   </span>
-                  <span className="font-bold text-[#F1F5F9]">
+                  <span className="font-bold text-[#E4DFD5]">
                     {site.climatology.solar_irradiance_kwh_m2_day.toFixed(1)} kWh ·{" "}
                     {site.climatology.wind_m_s.toFixed(1)} m/s
                   </span>
@@ -431,40 +431,40 @@ export function SideBySideComparison({
 
             {/* DEM & Scenario Priors */}
             <div className="space-y-1.5">
-              <span className="block text-[10px] font-semibold tracking-wider text-[#94A3B8] uppercase">
+              <span className="block text-[10px] font-semibold tracking-wider text-[#A3A1BD] uppercase">
                 Topografía DEM y Priors de Escenario
               </span>
               <div className="grid grid-cols-2 gap-2 font-mono text-xs tabular-nums">
-                <div className="rounded-lg border border-[rgba(100,180,210,0.16)] bg-[#132434]/60 p-2">
-                  <span className="block font-sans text-[10px] text-[#94A3B8]">
+                <div className="rounded-lg border border-[#55527D]/35 bg-[#181B2C]/60 p-2">
+                  <span className="block font-sans text-[10px] text-[#A3A1BD]">
                     Pendiente (DEM / Prior)
                   </span>
-                  <span className="font-bold text-[#F1F5F9]">
+                  <span className="font-bold text-[#E4DFD5]">
                     {site.dem_telemetry.dem_slope_deg.toFixed(1)}° / {earthSlope.toFixed(1)}°
                   </span>
                 </div>
-                <div className="rounded-lg border border-[rgba(100,180,210,0.16)] bg-[#132434]/60 p-2">
-                  <span className="block font-sans text-[10px] text-[#94A3B8]">
+                <div className="rounded-lg border border-[#55527D]/35 bg-[#181B2C]/60 p-2">
+                  <span className="block font-sans text-[10px] text-[#A3A1BD]">
                     Relieve DEM / Rugosidad
                   </span>
-                  <span className="font-bold text-[#F1F5F9]">
+                  <span className="font-bold text-[#E4DFD5]">
                     {site.dem_telemetry.dem_roughness_m.toFixed(1)} m / {earthRoughness.toFixed(2)}
                   </span>
                 </div>
-                <div className="rounded-lg border border-[rgba(100,180,210,0.16)] bg-[#132434]/60 p-2">
-                  <span className="block font-sans text-[10px] text-[#94A3B8]">
+                <div className="rounded-lg border border-[#55527D]/35 bg-[#181B2C]/60 p-2">
+                  <span className="block font-sans text-[10px] text-[#A3A1BD]">
                     Tubos Lávicos / Refugio
                   </span>
-                  <span className="font-bold text-[#F1F5F9]">
+                  <span className="font-bold text-[#E4DFD5]">
                     {(site.terrain.lava_tubes * 100).toFixed(0)}% /{" "}
                     {(site.terrain.shelter * 100).toFixed(0)}%
                   </span>
                 </div>
-                <div className="rounded-lg border border-[rgba(100,180,210,0.16)] bg-[#132434]/60 p-2">
-                  <span className="block font-sans text-[10px] text-[#94A3B8]">
+                <div className="rounded-lg border border-[#55527D]/35 bg-[#181B2C]/60 p-2">
+                  <span className="block font-sans text-[10px] text-[#A3A1BD]">
                     Hielo / Hist. Acuosa
                   </span>
-                  <span className="font-bold text-[#F1F5F9]">
+                  <span className="font-bold text-[#E4DFD5]">
                     {(earthIce * 100).toFixed(0)}% /{" "}
                     {(earthAqueous * 100).toFixed(0)}%
                   </span>
@@ -474,7 +474,7 @@ export function SideBySideComparison({
 
             {/* Lithological memberships */}
             <div>
-              <span className="block text-[10px] font-semibold tracking-wider text-[#94A3B8] uppercase">
+              <span className="block text-[10px] font-semibold tracking-wider text-[#A3A1BD] uppercase">
                 Membresías Geológicas del Sitio (0–100%)
               </span>
               <div className="mt-1.5 flex flex-wrap gap-1.5">
@@ -482,13 +482,13 @@ export function SideBySideComparison({
                   geologyEntries.map(({ label, val }) => (
                     <span
                       key={label}
-                      className="rounded border border-[rgba(100,180,210,0.2)] bg-[#071018] px-2 py-0.5 font-mono text-[10px] text-slate-300"
+                      className="rounded border border-[#55527D]/35 bg-[#181B2C] px-2 py-0.5 font-mono text-[10px] text-[#A3A1BD]"
                     >
                       {label}: {(val * 100).toFixed(0)}%
                     </span>
                   ))
                 ) : (
-                  <span className="font-mono text-[10px] text-[#94A3B8]">
+                  <span className="font-mono text-[10px] text-[#A3A1BD]">
                     Estimado por prior de escenario en punto libre
                   </span>
                 )}
@@ -496,10 +496,10 @@ export function SideBySideComparison({
             </div>
           </div>
 
-          <div className="mt-4 border-t border-[rgba(100,180,210,0.16)] pt-2.5 text-[11px] text-[#94A3B8]">
+          <div className="mt-4 border-t border-[#55527D]/35 pt-2.5 text-[11px] text-[#A3A1BD]">
             <span>
               Período climático: {site.climatology.period ?? " Escenario anual"} · Gravedad:{" "}
-              <strong className="font-mono text-slate-200">9.81 m/s²</strong>
+              <strong className="font-mono text-[#E4DFD5]">9.81 m/s²</strong>
             </span>
           </div>
         </section>
@@ -507,26 +507,26 @@ export function SideBySideComparison({
         {/* COLUMN 2 — ANÁLISIS CUANTITATIVO ASI */}
         <section
           aria-label="Columna central: análisis cuantitativo del índice ASI"
-          className="flex flex-col justify-between rounded-xl border border-[#F5B82E]/35 bg-[#0D1925]/95 p-4"
+          className="flex flex-col justify-between rounded-xl border border-[#C5A36D]/50 bg-[#181B2C]/95 p-4"
         >
           <div className="space-y-4">
-            <div className="flex items-center justify-between border-b border-[rgba(100,180,210,0.18)] pb-2.5">
+            <div className="flex items-center justify-between border-b border-[#55527D]/35 pb-2.5">
               <div className="flex items-center gap-2">
-                <Layers className="h-4 w-4 text-[#F5B82E]" aria-hidden="true" />
-                <h3 className="text-xs font-bold tracking-wider text-[#F5B82E] uppercase">
+                <Layers className="h-4 w-4 text-[#C5A36D]" aria-hidden="true" />
+                <h3 className="text-xs font-bold tracking-wider text-[#C5A36D] uppercase">
                   Columna II · Análisis ASI (5 Ejes)
                 </h3>
               </div>
-              <span className="font-mono text-xs font-bold text-[#F5B82E]">
+              <span className="font-mono text-xs font-bold text-[#C5A36D]">
                 {activeScore.overall_asi.toFixed(1)} / 100
               </span>
             </div>
 
             {/* Circular Gauge + 5-Axis Radar side by side */}
-            <div className="grid grid-cols-1 items-center gap-2 rounded-xl border border-[rgba(100,180,210,0.16)] bg-[#071018]/80 p-3 sm:grid-cols-2">
+            <div className="grid grid-cols-1 items-center gap-2 rounded-xl border border-[#55527D]/35 bg-[#181B2C]/80 p-3 sm:grid-cols-2">
               <div className="flex flex-col items-center justify-center">
                 <AsiCircularGauge score={activeScore.overall_asi} isMars={isMars} />
-                <span className="mt-1.5 text-center text-[10px] text-[#94A3B8]">
+                <span className="mt-1.5 text-center text-[10px] text-[#A3A1BD]">
                   Similitud ponderada de escenario (no probabilidad)
                 </span>
               </div>
@@ -547,72 +547,72 @@ export function SideBySideComparison({
                   <div key={key} className="space-y-1">
                     <div className="flex items-center justify-between text-xs">
                       <div>
-                        <span className="font-medium text-[#F1F5F9]">{label}</span>
-                        <span className="ml-1.5 font-mono text-[10px] text-[#94A3B8]">
+                        <span className="font-medium text-[#E4DFD5]">{label}</span>
+                        <span className="ml-1.5 font-mono text-[10px] text-[#A3A1BD]">
                           (peso: {weight.toFixed(0)}%)
                         </span>
                       </div>
-                      <span className="font-mono font-bold tabular-nums text-[#F5B82E]">
+                      <span className="font-mono font-bold tabular-nums text-[#C5A36D]">
                         {score.toFixed(1)}%
                       </span>
                     </div>
-                    <div className="h-2 w-full overflow-hidden rounded-full bg-[#132434]">
+                    <div className="h-2 w-full overflow-hidden rounded-full bg-[#181B2C]">
                       <div
                         className={`h-full rounded-full ${targetBar}`}
                         style={{ width: `${Math.min(100, Math.max(0, score))}%` }}
                       />
                     </div>
-                    <p className="text-[10px] leading-tight text-[#94A3B8]">{desc}</p>
+                    <p className="text-[10px] leading-tight text-[#A3A1BD]">{desc}</p>
                   </div>
                 );
               })}
             </div>
 
             {/* Key Environmental Gaps Summary */}
-            <div className="rounded-lg border border-[rgba(100,180,210,0.18)] bg-[#132434]/50 p-3 text-xs">
-              <span className="block text-[10px] font-bold tracking-wider text-[#00D9F5] uppercase">
+            <div className="rounded-lg border border-[#55527D]/35 bg-[#181B2C]/50 p-3 text-xs">
+              <span className="block text-[10px] font-bold tracking-wider text-[#7CA5B8] uppercase">
                 Brechas Ambientales Directas
               </span>
               <div className="mt-2 grid grid-cols-2 gap-2 font-mono text-[11px] tabular-nums">
                 <div>
-                  <span className="block font-sans text-[10px] text-[#94A3B8]">
+                  <span className="block font-sans text-[10px] text-[#A3A1BD]">
                     Δ Temp. Media:
                   </span>
-                  <span className="font-bold text-[#F5B82E]">
+                  <span className="font-bold text-[#C5A36D]">
                     {Math.abs(earthMeanTemp - targetMeanTemp).toFixed(1)}°C
                   </span>
                 </div>
                 <div>
-                  <span className="block font-sans text-[10px] text-[#94A3B8]">
+                  <span className="block font-sans text-[10px] text-[#A3A1BD]">
                     Δ Amplitud Térmica:
                   </span>
-                  <span className="font-bold text-[#F1F5F9]">
+                  <span className="font-bold text-[#E4DFD5]">
                     {Math.abs(earthTempSwing - targetTempSwing).toFixed(1)}°C
                   </span>
                 </div>
                 <div>
-                  <span className="block font-sans text-[10px] text-[#94A3B8]">
+                  <span className="block font-sans text-[10px] text-[#A3A1BD]">
                     Δ Pendiente:
                   </span>
-                  <span className="font-bold text-[#34D399]">
+                  <span className="font-bold text-[#8AB8A8]">
                     {targetSlope !== null
                       ? `${Math.abs(earthSlope - targetSlope).toFixed(1)}°`
                       : "No medida"}
                   </span>
                 </div>
                 <div>
-                  <span className="block font-sans text-[10px] text-[#94A3B8]">
+                  <span className="block font-sans text-[10px] text-[#A3A1BD]">
                     Relación Gravedad:
                   </span>
-                  <span className="font-bold text-purple-300">
+                  <span className="font-bold text-[#A3A1BD]">
                     {targetGravity.toFixed(2)} vs 9.81 m/s² ({targetGravityRatio}%)
                   </span>
                 </div>
-                <div className="col-span-2 border-t border-[rgba(100,180,210,0.14)] pt-1.5">
-                  <span className="font-sans text-[10px] text-[#94A3B8]">
+                <div className="col-span-2 border-t border-[#55527D]/35 pt-1.5">
+                  <span className="font-sans text-[10px] text-[#A3A1BD]">
                     Índice Aridez (Tierra vs {bodyLabel}):{" "}
                   </span>
-                  <span className="font-bold text-[#00D9F5]">
+                  <span className="font-bold text-[#7CA5B8]">
                     {(earthDryness * 100).toFixed(1)}% vs {(targetDryness * 100).toFixed(1)}%
                   </span>
                 </div>
@@ -621,15 +621,15 @@ export function SideBySideComparison({
           </div>
 
           {/* Objective Motor Conclusion (Fase 3 / Fase 6 compliance) */}
-          <div className="mt-4 rounded-lg border border-[#F5B82E]/30 bg-[#071018]/90 p-3 text-xs">
-            <div className="flex items-center gap-1.5 font-semibold text-[#F5B82E]">
+          <div className="mt-4 rounded-lg border border-[#C5A36D]/50 bg-[#181B2C]/90 p-3 text-xs">
+            <div className="flex items-center gap-1.5 font-semibold text-[#C5A36D]">
               <Info className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
               <span>Interpretación Cuantitativa del Motor ASI</span>
             </div>
-            <p className="mt-1 leading-relaxed text-slate-300">
+            <p className="mt-1 leading-relaxed text-[#A3A1BD]">
               Para el objetivo <strong>{target.name.split("/")[0]}</strong>, el motor
               calcula un ASI ponderado de{" "}
-              <strong className="font-mono text-[#F5B82E]">
+              <strong className="font-mono text-[#C5A36D]">
                 {activeScore.overall_asi.toFixed(1)}%
               </strong>
               , impulsado principalmente por{" "}
@@ -651,85 +651,85 @@ export function SideBySideComparison({
         {/* COLUMN 3 — LUNA O MARTE (Objetivo Extraterrestre) */}
         <section
           aria-label={`Columna derecha: propiedades documentadas de ${target.name}`}
-          className={`flex flex-col justify-between rounded-xl border ${targetBorder} bg-[#0D1925]/90 p-4`}
+          className={`flex flex-col justify-between rounded-xl border ${targetBorder} bg-[#181B2C]/90 p-4`}
         >
           <div className="space-y-4">
-            <div className="flex items-center justify-between border-b border-[rgba(100,180,210,0.18)] pb-2.5">
+            <div className="flex items-center justify-between border-b border-[#55527D]/35 pb-2.5">
               <div className="flex items-center gap-2">
                 {isMars ? (
                   <Orbit className="h-4 w-4 text-[#E07A5F]" aria-hidden="true" />
                 ) : (
-                  <Moon className="h-4 w-4 text-[#00D9F5]" aria-hidden="true" />
+                  <Moon className="h-4 w-4 text-[#7CA5B8]" aria-hidden="true" />
                 )}
                 <h3 className={`text-xs font-bold tracking-wider uppercase ${targetAccent}`}>
                   Columna III · {bodyLabel} (Referencia)
                 </h3>
               </div>
-              <span className="rounded bg-[#132434] px-2 py-0.5 font-mono text-[10px] text-slate-200">
+              <span className="rounded bg-[#181B2C] px-2 py-0.5 font-mono text-[10px] text-[#E4DFD5]">
                 NASA PDS
               </span>
             </div>
 
             <div>
-              <h4 className="text-sm font-bold text-[#F1F5F9]">{target.name}</h4>
-              <p className="mt-1 text-xs leading-relaxed text-slate-300">
+              <h4 className="text-sm font-bold text-[#E4DFD5]">{target.name}</h4>
+              <p className="mt-1 text-xs leading-relaxed text-[#A3A1BD]">
                 {target.context}
               </p>
             </div>
 
             {/* Documented Planetary Parameters */}
             <div className="space-y-1.5">
-              <span className="block text-[10px] font-semibold tracking-wider text-[#94A3B8] uppercase">
+              <span className="block text-[10px] font-semibold tracking-wider text-[#A3A1BD] uppercase">
                 Parámetros de Escenario y Constantes Nominales
               </span>
               <div className="grid grid-cols-2 gap-2 font-mono text-xs tabular-nums">
-                <div className="rounded-lg border border-[rgba(100,180,210,0.16)] bg-[#132434]/60 p-2">
-                  <span className="block font-sans text-[10px] text-[#94A3B8]">
+                <div className="rounded-lg border border-[#55527D]/35 bg-[#181B2C]/60 p-2">
+                  <span className="block font-sans text-[10px] text-[#A3A1BD]">
                     Temp. Media Escenario
                   </span>
-                  <span className="font-bold text-[#F1F5F9]">
+                  <span className="font-bold text-[#E4DFD5]">
                     {targetMeanTemp.toFixed(1)}°C
                   </span>
                 </div>
-                <div className="rounded-lg border border-[rgba(100,180,210,0.16)] bg-[#132434]/60 p-2">
-                  <span className="block font-sans text-[10px] text-[#94A3B8]">
+                <div className="rounded-lg border border-[#55527D]/35 bg-[#181B2C]/60 p-2">
+                  <span className="block font-sans text-[10px] text-[#A3A1BD]">
                     Rango Escenario
                   </span>
-                  <span className="font-bold text-[#F1F5F9]">
+                  <span className="font-bold text-[#E4DFD5]">
                     {target.temp_min_c !== undefined && target.temp_max_c !== undefined
                       ? `${target.temp_min_c}° a ${target.temp_max_c}°C`
                       : `±${(targetTempSwing / 2).toFixed(0)}°C`}
                   </span>
                 </div>
-                <div className="rounded-lg border border-[rgba(100,180,210,0.16)] bg-[#132434]/60 p-2">
-                  <span className="block font-sans text-[10px] text-[#94A3B8]">
+                <div className="rounded-lg border border-[#55527D]/35 bg-[#181B2C]/60 p-2">
+                  <span className="block font-sans text-[10px] text-[#A3A1BD]">
                     Amplitud Térmica ΔT
                   </span>
                   <span className={`font-bold ${targetAccent}`}>
                     {targetTempSwing.toFixed(1)}°C
                   </span>
                 </div>
-                <div className="rounded-lg border border-[rgba(100,180,210,0.16)] bg-[#132434]/60 p-2">
-                  <span className="block font-sans text-[10px] text-[#94A3B8]">
+                <div className="rounded-lg border border-[#55527D]/35 bg-[#181B2C]/60 p-2">
+                  <span className="block font-sans text-[10px] text-[#A3A1BD]">
                     Sequedad Superficial
                   </span>
-                  <span className="font-bold text-[#F1F5F9]">
+                  <span className="font-bold text-[#E4DFD5]">
                     {(targetDryness * 100).toFixed(0)}% (Sin lluvia líquida)
                   </span>
                 </div>
-                <div className="rounded-lg border border-[rgba(100,180,210,0.16)] bg-[#132434]/60 p-2">
-                  <span className="block font-sans text-[10px] text-[#94A3B8]">
+                <div className="rounded-lg border border-[#55527D]/35 bg-[#181B2C]/60 p-2">
+                  <span className="block font-sans text-[10px] text-[#A3A1BD]">
                     Gravedad Nominal
                   </span>
-                  <span className="font-bold text-[#F1F5F9]">
+                  <span className="font-bold text-[#E4DFD5]">
                     {targetGravity.toFixed(2)} m/s² ({targetGravityRatio}% g)
                   </span>
                 </div>
-                <div className="rounded-lg border border-[rgba(100,180,210,0.16)] bg-[#132434]/60 p-2">
-                  <span className="block font-sans text-[10px] text-[#94A3B8]">
+                <div className="rounded-lg border border-[#55527D]/35 bg-[#181B2C]/60 p-2">
+                  <span className="block font-sans text-[10px] text-[#A3A1BD]">
                     Presión Nominal
                   </span>
-                  <span className="font-bold text-[#F1F5F9]">
+                  <span className="font-bold text-[#E4DFD5]">
                     {target.pressure_kpa !== undefined
                       ? `${target.pressure_kpa} kPa`
                       : isMars
@@ -742,40 +742,40 @@ export function SideBySideComparison({
 
             {/* Target Terrain Priors & Unmeasured Indicators */}
             <div className="space-y-1.5">
-              <span className="block text-[10px] font-semibold tracking-wider text-[#94A3B8] uppercase">
+              <span className="block text-[10px] font-semibold tracking-wider text-[#A3A1BD] uppercase">
                 Priors Morfológicos y Mineralogía Regional
               </span>
               <div className="grid grid-cols-2 gap-2 font-mono text-xs tabular-nums">
-                <div className="rounded-lg border border-[rgba(100,180,210,0.16)] bg-[#132434]/60 p-2">
-                  <span className="block font-sans text-[10px] text-[#94A3B8]">
+                <div className="rounded-lg border border-[#55527D]/35 bg-[#181B2C]/60 p-2">
+                  <span className="block font-sans text-[10px] text-[#A3A1BD]">
                     Pendiente Escenario
                   </span>
-                  <span className="font-bold text-[#F1F5F9]">
+                  <span className="font-bold text-[#E4DFD5]">
                     {targetSlope !== null ? `${targetSlope.toFixed(1)}°` : "No disponible"}
                   </span>
                 </div>
-                <div className="rounded-lg border border-[rgba(100,180,210,0.16)] bg-[#132434]/60 p-2">
-                  <span className="block font-sans text-[10px] text-[#94A3B8]">
+                <div className="rounded-lg border border-[#55527D]/35 bg-[#181B2C]/60 p-2">
+                  <span className="block font-sans text-[10px] text-[#A3A1BD]">
                     Rugosidad / Hielo
                   </span>
-                  <span className="font-bold text-[#F1F5F9]">
+                  <span className="font-bold text-[#E4DFD5]">
                     {targetRoughness !== null ? targetRoughness.toFixed(2) : "—"} /{" "}
                     {targetIce !== null ? `${(targetIce * 100).toFixed(0)}%` : "—"}
                   </span>
                 </div>
               </div>
               {target.mineralogy_summary && (
-                <p className="rounded-lg border border-[rgba(100,180,210,0.16)] bg-[#071018]/70 p-2.5 text-xs leading-relaxed text-slate-300">
-                  <strong className="text-slate-100">Contexto Mineralógico:</strong>{" "}
+                <p className="rounded-lg border border-[#55527D]/35 bg-[#181B2C]/70 p-2.5 text-xs leading-relaxed text-[#A3A1BD]">
+                  <strong className="text-[#E4DFD5]">Contexto Mineralógico:</strong>{" "}
                   {target.mineralogy_summary}
                 </p>
               )}
             </div>
 
             {/* Explicitly Unmeasured / Unavailable Data */}
-            <div className="rounded-lg border border-[rgba(100,180,210,0.18)] bg-[#071018]/80 p-2.5 text-[11px] text-[#94A3B8]">
-              <span className="flex items-center gap-1 font-semibold text-slate-200">
-                <Database className="h-3.5 w-3.5 text-[#00D9F5]" aria-hidden="true" />
+            <div className="rounded-lg border border-[#55527D]/35 bg-[#181B2C]/80 p-2.5 text-[11px] text-[#A3A1BD]">
+              <span className="flex items-center gap-1 font-semibold text-[#E4DFD5]">
+                <Database className="h-3.5 w-3.5 text-[#7CA5B8]" aria-hidden="true" />
                 Instrumentación y Datos No Medidos Localmente
               </span>
               <p className="mt-1">
@@ -786,7 +786,7 @@ export function SideBySideComparison({
                 </span>
                 .
               </p>
-              <p className="mt-1 text-[10px] text-slate-400">
+              <p className="mt-1 text-[10px] text-[#A3A1BD]">
                 * Dosis de radiación ionizante local, ensayo geoquímico in situ de
                 tubos subterráneos y humedad relativa atmosférica no aplican o no
                 están medidos en este perfil.
@@ -794,12 +794,12 @@ export function SideBySideComparison({
             </div>
           </div>
 
-          <div className="mt-4 border-t border-[rgba(100,180,210,0.16)] pt-3">
+          <div className="mt-4 border-t border-[#55527D]/35 pt-3">
             <a
               href={target.source_url}
               target="_blank"
               rel="noreferrer noopener"
-              className="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-[#F5B82E] bg-[#F5B82E]/15 px-3 py-2 text-xs font-semibold text-[#F5B82E] transition-colors hover:bg-[#F5B82E]/25"
+              className="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-[#C5A36D] bg-[#C5A36D]/15 px-3 py-2 text-xs font-semibold text-[#C5A36D] transition-colors hover:bg-[#C5A36D]/25"
             >
               <span>Consultar Fuente Oficial en NASA.gov</span>
               <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" />
@@ -811,21 +811,21 @@ export function SideBySideComparison({
       {/* 3. SCIENTIFIC STRENGTHS & DOCUMENTED LIMITATIONS (FASE 3 / FASE 6) */}
       <section aria-labelledby="strengths-limits-heading" className="grid gap-3 sm:grid-cols-2">
         {/* Strengths */}
-        <div className="rounded-xl border border-[#34D399]/35 bg-[#0D1925]/90 p-4">
-          <div className="mb-2 flex items-center gap-1.5 text-xs font-bold tracking-wider text-[#34D399] uppercase">
+        <div className="rounded-xl border border-[#526D62]/50 bg-[#181B2C]/90 p-4">
+          <div className="mb-2 flex items-center gap-1.5 text-xs font-bold tracking-wider text-[#8AB8A8] uppercase">
             <CheckCircle2 className="h-4 w-4" aria-hidden="true" />
             Dimensiones con Alta Afinidad (Score ≥ 70/100)
           </div>
           {activeScore.analogy_strengths.length === 0 ? (
-            <p className="text-xs text-[#94A3B8]">
+            <p className="text-xs text-[#A3A1BD]">
               Ninguna dimensión individual superó el umbral de 70/100 frente a este
               objetivo; la similitud es parcial o específica de sub-variables.
             </p>
           ) : (
-            <ul className="space-y-1.5 text-xs text-slate-200">
+            <ul className="space-y-1.5 text-xs text-[#E4DFD5]">
               {activeScore.analogy_strengths.map((str, idx) => (
                 <li key={idx} className="flex items-start gap-2">
-                  <span className="font-bold text-[#34D399]">•</span>
+                  <span className="font-bold text-[#8AB8A8]">•</span>
                   <span>{str}</span>
                 </li>
               ))}
@@ -834,15 +834,15 @@ export function SideBySideComparison({
         </div>
 
         {/* Documented Breakdowns / Limitations */}
-        <div className="rounded-xl border border-[#F5B82E]/35 bg-[#0D1925]/90 p-4">
-          <div className="mb-2 flex items-center gap-1.5 text-xs font-bold tracking-wider text-[#F5B82E] uppercase">
+        <div className="rounded-xl border border-[#C5A36D]/50 bg-[#181B2C]/90 p-4">
+          <div className="mb-2 flex items-center gap-1.5 text-xs font-bold tracking-wider text-[#C5A36D] uppercase">
             <AlertTriangle className="h-4 w-4" aria-hidden="true" />
             Limitaciones Científicas y Brechas Físicas Documentadas
           </div>
-          <ul className="space-y-1.5 text-xs text-slate-300">
+          <ul className="space-y-1.5 text-xs text-[#A3A1BD]">
             {Object.entries(activeScore.analogy_breakdowns).map(([key, msg]) => (
               <li key={key} className="leading-relaxed">
-                <span className="font-semibold text-[#F1F5F9] uppercase">{key}:</span>{" "}
+                <span className="font-semibold text-[#E4DFD5] uppercase">{key}:</span>{" "}
                 <span>{msg}</span>
               </li>
             ))}

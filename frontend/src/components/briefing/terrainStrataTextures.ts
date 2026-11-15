@@ -331,13 +331,18 @@ function buildNormalMapFromHeightfield(
   return createCanvasTextureFromBuffer(size, buf, false);
 }
 
+const cachedTexturesBySize = new Map<number, TerrainStrataTextureBundle>();
+
 /**
- * Generates high-resolution (1024x1024 default) PBR textures (map, normalMap, roughnessMap)
+ * Generates memoized PBR textures (map, normalMap, roughnessMap)
  * for all 4 geological strata and the subterranean lava tube.
  */
 export function createTerrainStrataTextures(
-  size = 1024
+  size = 256
 ): TerrainStrataTextureBundle {
+  const existing = cachedTexturesBySize.get(size);
+  if (existing) return existing;
+
   const total = size * size;
 
   const makeLayerMaps = (
@@ -382,9 +387,9 @@ export function createTerrainStrataTextures(
 
   // Layer 1: Satellite volcanic/arid terrain + subtle vegetation patches (Galapagos / Atacama)
   const layer1 = makeLayerMaps(3.2, (u, v) => {
-    const base = fbm(u * 7.5, v * 7.5, 11, 5);
-    const ridge = ridgedMultifractal(u * 11, v * 11, 29, 4);
-    const vegMask = fbm(u * 3.8 + 1.9, v * 3.8 - 1.2, 43, 4);
+    const base = fbm(u * 7.5, v * 7.5, 11, 4);
+    const ridge = ridgedMultifractal(u * 11, v * 11, 29, 3);
+    const vegMask = fbm(u * 3.8 + 1.9, v * 3.8 - 1.2, 43, 3);
 
     let rgb = mixRgb([48, 42, 38], [154, 112, 74], base);
     rgb = mixRgb(rgb, [192, 158, 118], Math.max(0, ridge - 0.52) * 1.45);
@@ -400,8 +405,8 @@ export function createTerrainStrataTextures(
 
   // Layer 2: DEM 90m volcanic rock & sandstone with eroded ridges
   const layer2 = makeLayerMaps(4.8, (u, v) => {
-    const ridge = ridgedMultifractal(u * 6.5, v * 6.5, 101, 6);
-    const soil = fbm(u * 12, v * 12, 113, 4);
+    const ridge = ridgedMultifractal(u * 6.5, v * 6.5, 101, 4);
+    const soil = fbm(u * 12, v * 12, 113, 3);
     let rgb = mixRgb([34, 36, 44], [142, 88, 50], Math.pow(ridge, 0.85));
     rgb = mixRgb(rgb, [206, 172, 128], Math.max(0, ridge - 0.6) * 2.1);
     rgb = mixRgb(rgb, [76, 66, 58], soil * 0.28);
@@ -414,8 +419,8 @@ export function createTerrainStrataTextures(
 
   // Layer 3: Geology & lithology (base texture enhanced by triplanar GLSL strata shader)
   const layer3 = makeLayerMaps(4.2, (u, v) => {
-    const grain = fbm(u * 16, v * 16, 211, 5);
-    const fracture = ridgedMultifractal(u * 9, v * 9, 227, 4);
+    const grain = fbm(u * 16, v * 16, 211, 4);
+    const fracture = ridgedMultifractal(u * 9, v * 9, 227, 3);
     const rgb = mixRgb([120, 88, 64], [186, 152, 116], grain);
     return {
       rgb,
@@ -426,8 +431,8 @@ export function createTerrainStrataTextures(
 
   // Layer 4: Fractured black volcanic basaltic rock with incandescent magma cracks
   const layer4 = makeLayerMaps(5.6, (u, v) => {
-    const rock = fbm(u * 14, v * 14, 401, 5);
-    const fracture = ridgedMultifractal(u * 6.5, v * 6.5, 419, 5);
+    const rock = fbm(u * 14, v * 14, 401, 4);
+    const fracture = ridgedMultifractal(u * 6.5, v * 6.5, 419, 4);
     let rgb = mixRgb([12, 13, 16], [34, 36, 42], rock);
     let rough = 0.92;
     let h = rock * 0.65 + (1 - fracture) * 0.35;
@@ -440,32 +445,17 @@ export function createTerrainStrataTextures(
     return { rgb, height: h, roughness: rough };
   });
 
-  const allTextures: THREE.CanvasTexture[] = [
-    layer1.map,
-    layer1.normalMap,
-    layer1.roughnessMap,
-    layer2.map,
-    layer2.normalMap,
-    layer2.roughnessMap,
-    layer3.map,
-    layer3.normalMap,
-    layer3.roughnessMap,
-    layer4.map,
-    layer4.normalMap,
-    layer4.roughnessMap,
-  ];
-
-  return {
+  const bundle: TerrainStrataTextureBundle = {
     layer1,
     layer2,
     layer3,
     layer4,
     dispose: () => {
-      for (const tex of allTextures) {
-        tex.dispose();
-      }
+      // Kept in module cache for instant reuse across mounts
     },
   };
+  cachedTexturesBySize.set(size, bundle);
+  return bundle;
 }
 
 export type StratumShaderMode = "surface" | "relief" | "geology" | "subsurface";

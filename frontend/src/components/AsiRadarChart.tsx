@@ -22,8 +22,8 @@ export function AsiRadarChart({ dimensions, weights, isMars }: AsiRadarChartProp
   const cy = size / 2 + 4;
   const maxR = 72;
 
-  const strokeColor = isMars ? "#E07A5F" : "#06B6D4";
-  const fillColor = isMars ? "rgba(224, 122, 95, 0.24)" : "rgba(6, 182, 212, 0.24)";
+  const strokeColor = isMars ? "#E07A5F" : "#7CA5B8";
+  const fillColor = isMars ? "rgba(224, 122, 95, 0.24)" : "rgba(124, 165, 184, 0.24)";
 
   const getPoint = (index: number, pct: number) => {
     const angle = -Math.PI / 2 + (index * 2 * Math.PI) / AXES.length;
@@ -69,7 +69,7 @@ export function AsiRadarChart({ dimensions, weights, isMars }: AsiRadarChartProp
               key={ringPct}
               points={pts}
               fill="none"
-              stroke={ringPct === 100 ? "rgba(148, 163, 184, 0.32)" : "rgba(148, 163, 184, 0.14)"}
+              stroke={ringPct === 100 ? "rgba(85, 82, 125, 0.55)" : "rgba(85, 82, 125, 0.28)"}
               strokeWidth={ringPct === 100 ? 1.1 : 0.8}
               strokeDasharray={ringPct === 50 ? "2,2" : undefined}
             />
@@ -86,7 +86,7 @@ export function AsiRadarChart({ dimensions, weights, isMars }: AsiRadarChartProp
               y1={cy}
               x2={outer.x}
               y2={outer.y}
-              stroke="rgba(148, 163, 184, 0.2)"
+              stroke="rgba(85, 82, 125, 0.35)"
               strokeWidth="0.9"
             />
           );
@@ -95,8 +95,8 @@ export function AsiRadarChart({ dimensions, weights, isMars }: AsiRadarChartProp
         {/* Target mission weight envelope */}
         <polygon
           points={priorityPolygon}
-          fill="rgba(212, 175, 55, 0.07)"
-          stroke="#D4AF37"
+          fill="rgba(197, 163, 109, 0.08)"
+          stroke="#C5A36D"
           strokeWidth="1.2"
           strokeDasharray="3,2"
         />
@@ -121,14 +121,14 @@ export function AsiRadarChart({ dimensions, weights, isMars }: AsiRadarChartProp
                 cy={pt.y}
                 r="3.2"
                 fill={strokeColor}
-                stroke="#060913"
+                stroke="#101321"
                 strokeWidth="1.2"
               />
               <text
                 x={labelPt.x}
                 y={labelPt.y - 4}
                 textAnchor="middle"
-                className="fill-slate-300 text-[9.5px] font-medium"
+                className="fill-[#E4DFD5] text-[9.5px] font-medium"
               >
                 {axis.shortLabel}
               </text>
@@ -136,7 +136,7 @@ export function AsiRadarChart({ dimensions, weights, isMars }: AsiRadarChartProp
                 x={labelPt.x}
                 y={labelPt.y + 7}
                 textAnchor="middle"
-                className="fill-[#D4AF37] font-mono text-[9.5px] font-bold"
+                className="fill-[#C5A36D] font-mono text-[9.5px] font-bold"
               >
                 {val.toFixed(0)}%
               </text>
@@ -145,7 +145,7 @@ export function AsiRadarChart({ dimensions, weights, isMars }: AsiRadarChartProp
         })}
       </svg>
 
-      <div className="mt-1 flex items-center justify-center gap-4 text-[10px] text-slate-400">
+      <div className="mt-1 flex items-center justify-center gap-4 text-[10px] text-[#A3A1BD]">
         <span className="flex items-center gap-1.5">
           <span
             className="inline-block h-2 w-2 rounded-full"
@@ -154,7 +154,7 @@ export function AsiRadarChart({ dimensions, weights, isMars }: AsiRadarChartProp
           Similitud Sitio (%)
         </span>
         <span className="flex items-center gap-1.5">
-          <span className="inline-block h-0.5 w-3 border-b border-dashed border-[#D4AF37]" />
+          <span className="inline-block h-0.5 w-3 border-b border-dashed border-[#C5A36D]" />
           Énfasis Objetivo
         </span>
       </div>

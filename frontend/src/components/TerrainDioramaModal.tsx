@@ -148,8 +148,8 @@ export function TerrainDioramaModal({ target, onClose }: TerrainDioramaModalProp
     container.appendChild(renderer.domElement);
 
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color("#060913");
-    scene.fog = new THREE.FogExp2("#060913", 0.0022);
+    scene.background = new THREE.Color(0x101321);
+    scene.fog = new THREE.FogExp2(0x101321, 0.0022);
 
     const camera = new THREE.PerspectiveCamera(42, width / height, 0.5, 900);
     camera.position.set(82, 58, 92);
@@ -232,7 +232,7 @@ export function TerrainDioramaModal({ target, onClose }: TerrainDioramaModalProp
     scene.add(mesh);
 
     // Subtle spatial reference grid beneath the diorama
-    const gridHelper = new THREE.GridHelper(160, 16, 0x1e293b, 0x0f172a);
+    const gridHelper = new THREE.GridHelper(160, 16, 0x55527d, 0x27233e);
     gridHelper.position.y = -0.5;
     scene.add(gridHelper);
 
@@ -245,11 +245,11 @@ export function TerrainDioramaModal({ target, onClose }: TerrainDioramaModalProp
       exaggeration;
     const beaconGroup = new THREE.Group();
     const poleGeo = new THREE.CylinderGeometry(0.18, 0.18, 12, 8);
-    const poleMat = new THREE.MeshBasicMaterial({ color: 0x06b6d4 });
+    const poleMat = new THREE.MeshBasicMaterial({ color: 0x7ca5b8 });
     const pole = new THREE.Mesh(poleGeo, poleMat);
     pole.position.y = 6;
     const tipGeo = new THREE.OctahedronGeometry(0.9, 0);
-    const tipMat = new THREE.MeshBasicMaterial({ color: 0x22d3ee });
+    const tipMat = new THREE.MeshBasicMaterial({ color: 0xc5a36d });
     const tip = new THREE.Mesh(tipGeo, tipMat);
     tip.position.y = 12.8;
     beaconGroup.add(pole, tip);
@@ -402,30 +402,30 @@ export function TerrainDioramaModal({ target, onClose }: TerrainDioramaModalProp
 
   return createPortal(
     <div
-      className="fixed inset-0 z-[120] flex items-center justify-center bg-black/80 p-3 backdrop-blur-sm md:p-6"
+      className="fixed inset-0 z-[120] flex items-center justify-center bg-[#101321]/80 p-3 backdrop-blur-sm md:p-6"
       role="dialog"
       aria-modal="true"
       aria-label={`Gemelo Topográfico 3D HD de ${target.name}`}
     >
-      <div className="relative flex h-[90vh] w-full max-w-6xl flex-col overflow-hidden rounded-xl border border-slate-800/90 bg-[#060913] shadow-2xl">
+      <div className="relative flex h-[90vh] w-full max-w-6xl flex-col overflow-hidden rounded-xl border border-[#55527D]/35 bg-[#101321] shadow-2xl">
         {/* Header HUD */}
-        <header className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-800/80 bg-[#0D1424]/95 px-4 py-3">
+        <header className="flex flex-wrap items-center justify-between gap-3 border-b border-[#55527D]/35 bg-[#121626]/95 px-4 py-3">
           <div className="flex items-center gap-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg border border-cyan-500/40 bg-cyan-500/10 text-cyan-300">
+            <div className="flex h-9 w-9 items-center justify-center rounded-lg border border-[#7CA5B8]/50 bg-[#7CA5B8]/15 text-[#7CA5B8]">
               <Mountain className="h-5 w-5" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h2 className="text-sm font-semibold text-slate-100 md:text-base">
+                <h2 className="text-sm font-semibold text-[#E4DFD5] md:text-base">
                   Gemelo Topográfico 3D HD — {target.name}
                 </h2>
                 {typeof target.asiScore === "number" && (
-                  <span className="rounded border border-cyan-500/40 bg-cyan-500/15 px-2 py-0.5 font-mono text-xs tabular-nums text-cyan-200">
+                  <span className="rounded border border-[#7CA5B8]/50 bg-[#7CA5B8]/15 px-2 py-0.5 font-mono text-xs tabular-nums text-[#7CA5B8]">
                     ASI {target.asiScore.toFixed(1)}%
                   </span>
                 )}
               </div>
-              <p className="font-mono text-xs tabular-nums text-slate-400">
+              <p className="font-mono text-xs tabular-nums text-[#A3A1BD]">
                 LAT {target.latitude.toFixed(4)}° · LON {target.longitude.toFixed(4)}°
                 {dataset && (
                   <>
@@ -441,7 +441,7 @@ export function TerrainDioramaModal({ target, onClose }: TerrainDioramaModalProp
           <button
             type="button"
             onClick={onClose}
-            className="inline-flex min-h-[40px] items-center gap-1.5 rounded-lg border border-slate-700/80 bg-slate-900/70 px-3 py-1.5 text-xs font-medium text-slate-200 transition-colors hover:border-cyan-500/50 hover:text-white"
+            className="inline-flex min-h-[40px] items-center gap-1.5 rounded-lg border border-[#55527D]/35 bg-[#181B2C]/70 px-3 py-1.5 text-xs font-medium text-[#E4DFD5] transition-colors hover:border-[#7CA5B8]/50 hover:text-[#E4DFD5]"
           >
             <X className="h-4 w-4" />
             Cerrar visor
@@ -451,25 +451,25 @@ export function TerrainDioramaModal({ target, onClose }: TerrainDioramaModalProp
         {/* Body */}
         <div className="grid min-h-0 flex-1 grid-cols-1 lg:grid-cols-[1fr_320px]">
           {/* WebGL Viewport */}
-          <div className="relative min-h-[340px] flex-1 bg-[#060913]">
+          <div className="relative min-h-[340px] flex-1 bg-[#101321]">
             <div ref={mountRef} className="h-full w-full" />
 
             {loading && (
-              <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-[#060913]/85 backdrop-blur-sm">
-                <Loader2 className="h-7 w-7 animate-spin text-cyan-400" />
-                <p className="font-mono text-xs text-slate-300">
+              <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-[#101321]/85 backdrop-blur-sm">
+                <Loader2 className="h-7 w-7 animate-spin text-[#7CA5B8]" />
+                <p className="font-mono text-xs text-[#A3A1BD]">
                   Reconstruyendo malla DEM y textura satelital HD...
                 </p>
               </div>
             )}
 
             {error && (
-              <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-[#060913]/95 p-6 text-center">
-                <p className="max-w-md text-sm text-rose-300">{error}</p>
+              <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-[#101321]/95 p-6 text-center">
+                <p className="max-w-md text-sm text-[#D47A61]">{error}</p>
                 <button
                   type="button"
                   onClick={() => setRetryNonce((n) => n + 1)}
-                  className="rounded-md border border-slate-700 bg-slate-900 px-3 py-1.5 text-xs text-slate-200 hover:border-cyan-500/50"
+                  className="rounded-md border border-[#55527D]/35 bg-[#181B2C] px-3 py-1.5 text-xs text-[#E4DFD5] hover:border-[#7CA5B8]/50"
                 >
                   Reintentar carga
                 </button>
@@ -479,7 +479,7 @@ export function TerrainDioramaModal({ target, onClose }: TerrainDioramaModalProp
             {/* Floating viewport controls */}
             {dataset && !loading && (
               <div className="pointer-events-none absolute bottom-3 left-3 right-3 flex flex-wrap items-end justify-between gap-2">
-                <div className="pointer-events-auto rounded-lg border border-slate-800/80 bg-[#0D1424]/90 px-3 py-1.5 font-mono text-[11px] tabular-nums text-slate-300 backdrop-blur-md">
+                <div className="pointer-events-auto rounded-lg border border-[#55527D]/35 bg-[#181B2C]/90 px-3 py-1.5 font-mono text-[11px] tabular-nums text-[#A3A1BD] backdrop-blur-md">
                   Arrastrar: Orbitar · Scroll: Zoom · Clic derecho: Desplazar
                 </div>
                 <div className="pointer-events-auto flex items-center gap-1.5">
@@ -489,8 +489,8 @@ export function TerrainDioramaModal({ target, onClose }: TerrainDioramaModalProp
                     aria-pressed={autoRotate}
                     className={`inline-flex items-center gap-1 rounded-md border px-2.5 py-1.5 text-xs font-medium backdrop-blur-md transition-colors ${
                       autoRotate
-                        ? "border-cyan-500/60 bg-cyan-500/20 text-cyan-200"
-                        : "border-slate-800/80 bg-[#0D1424]/90 text-slate-300 hover:text-white"
+                        ? "border-[#7CA5B8]/50 bg-[#27233E] text-[#7CA5B8]"
+                        : "border-[#55527D]/35 bg-[#121626]/90 text-[#A3A1BD] hover:text-[#E4DFD5]"
                     }`}
                   >
                     <RotateCcw className="h-3.5 w-3.5" />
@@ -502,8 +502,8 @@ export function TerrainDioramaModal({ target, onClose }: TerrainDioramaModalProp
                     aria-pressed={wireframe}
                     className={`inline-flex items-center gap-1 rounded-md border px-2.5 py-1.5 text-xs font-medium backdrop-blur-md transition-colors ${
                       wireframe
-                        ? "border-amber-500/60 bg-amber-500/20 text-amber-200"
-                        : "border-slate-800/80 bg-[#0D1424]/90 text-slate-300 hover:text-white"
+                        ? "border-[#C5A36D]/50 bg-[#27233E] text-[#C5A36D]"
+                        : "border-[#55527D]/35 bg-[#121626]/90 text-[#A3A1BD] hover:text-[#E4DFD5]"
                     }`}
                   >
                     <Maximize2 className="h-3.5 w-3.5" />
@@ -515,11 +515,11 @@ export function TerrainDioramaModal({ target, onClose }: TerrainDioramaModalProp
           </div>
 
           {/* Right Telemetry & Simulation Controls */}
-          <aside className="flex flex-col gap-4 overflow-y-auto border-t border-slate-800/80 bg-[#0D1424]/95 p-4 lg:border-l lg:border-t-0">
+          <aside className="flex flex-col gap-4 overflow-y-auto border-t border-[#55527D]/35 bg-[#121626]/95 p-4 lg:border-l lg:border-t-0">
             {/* Render Mode */}
             <section>
-              <div className="mb-2 flex items-center gap-1.5 text-xs font-semibold text-slate-200">
-                <Layers className="h-3.5 w-3.5 text-cyan-400" />
+              <div className="mb-2 flex items-center gap-1.5 text-xs font-semibold text-[#E4DFD5]">
+                <Layers className="h-3.5 w-3.5 text-[#7CA5B8]" />
                 Capa de Análisis 3D
               </div>
               <div className="grid grid-cols-3 gap-1.5">
@@ -539,8 +539,8 @@ export function TerrainDioramaModal({ target, onClose }: TerrainDioramaModalProp
                       aria-pressed={active}
                       className={`min-h-[38px] rounded-md border px-2 py-1.5 text-xs font-medium transition-colors ${
                         active
-                          ? "border-cyan-500/60 bg-cyan-500/20 text-cyan-200"
-                          : "border-slate-800 bg-[#060913]/70 text-slate-300 hover:border-slate-700 hover:text-white"
+                          ? "border-[#7CA5B8]/50 bg-[#27233E] text-[#7CA5B8]"
+                          : "border-[#55527D]/35 bg-[#101321]/70 text-[#A3A1BD] hover:border-[#55527D]/35 hover:text-[#E4DFD5]"
                       }`}
                     >
                       {m.label}
@@ -550,17 +550,17 @@ export function TerrainDioramaModal({ target, onClose }: TerrainDioramaModalProp
               </div>
 
               {renderMode === "slope" && (
-                <div className="mt-2.5 grid grid-cols-2 gap-1.5 rounded-md border border-slate-800/80 bg-[#060913]/70 p-2 font-mono text-[11px] tabular-nums">
-                  <div className="flex items-center gap-1.5 text-cyan-300">
-                    <span className="h-2.5 w-2.5 rounded-sm bg-[#06B6D4]" />
+                <div className="mt-2.5 grid grid-cols-2 gap-1.5 rounded-md border border-[#55527D]/35 bg-[#181B2C] p-2 font-mono text-[11px] tabular-nums">
+                  <div className="flex items-center gap-1.5 text-[#7CA5B8]">
+                    <span className="h-2.5 w-2.5 rounded-sm bg-[#7CA5B8]" />
                     {"<=10° Óptimo"}
                   </div>
-                  <div className="flex items-center gap-1.5 text-emerald-300">
-                    <span className="h-2.5 w-2.5 rounded-sm bg-[#10B981]" />
+                  <div className="flex items-center gap-1.5 text-[#8AB8A8]">
+                    <span className="h-2.5 w-2.5 rounded-sm bg-[#526D62]" />
                     10-15° Rover OK
                   </div>
-                  <div className="flex items-center gap-1.5 text-amber-300">
-                    <span className="h-2.5 w-2.5 rounded-sm bg-[#F59E0B]" />
+                  <div className="flex items-center gap-1.5 text-[#C5A36D]">
+                    <span className="h-2.5 w-2.5 rounded-sm bg-[#C5A36D]" />
                     15-25° Límite
                   </div>
                   <div className="flex items-center gap-1.5 text-[#E07A5F]">
@@ -572,13 +572,13 @@ export function TerrainDioramaModal({ target, onClose }: TerrainDioramaModalProp
             </section>
 
             {/* Solar Simulation */}
-            <section className="rounded-lg border border-slate-800/80 bg-[#060913]/70 p-3">
+            <section className="rounded-lg border border-[#55527D]/35 bg-[#181B2C] p-3">
               <div className="mb-2 flex items-center justify-between">
-                <span className="flex items-center gap-1.5 text-xs font-semibold text-slate-200">
-                  <Sun className="h-3.5 w-3.5 text-amber-300" />
+                <span className="flex items-center gap-1.5 text-xs font-semibold text-[#E4DFD5]">
+                  <Sun className="h-3.5 w-3.5 text-[#C5A36D]" />
                   Simulador Solar
                 </span>
-                <span className="font-mono text-xs tabular-nums text-amber-200">
+                <span className="font-mono text-xs tabular-nums text-[#C5A36D]">
                   {solarElevation.toFixed(1)}° / {solarAzimuth}°
                 </span>
               </div>
@@ -592,14 +592,14 @@ export function TerrainDioramaModal({ target, onClose }: TerrainDioramaModalProp
                       setSolarElevation(preset.elevation);
                       setSolarAzimuth(preset.azimuth);
                     }}
-                    className="rounded border border-slate-800 bg-[#0D1424] px-2 py-1 text-[11px] text-slate-300 hover:border-amber-400/50 hover:text-amber-200"
+                    className="rounded border border-[#55527D]/35 bg-[#181B2C] px-2 py-1 text-[11px] text-[#A3A1BD] hover:border-[#C5A36D]/50 hover:text-[#C5A36D]"
                   >
                     {preset.label}
                   </button>
                 ))}
               </div>
 
-              <label className="block text-[11px] text-slate-400">
+              <label className="block text-[11px] text-[#A3A1BD]">
                 Elevación solar ({solarElevation.toFixed(1)}°)
                 <input
                   type="range"
@@ -608,11 +608,11 @@ export function TerrainDioramaModal({ target, onClose }: TerrainDioramaModalProp
                   step={0.5}
                   value={solarElevation}
                   onChange={(e) => setSolarElevation(Number(e.target.value))}
-                  className="mt-1 w-full accent-amber-400"
+                  className="mt-1 w-full accent-[#C5A36D]"
                 />
               </label>
 
-              <label className="mt-2 block text-[11px] text-slate-400">
+              <label className="mt-2 block text-[11px] text-[#A3A1BD]">
                 Azimut solar ({solarAzimuth}°)
                 <input
                   type="range"
@@ -621,20 +621,20 @@ export function TerrainDioramaModal({ target, onClose }: TerrainDioramaModalProp
                   step={5}
                   value={solarAzimuth}
                   onChange={(e) => setSolarAzimuth(Number(e.target.value))}
-                  className="mt-1 w-full accent-cyan-400"
+                  className="mt-1 w-full accent-[#7CA5B8]"
                 />
               </label>
             </section>
 
             {/* Scale & Vertical Exaggeration */}
-            <section className="rounded-lg border border-slate-800/80 bg-[#060913]/70 p-3">
-              <div className="mb-2 flex items-center gap-1.5 text-xs font-semibold text-slate-200">
-                <Compass className="h-3.5 w-3.5 text-cyan-400" />
+            <section className="rounded-lg border border-[#55527D]/35 bg-[#181B2C] p-3">
+              <div className="mb-2 flex items-center gap-1.5 text-xs font-semibold text-[#E4DFD5]">
+                <Compass className="h-3.5 w-3.5 text-[#7CA5B8]" />
                 Geometría y Escala
               </div>
 
               <div className="mb-2.5">
-                <span className="mb-1 block text-[11px] text-slate-400">
+                <span className="mb-1 block text-[11px] text-[#A3A1BD]">
                   Exageración vertical
                 </span>
                 <div className="grid grid-cols-4 gap-1">
@@ -646,8 +646,8 @@ export function TerrainDioramaModal({ target, onClose }: TerrainDioramaModalProp
                       aria-pressed={exaggeration === factor}
                       className={`rounded border py-1 font-mono text-xs tabular-nums transition-colors ${
                         exaggeration === factor
-                          ? "border-cyan-500/60 bg-cyan-500/20 text-cyan-200"
-                          : "border-slate-800 bg-[#0D1424] text-slate-300 hover:text-white"
+                          ? "border-[#7CA5B8]/50 bg-[#27233E] text-[#7CA5B8]"
+                          : "border-[#55527D]/35 bg-[#121626] text-[#A3A1BD] hover:text-[#E4DFD5]"
                       }`}
                     >
                       {factor.toFixed(1)}x
@@ -657,7 +657,7 @@ export function TerrainDioramaModal({ target, onClose }: TerrainDioramaModalProp
               </div>
 
               <div>
-                <span className="mb-1 block text-[11px] text-slate-400">
+                <span className="mb-1 block text-[11px] text-[#A3A1BD]">
                   Radio de captura
                 </span>
                 <div className="grid grid-cols-3 gap-1">
@@ -673,8 +673,8 @@ export function TerrainDioramaModal({ target, onClose }: TerrainDioramaModalProp
                       aria-pressed={radiusMeters === opt.value}
                       className={`rounded border py-1 font-mono text-xs tabular-nums transition-colors ${
                         radiusMeters === opt.value
-                          ? "border-cyan-500/60 bg-cyan-500/20 text-cyan-200"
-                          : "border-slate-800 bg-[#0D1424] text-slate-300 hover:text-white"
+                          ? "border-[#7CA5B8]/50 bg-[#27233E] text-[#7CA5B8]"
+                          : "border-[#55527D]/35 bg-[#121626] text-[#A3A1BD] hover:text-[#E4DFD5]"
                       }`}
                     >
                       {opt.label}
@@ -686,40 +686,40 @@ export function TerrainDioramaModal({ target, onClose }: TerrainDioramaModalProp
 
             {/* Terrain Metrics */}
             {dataset && (
-              <section className="rounded-lg border border-slate-800/80 bg-[#060913]/70 p-3">
-                <h3 className="mb-2 text-xs font-semibold text-slate-200">
+              <section className="rounded-lg border border-[#55527D]/35 bg-[#181B2C] p-3">
+                <h3 className="mb-2 text-xs font-semibold text-[#E4DFD5]">
                   Métricas Topográficas del Sector
                 </h3>
                 <dl className="grid grid-cols-2 gap-2 font-mono text-xs tabular-nums">
-                  <div className="rounded border border-slate-800/70 bg-[#0D1424]/70 p-2">
-                    <dt className="text-[10px] text-slate-400">Elevación Mín</dt>
-                    <dd className="text-slate-100">
+                  <div className="rounded border border-[#55527D]/35 bg-[#181B2C]/70 p-2">
+                    <dt className="text-[10px] text-[#A3A1BD]">Elevación Mín</dt>
+                    <dd className="text-[#E4DFD5]">
                       {dataset.metrics.minElevationM.toFixed(0)} m
                     </dd>
                   </div>
-                  <div className="rounded border border-slate-800/70 bg-[#0D1424]/70 p-2">
-                    <dt className="text-[10px] text-slate-400">Elevación Máx</dt>
-                    <dd className="text-slate-100">
+                  <div className="rounded border border-[#55527D]/35 bg-[#181B2C]/70 p-2">
+                    <dt className="text-[10px] text-[#A3A1BD]">Elevación Máx</dt>
+                    <dd className="text-[#E4DFD5]">
                       {dataset.metrics.maxElevationM.toFixed(0)} m
                     </dd>
                   </div>
-                  <div className="rounded border border-slate-800/70 bg-[#0D1424]/70 p-2">
-                    <dt className="text-[10px] text-slate-400">Relieve Total</dt>
-                    <dd className="text-cyan-300">
+                  <div className="rounded border border-[#55527D]/35 bg-[#181B2C]/70 p-2">
+                    <dt className="text-[10px] text-[#A3A1BD]">Relieve Total</dt>
+                    <dd className="text-[#7CA5B8]">
                       {dataset.metrics.reliefM.toFixed(0)} m
                     </dd>
                   </div>
-                  <div className="rounded border border-slate-800/70 bg-[#0D1424]/70 p-2">
-                    <dt className="text-[10px] text-slate-400">Pendiente Media</dt>
-                    <dd className="text-slate-100">
+                  <div className="rounded border border-[#55527D]/35 bg-[#181B2C]/70 p-2">
+                    <dt className="text-[10px] text-[#A3A1BD]">Pendiente Media</dt>
+                    <dd className="text-[#E4DFD5]">
                       {dataset.metrics.meanSlopeDeg.toFixed(1)}°
                     </dd>
                   </div>
-                  <div className="col-span-2 rounded border border-slate-800/70 bg-[#0D1424]/70 p-2">
-                    <dt className="text-[10px] text-slate-400">
+                  <div className="col-span-2 rounded border border-[#55527D]/35 bg-[#181B2C]/70 p-2">
+                    <dt className="text-[10px] text-[#A3A1BD]">
                       Transitabilidad Rover (&le; 15°)
                     </dt>
-                    <dd className="text-sm font-semibold text-emerald-300">
+                    <dd className="text-sm font-semibold text-[#8AB8A8]">
                       {dataset.metrics.roverTraversablePct.toFixed(1)}% del área
                     </dd>
                   </div>

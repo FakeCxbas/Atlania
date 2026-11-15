@@ -35,8 +35,10 @@ export default function RootLayout({
         <link rel="preconnect" href="https://server.arcgisonline.com" crossOrigin="anonymous" />
         <link rel="preconnect" href="https://s3.amazonaws.com" crossOrigin="anonymous" />
         <link rel="dns-prefetch" href="https://gibs.earthdata.nasa.gov" />
-        <link rel="dns-prefetch" href="https://tiles.openfreemap.org" />
-        <link rel="preload" href="/maplibre-gl-worker.mjs" as="script" crossOrigin="anonymous" />
+        <link rel="preload" href="/fonts/HelloParis.woff2" as="font" type="font/woff2" crossOrigin="anonymous" />
+        <link rel="preload" href="/nasa/earth-equirectangular.jpg" as="image" fetchPriority="high" />
+        <link rel="preload" href="/nasa/moon-equirectangular.jpg" as="image" />
+        <link rel="preload" href="/nasa/mars-equirectangular.jpg" as="image" />
       </head>
       <body className="min-h-full flex flex-col bg-[#101321] text-[#E4DFD5] selection:bg-[#C5A36D]/30 selection:text-[#E4DFD5]">
         {children}

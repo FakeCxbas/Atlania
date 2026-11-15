@@ -180,14 +180,60 @@ export function PlanetScene({
     const starField = new THREE.Points(starGeo, starMat);
     scene.add(starField);
 
-    // 2. Load NASA Textures
+    // 2. Load NASA Textures with instant frame-0 procedural fallback so planets appear at 0ms
+    const makeInstantFallbackTex = (c1: string, c2: string) => {
+      const c = document.createElement("canvas");
+      c.width = 64;
+      c.height = 32;
+      const ctx = c.getContext("2d");
+      if (ctx) {
+        const g = ctx.createLinearGradient(0, 0, 64, 32);
+        g.addColorStop(0, c1);
+        g.addColorStop(0.55, c2);
+        g.addColorStop(1, c1);
+        ctx.fillStyle = g;
+        ctx.fillRect(0, 0, 64, 32);
+      }
+      const tex = new THREE.CanvasTexture(c);
+      tex.colorSpace = THREE.SRGBColorSpace;
+      return tex;
+    };
+
     const textureLoader = new THREE.TextureLoader();
-    const earthTexture = textureLoader.load("/nasa/earth-equirectangular.jpg");
-    earthTexture.colorSpace = THREE.SRGBColorSpace;
-    const moonTexture = textureLoader.load("/nasa/moon-equirectangular.jpg");
-    moonTexture.colorSpace = THREE.SRGBColorSpace;
-    const marsTexture = textureLoader.load("/nasa/mars-equirectangular.jpg");
-    marsTexture.colorSpace = THREE.SRGBColorSpace;
+    const earthFallback = makeInstantFallbackTex("#0c2d48", "#1f5f5b");
+    const moonFallback = makeInstantFallbackTex("#64748b", "#94a3b8");
+    const marsFallback = makeInstantFallbackTex("#7c2d12", "#c2410c");
+    const earthTexture = earthFallback;
+    const moonTexture = moonFallback;
+    const marsTexture = marsFallback;
+
+    textureLoader.load("/nasa/earth-equirectangular.jpg", (tex) => {
+      if (disposed) {
+        tex.dispose();
+        return;
+      }
+      tex.colorSpace = THREE.SRGBColorSpace;
+      earthMat.map = tex;
+      earthMat.needsUpdate = true;
+    });
+    textureLoader.load("/nasa/moon-equirectangular.jpg", (tex) => {
+      if (disposed) {
+        tex.dispose();
+        return;
+      }
+      tex.colorSpace = THREE.SRGBColorSpace;
+      moonMat.map = tex;
+      moonMat.needsUpdate = true;
+    });
+    textureLoader.load("/nasa/mars-equirectangular.jpg", (tex) => {
+      if (disposed) {
+        tex.dispose();
+        return;
+      }
+      tex.colorSpace = THREE.SRGBColorSpace;
+      marsMat.map = tex;
+      marsMat.needsUpdate = true;
+    });
 
     // 3. Dominant 3D Earth Group with Fresnel Atmosphere Shader
     const earthGroup = new THREE.Group();
@@ -376,7 +422,7 @@ export function PlanetScene({
     const ensureTerrainBuilt = () => {
       if (terrainRefs || disposed) return;
 
-      const textures = createTerrainStrataTextures(isLowPowerDevice ? 384 : 512);
+      const textures = createTerrainStrataTextures(isLowPowerDevice ? 192 : 256);
       deferredTextures = textures;
       const geos = getOrCreateStrataGeometries(gridSegs, slabSize);
 
@@ -539,7 +585,7 @@ export function PlanetScene({
       };
     };
 
-    // Pre-build & compile Chapter 3 terrain shaders shortly after mount to eliminate scroll micro-stutter
+    // Pre-build & compile Chapter 3 terrain shaders after initial Hero & Earth paint to keep first load instant
     const warmupTimer = window.setTimeout(() => {
       if (disposed || terrainRefs) return;
       ensureTerrainBuilt();
@@ -547,7 +593,7 @@ export function PlanetScene({
       terrainGroup.visible = true;
       renderer.compile(scene, camera);
       terrainGroup.visible = prevVis;
-    }, 120);
+    }, 850);
 
     // Luminous geodesic extraction outline anchored to the emerging crust plate.
     const fractureGroup = new THREE.Group();
