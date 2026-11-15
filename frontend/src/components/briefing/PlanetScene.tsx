@@ -131,15 +131,12 @@ export function PlanetScene({
     );
     camera.position.set(0, 0.35, 9.2);
 
-    // Cinematic lighting: warm/neutral lateral key light + cool sky/ground HemisphereLight + rim fill
-    const ambientLight = new THREE.AmbientLight(0x0f172a, 0.45);
+    // Physically convincing space illumination: strong solar key light + deep space fill
+    const ambientLight = new THREE.AmbientLight(0x0f172a, 0.95);
     scene.add(ambientLight);
 
-    const hemiLight = new THREE.HemisphereLight(0x7dd3fc, 0x0b1120, 0.78);
-    scene.add(hemiLight);
-
-    const sunLight = new THREE.DirectionalLight(0xfff6e5, 3.4);
-    sunLight.position.set(7.5, 5.5, 6.5);
+    const sunLight = new THREE.DirectionalLight(0xfffbeb, 3.2);
+    sunLight.position.set(8, 6, 7);
     if (!isLowPowerDevice) {
       sunLight.castShadow = true;
       sunLight.shadow.mapSize.width = 2048;
@@ -148,7 +145,7 @@ export function PlanetScene({
       sunLight.shadow.camera.far = 25;
       const d = 4.5;
       sunLight.shadow.camera.left = -d;
-      sunLight.shadow.bias = -0.0004;
+      sunLight.shadow.bias = -0.0005;
       sunLight.shadow.normalBias = 0.015;
       sunLight.shadow.camera.right = d;
       sunLight.shadow.camera.top = d;
@@ -156,7 +153,7 @@ export function PlanetScene({
     }
     scene.add(sunLight);
 
-    const earthshineLight = new THREE.DirectionalLight(0x38bdf8, 1.05);
+    const earthshineLight = new THREE.DirectionalLight(0x00d9f5, 1.15);
     earthshineLight.position.set(-7, -3, 4);
     scene.add(earthshineLight);
 
@@ -215,13 +212,8 @@ export function PlanetScene({
     );
     const earthMat = new THREE.MeshStandardMaterial({
       map: earthTexture,
-      emissiveMap: earthTexture,
-      emissive: new THREE.Color(0x1e3a5f),
-      emissiveIntensity: 0.44,
-      roughness: 0.65,
-      metalness: 0.05,
-      transparent: false,
-      opacity: 1,
+      roughness: 0.58,
+      metalness: 0.1,
     });
     const earthMesh = new THREE.Mesh(earthGeo, earthMat);
     earthMesh.rotation.z = 0.18;
@@ -602,27 +594,22 @@ export function PlanetScene({
       // =======================================================================
       // CONTINUOUS CAMERA & PLANET CHOREOGRAPHY ACROSS CHAPTERS 1 -> 5
       // =======================================================================
-      let earthFade = 1.0;
-
       if (ch <= 2) {
         // Chapters 1 & 2 shared continuous orbital approach:
-        // Camera advances toward Earth but stops safely outside the atmosphere (never clips sphere)
+        // As introP goes 0 -> 1:
+        // - Camera advances directly toward Earth (z: 9.2 -> 4.95)
+        // - Earth rises and grows in the frame, atmosphere intensifies
+        // - Moon and Mars drift outward in parallax depth
         const t = Math.max(0, Math.min(1, introP));
-        const targetEarthPos = new THREE.Vector3(
-          THREE.MathUtils.lerp(0.35, 0.72, t),
-          THREE.MathUtils.lerp(-3.15, -2.15, t),
-          THREE.MathUtils.lerp(0.2, 0.55, t)
+        targetCamPos.set(0.18 * t, 0.35 - t * 0.55, 9.2 - t * 4.25);
+        targetLookAt.set(0.25 * t, -0.55 - t * 0.35, 0);
+
+        earthGroup.position.set(
+          THREE.MathUtils.lerp(0.35, 0.75, t),
+          THREE.MathUtils.lerp(-3.15, -2.05, t),
+          THREE.MathUtils.lerp(0.2, 0.75, t)
         );
-        earthGroup.position.lerp(targetEarthPos, 0.14);
-        earthGroup.scale.lerp(new THREE.Vector3(1, 1, 1), 0.12);
-
-        const minSafeZ = earthGroup.position.z + earthRadius + 1.35;
-        const desiredZ = Math.max(minSafeZ, 9.2 - t * 3.85);
-        targetCamPos.set(0.16 * t, 0.35 - t * 0.45, desiredZ);
-        targetLookAt.set(0.22 * t, -0.55 - t * 0.25, 0);
-
-        atmoUniforms.uIntensity.value = 1.05 + t * 0.75;
-        earthFade = 1.0;
+        atmoUniforms.uIntensity.value = 1.05 + t * 0.65;
 
         moonMesh.position.set(
           -4.35 - t * 1.4,
@@ -635,24 +622,20 @@ export function PlanetScene({
           -4.8 - t * 1.5
         );
       } else if (ch === 3) {
-        // Chapter 3: Atmospheric descent into the 3D Stratified Terrain Block framed on the right
+        // Chapter 3: Camera descends to the 3D Stratified Terrain Block on the right
         const t = Math.max(0, Math.min(1, terrP));
         targetCamPos.set(-0.28, 0.05, 6.85 - t * 0.25);
         targetLookAt.set(-0.24, 0.0, 1.4);
 
-        // Earth smoothly attenuates and scales gently back as the atmospheric veil transitions to strata
-        earthFade = Math.max(0, 1.0 - t * 3.8);
-        earthGroup.position.lerp(new THREE.Vector3(-1.1, -3.45, -1.0), 0.08);
-        const earthScale = 1.0 - (1.0 - earthFade) * 0.18;
-        earthGroup.scale.lerp(new THREE.Vector3(earthScale, earthScale, earthScale), 0.1);
-        atmoUniforms.uIntensity.value = 1.35 * earthFade;
+        // Push Earth limb lower/back so the 3D terrain block sits in clear dark space on the right
+        earthGroup.position.lerp(new THREE.Vector3(-1.35, -3.95, -1.2), 0.12);
+        atmoUniforms.uIntensity.value = 1.35;
       } else if (ch === 4) {
         // Chapter 4: Planetary Comparison (Earth on left, Moon or Mars on right)
         targetCamPos.set(0, 0.1, 6.8);
         targetLookAt.set(0, -0.15, 0);
 
         earthGroup.position.lerp(new THREE.Vector3(-2.35, -1.85, -0.4), 0.08);
-        earthGroup.scale.lerp(new THREE.Vector3(1, 1, 1), 0.12);
         atmoUniforms.uIntensity.value = 1.2;
 
         if (body === "Moon") {
@@ -667,15 +650,9 @@ export function PlanetScene({
         targetCamPos.set(0, 0.6, 9.6);
         targetLookAt.set(0, -0.6, 0);
         earthGroup.position.lerp(new THREE.Vector3(0, -3.35, 0), 0.08);
-        earthGroup.scale.lerp(new THREE.Vector3(1, 1, 1), 0.12);
         moonMesh.position.lerp(new THREE.Vector3(-4.2, 1.8, -2.5), 0.08);
         marsMesh.position.lerp(new THREE.Vector3(4.4, 2.1, -4.5), 0.08);
       }
-
-      const nextEarthOpacity = THREE.MathUtils.lerp(earthMat.opacity, earthFade, 0.14);
-      earthMat.opacity = nextEarthOpacity;
-      earthMat.transparent = nextEarthOpacity < 0.995;
-      earthGroup.visible = nextEarthOpacity > 0.015;
 
       const lerpFactor = prefersReducedMotion ? 0.25 : 0.09;
       currentCamPos.lerp(targetCamPos, lerpFactor);
