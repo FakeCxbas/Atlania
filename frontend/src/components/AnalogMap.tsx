@@ -81,13 +81,20 @@ function getBasemapStyle(mode: BasemapMode): string | maplibregl.StyleSpecificat
       },
       layers: [
         {
+          id: "ocean-background",
+          type: "background",
+          paint: {
+            "background-color": "#071426",
+          },
+        },
+        {
           id: "nasa-gibs-layer",
           type: "raster",
           source: "nasa-gibs",
           minzoom: 0,
           maxzoom: 18,
           paint: {
-            "raster-fade-duration": 120,
+            "raster-fade-duration": 250,
           },
         },
         {
@@ -142,13 +149,22 @@ function getBasemapStyle(mode: BasemapMode): string | maplibregl.StyleSpecificat
     },
     layers: [
       {
+        id: "ocean-background",
+        type: "background",
+        paint: {
+          "background-color": "#071426",
+        },
+      },
+      {
         id: "esri-satellite-layer",
         type: "raster",
         source: "esri-satellite",
         minzoom: 0,
         maxzoom: 18,
         paint: {
-          "raster-fade-duration": 120,
+          "raster-fade-duration": 250,
+          "raster-contrast": 0.05,
+          "raster-saturation": 0.05,
         },
       },
       {
@@ -320,8 +336,8 @@ export function AnalogMap({
         zoom: targetZoom,
         pitch: terrain3d ? Math.max(map.getPitch(), 45) : map.getPitch(),
         bearing: 0,
-        speed: 0.85,
-        curve: 1.35,
+        speed: 0.75,
+        curve: 1.08,
         essential: true,
       });
     },
@@ -357,7 +373,7 @@ export function AnalogMap({
       pitch: startPitch,
       bearing: 0,
       fadeDuration: 100,
-      maxTileCacheSize: 500,
+      maxTileCacheSize: 600,
       refreshExpiredTiles: false,
       cancelPendingTileRequestsWhileZooming: true,
     });
@@ -443,6 +459,9 @@ export function AnalogMap({
         if (map.getTerrain()) {
           map.setTerrain(null);
         }
+        if (map.getLayer("terrain-hillshade")) {
+          map.removeLayer("terrain-hillshade");
+        }
         return;
       }
 
@@ -459,8 +478,25 @@ export function AnalogMap({
         });
       }
 
+      if (!map.getLayer("terrain-hillshade")) {
+        map.addLayer(
+          {
+            id: "terrain-hillshade",
+            type: "hillshade",
+            source: "terrain-dem",
+            minzoom: TERRAIN_MIN_ZOOM,
+            paint: {
+              "hillshade-exaggeration": 0.28,
+              "hillshade-shadow-color": "rgba(5, 12, 24, 0.45)",
+              "hillshade-highlight-color": "rgba(255, 255, 255, 0.18)",
+            },
+          },
+          map.getLayer("esri-labels-layer") ? "esri-labels-layer" : undefined
+        );
+      }
+
       if (!map.getTerrain()) {
-        map.setTerrain({ source: "terrain-dem", exaggeration: 1.2 });
+        map.setTerrain({ source: "terrain-dem", exaggeration: 1.4 });
       }
     };
 
@@ -1091,7 +1127,7 @@ export function AnalogMap({
   }, [cameraTarget, sites, flyToSiteCinematographically]);
 
   return (
-    <div className="relative h-full w-full bg-[#060913]">
+    <div className="relative h-full w-full bg-[#071426]">
       <div
         ref={containerRef}
         className="h-full w-full"
