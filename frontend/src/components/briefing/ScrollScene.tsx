@@ -7,13 +7,15 @@ import { PlanetScene } from "./PlanetScene";
 
 export interface ScrollState {
   scrollProgress: number;
+  introProgress: number;
+  terrainProgress: number;
   activeChapter: number;
   layerSeparation: number;
 }
 
 interface ScrollSceneProps {
   comparisonBody: "Moon" | "Mars";
-  focusedLayer: 0 | 1 | 2 | 3;
+  focusedLayer: 0 | 1 | 2 | 3 | 4;
   children: (state: ScrollState) => React.ReactNode;
 }
 
@@ -22,12 +24,12 @@ const CHAPTER_MARKERS = [
   { index: 2, href: "#el-desafio", label: "02 · Aproximación a la Tierra" },
   { index: 3, href: "#capas-del-terreno", label: "03 · Capas del terreno" },
   { index: 4, href: "#que-es-un-analogo", label: "04 · Comparación planetaria" },
-  { index: 5, href: "#acceso-explorador", label: "05 · Acceso al explorador" },
+  { index: 5, href: "#acceso-al-explorador", label: "05 · Acceso al explorador" },
 ];
 
 /**
  * Coordinates narrative scroll progress across the 5 chapters using GSAP ScrollTrigger
- * and feeds normalized progress into the Three.js `PlanetScene` and `TerrainLayers`.
+ * and feeds normalized progress into the Three.js `PlanetScene` and sticky chapter stages.
  */
 export function ScrollScene({
   comparisonBody,
@@ -37,8 +39,10 @@ export function ScrollScene({
   const rootRef = useRef<HTMLDivElement | null>(null);
   const [scrollState, setScrollState] = useState<ScrollState>({
     scrollProgress: 0,
+    introProgress: 0,
+    terrainProgress: 0,
     activeChapter: 1,
-    layerSeparation: 0.25,
+    layerSeparation: 0.1,
   });
 
   useEffect(() => {
@@ -48,47 +52,89 @@ export function ScrollScene({
     gsap.registerPlugin(ScrollTrigger);
 
     const ctx = gsap.context(() => {
-      // Master narrative progress trigger across the entire page
+      // 1. Master narrative progress trigger across the entire page
       ScrollTrigger.create({
         trigger: root,
         start: "top top",
         end: "bottom bottom",
-        scrub: 0.4,
+        scrub: 0.2,
         onUpdate: (self) => {
-          const p = self.progress;
-          const chapter =
-            p < 0.18
-              ? 1
-              : p < 0.38
-              ? 2
-              : p < 0.62
-              ? 3
-              : p < 0.85
-              ? 4
-              : 5;
-
           setScrollState((prev) => ({
             ...prev,
-            scrollProgress: p,
-            activeChapter: chapter,
+            scrollProgress: self.progress,
           }));
         },
       });
 
-      // Dedicated Chapter 3 ScrollTrigger for 3D terrain layer separation
-      const chapter3El = document.getElementById("capas-del-terreno");
-      if (chapter3El) {
+      // 2. Shared Chapter 1 -> Chapter 2 continuous orbital approach trigger
+      const introTrackEl = document.getElementById("intro-scroll-track");
+      if (introTrackEl) {
         ScrollTrigger.create({
-          trigger: chapter3El,
-          start: "top 80%",
-          end: "bottom 25%",
-          scrub: 0.5,
+          trigger: introTrackEl,
+          start: "top top",
+          end: "bottom bottom",
+          scrub: 0.25,
+          onUpdate: (self) => {
+            const p = self.progress;
+            setScrollState((prev) => ({
+              ...prev,
+              introProgress: p,
+              activeChapter: p < 0.38 ? 1 : 2,
+            }));
+          },
+        });
+      }
+
+      // 3. Dedicated Chapter 3 ScrollTrigger for 3D terrain descent & 4-layer separation
+      const terrainTrackEl =
+        document.getElementById("terrain-3d-track") ??
+        document.getElementById("capas-del-terreno");
+      if (terrainTrackEl) {
+        ScrollTrigger.create({
+          trigger: terrainTrackEl,
+          start: "top 65%",
+          end: "bottom 35%",
+          scrub: 0.25,
+          onToggle: (self) => {
+            if (self.isActive) {
+              setScrollState((prev) => ({ ...prev, activeChapter: 3 }));
+            }
+          },
           onUpdate: (self) => {
             setScrollState((prev) => ({
               ...prev,
-              layerSeparation: self.progress,
+              activeChapter: 3,
+              terrainProgress: self.progress,
+              layerSeparation: Math.min(1, Math.max(0, (self.progress - 0.12) * 1.35)),
             }));
           },
+        });
+      }
+
+      // 4. Chapter 4 & Chapter 5 active chapter triggers
+      const ch4El = document.getElementById("que-es-un-analogo");
+      if (ch4El) {
+        ScrollTrigger.create({
+          trigger: ch4El,
+          start: "top 55%",
+          end: "bottom 45%",
+          onEnter: () =>
+            setScrollState((prev) => ({ ...prev, activeChapter: 4 })),
+          onEnterBack: () =>
+            setScrollState((prev) => ({ ...prev, activeChapter: 4 })),
+        });
+      }
+
+      const ch5El = document.getElementById("acceso-al-explorador");
+      if (ch5El) {
+        ScrollTrigger.create({
+          trigger: ch5El,
+          start: "top 60%",
+          end: "bottom bottom",
+          onEnter: () =>
+            setScrollState((prev) => ({ ...prev, activeChapter: 5 })),
+          onEnterBack: () =>
+            setScrollState((prev) => ({ ...prev, activeChapter: 5 })),
         });
       }
     }, root);
@@ -103,16 +149,18 @@ export function ScrollScene({
       {/* Continuous 3D WebGL Planetary & Stratified Terrain Stage */}
       <PlanetScene
         scrollProgress={scrollState.scrollProgress}
+        introProgress={scrollState.introProgress}
+        terrainProgress={scrollState.terrainProgress}
         activeChapter={scrollState.activeChapter}
         layerSeparation={scrollState.layerSeparation}
         comparisonBody={comparisonBody}
         focusedLayer={focusedLayer}
       />
 
-      {/* Discreet Editorial 5-Chapter Progress Rail (Desktop) */}
+      {/* Minimalist Editorial 5-Chapter Progress Rail (Desktop) */}
       <aside
         aria-label="Progreso de capítulos del viaje espacial"
-        className="fixed top-1/2 right-5 z-30 hidden -translate-y-1/2 flex-col gap-2.5 xl:flex"
+        className="fixed top-1/2 right-6 z-30 hidden -translate-y-1/2 flex-col gap-3 xl:flex"
       >
         {CHAPTER_MARKERS.map((ch) => {
           const isCurrent = scrollState.activeChapter === ch.index;
@@ -120,26 +168,22 @@ export function ScrollScene({
             <a
               key={ch.index}
               href={ch.href}
-              className={`group flex items-center justify-end gap-2.5 rounded-full px-3 py-1.5 font-mono text-[11px] transition-all ${
-                isCurrent
-                  ? "border border-[#00D9F5]/50 bg-[#0A1624]/90 text-[#00D9F5]"
-                  : "text-[#94A3B8]/75 hover:text-[#F1F5F9]"
-              }`}
+              className="group flex items-center justify-end gap-3 py-1 font-mono text-[11px] transition-colors"
             >
               <span
-                className={`transition-opacity ${
+                className={`transition-opacity duration-300 ${
                   isCurrent
-                    ? "opacity-100 font-semibold"
-                    : "opacity-0 group-hover:opacity-100"
+                    ? "opacity-100 font-semibold text-[#F1F5F9]"
+                    : "opacity-0 text-[#94A3B8] group-hover:opacity-100"
                 }`}
               >
                 {ch.label}
               </span>
               <span
-                className={`h-2 w-2 rounded-full transition-transform ${
+                className={`h-1.5 rounded-full transition-all duration-300 ${
                   isCurrent
-                    ? "scale-125 bg-[#00D9F5]"
-                    : "bg-slate-600 group-hover:bg-[#F5B82E]"
+                    ? "w-6 bg-[#00D9F5]"
+                    : "w-1.5 bg-white/30 group-hover:bg-white/70"
                 }`}
               />
             </a>
