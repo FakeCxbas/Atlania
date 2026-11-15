@@ -590,12 +590,6 @@ export function PlanetScene({
 
     let terrainPresence = 0;
     let currentSep = 0.1;
-    const stratumFocusOpacity: Record<1 | 2 | 3 | 4, number> = {
-      1: 1,
-      2: 1,
-      3: 1,
-      4: 1,
-    };
 
     const dampFactor = (dt: number, speed: number) =>
       prefersReducedMotion ? 1 : 1 - Math.exp(-speed * Math.min(dt, 0.05));

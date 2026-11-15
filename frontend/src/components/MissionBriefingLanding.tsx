@@ -445,7 +445,6 @@ export function MissionBriefingLanding({
   dataset,
 }: MissionBriefingLandingProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [activeChallengeIdx, setActiveChallengeIdx] = useState<number>(0);
   const [activeBodyTab, setActiveBodyTab] = useState<"Moon" | "Mars">("Moon");
   const [activeExampleId, setActiveExampleId] =
     useState<string>("moon-lava-tubes");
@@ -737,7 +736,7 @@ export function MissionBriefingLanding({
         brands: ["nextjs", "maplibre", "github"] as BrandId[],
       },
     ],
-    [dataset.methodology, dataset.sites.length]
+    [dataset.methodology]
   );
 
   const currentAsiValue = selectedAsiScore?.overall_asi ?? 0;

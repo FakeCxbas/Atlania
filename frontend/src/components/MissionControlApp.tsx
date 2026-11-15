@@ -25,7 +25,6 @@ import {
   ChevronLeft,
   ChevronRight,
   ChevronUp,
-  Compass,
   Download,
   ListFilter,
   Presentation,

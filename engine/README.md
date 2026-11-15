@@ -19,8 +19,12 @@ errors and invalid payloads fall back immediately; a site can take longer than
 to the script, not the caller's working directory. Import with `engine.asi_engine`
 or run the builder with `python -m engine.build_dataset`.
 
-Outputs contain 16 representative Earth sites, scores against all four targets,
-the winning target, strengths, explicit breakdowns and climate provenance.
+Outputs contain 35 representative Earth sites across 20 countries (including 8 sites in Ecuador),
+scores against all six Lunar and Martian reference targets (`shackleton-crater`,
+`mare-tranquillitatis`, `mouton-mons`, `jezero-crater`, `olympus-mons-flank`, and
+`valles-marineris`), the winning target, strengths, explicit breakdowns, 3-sensor
+`satellite_observatory` profiles (Landsat OLI optical, Sentinel-1 C-SAR radar, and
+Landsat TIRS thermal infrared), and climate/DEM provenance.
 GeoJSON uses WGS84 `[longitude, latitude]` coordinates and preserves the full site
 record in each feature's properties. JSON root keys are `schema_version`,
 `methodology`, `references`, `sites`. Each site's `scores[target_id]` contains
