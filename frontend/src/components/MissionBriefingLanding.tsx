@@ -566,47 +566,42 @@ export function MissionBriefingLanding({
       {
         id: "where-simulate",
         concept: "topography" as ScientificConcept,
-        question:
-          "¿Dónde podemos simular las condiciones de una región lunar o marciana?",
-        tag: "Cartografía de Análogos",
+        question: "¿Dónde probamos misiones lunares o marcianas?",
+        tag: "Análogos",
         shortAnswer:
-          "En regiones terrestres extremas que aíslan variables clave: tubos de lava basálticos, salares hiperáridos y criósfera de alta montaña.",
+          "En desiertos, volcanes y zonas polares de la Tierra.",
         detail:
-          "Ningún sitio terrestre replica un planeta al 100%, pero permiten aislar subsistemas: tubos volcánicos en Galápagos y Craters of the Moon reproducen cavidades subterráneas; salares en Atacama y Uyuni simulan paleolagos marcianos; y permafrost en Chimborazo y Haughton permite ensayar perforación en suelos congelados.",
-        metricLabel: "Cobertura actual del catálogo",
-        metricValue: `${translatedSites.length} sitios documentados en ${
+          "Tubos de lava en Galápagos, salares en Atacama o hielo en Chimborazo aíslan variables reales antes de despegar.",
+        metricLabel: "Cobertura del catálogo",
+        metricValue: `${translatedSites.length} sitios en ${
           new Set(translatedSites.map((s) => s.country)).size
         } países y regiones`,
       },
       {
         id: "what-makes-useful",
         concept: "geology" as ScientificConcept,
-        question: "¿Qué características hacen útil a un análogo terrestre?",
-        tag: "Evaluación Multidimensional",
+        question: "¿Qué hace útil a un análogo?",
+        tag: "5 Ejes ASI",
         shortAnswer:
-          "La correspondencia cuantitativa en 5 ejes: Topografía (pendientes), Geología (basalto/regolito), Clima térmico, Aridez/Hielo y Refugio subterráneo.",
+          "Su similitud en relieve, geología, clima, aridez y subsuelo.",
         detail:
-          "Un análogo es útil según el subsistema a evaluar: movilidad de rovers en pendientes escarpadas, durabilidad de sellos en polvo abrasivo o aislamiento térmico en amplitudes extremas. Cada destino extraterrestre pondera los 5 ejes según su objetivo científico prioritario.",
-        metricLabel: "Dimensiones del modelo ASI",
+          "Cada destino pondera estos 5 ejes según la misión: tracción de rovers, polvo abrasivo o refugio térmico.",
+        metricLabel: "Dimensiones ASI",
         metricValue: `${
           dataset.methodology.dimensions?.length ?? 5
-        } ejes ponderados por objetivo (${
-          Object.keys(dataset.references).length
-        } escenarios PDS)`,
+        } ejes · ${Object.keys(dataset.references).length} escenarios PDS`,
       },
       {
         id: "what-differences",
         concept: "gravity" as ScientificConcept,
-        question:
-          "¿Cuáles son las diferencias que ningún entorno terrestre puede reproducir?",
-        tag: "Ruptura de Analogía Física",
+        question: "¿Qué no puede replicar la Tierra?",
+        tag: "Límites Físicos",
         shortAnswer:
-          "Límites físicos insalvables: gravedad terrestre (9.81 m/s² frente a 1.62 y 3.71 m/s²), atmósfera densa con O₂/humedad y ausencia de radiación cósmica directa.",
+          "Gravedad (9.81 m/s²), atmósfera densa y escudo contra radiación.",
         detail:
-          "Identificar la ruptura de la analogía es mandatorio: la gravedad terrestre altera la mecánica de suelos y tracción; la atmósfera protege contra micrometeoritos y rayos cósmicos (GCR); y la biosfera meteoriza rocas de forma distinta al vacío lunar o marciano.",
-        metricLabel: "Constantes físicas contrastadas",
-        metricValue:
-          "Tierra 9.81 m/s² (101.3 kPa) vs. Luna 1.62 m/s² (0 kPa) y Marte 3.71 m/s² (0.65 kPa)",
+          "En la Luna (1.62 m/s²) y Marte (3.71 m/s²) cambian la mecánica del suelo, el vacío y la radiación cósmica.",
+        metricLabel: "Gravedad comparada",
+        metricValue: "Tierra 9.81 vs. Luna 1.62 y Marte 3.71 m/s²",
       },
     ],
     [translatedSites, dataset.methodology.dimensions, dataset.references]
@@ -615,58 +610,58 @@ export function MissionBriefingLanding({
   const pipelineSteps = useMemo(
     () => [
       {
-        step: "Etapa 1 — Recopilar",
+        step: "01 · Recopilar",
         code: "01 // FUENTES ABIERTAS",
-        title: "Telemetría satelital y archivos planetarios oficiales",
+        title: "Datos satelitales y archivos NASA",
         description:
-          "Ingesta automatizada de 7 variables climáticas de superficie desde NASA POWER API y modelos digitales de elevación Copernicus DEM GLO-90, cotejados con registros del Planetary Data System (PDS).",
+          "Clima (NASA POWER), relieve (Copernicus DEM 90 m) y misiones PDS.",
         sources: [
-          `NASA POWER API: 7 parámetros climáticos a 2 m (${dataset.methodology.source_counts.nasa_power}/${dataset.sites.length} sitios activos)`,
-          `Copernicus DEM 90m: Muestreo topográfico de 5 puntos para pendientes y rugosidad`,
-          "NASA PDS: Archivos de misiones LRO (Diviner/LOLA), MRO (HiRISE/CRISM) y Perseverance",
-          "Capas cartográficas: NASA GIBS VIIRS True Color y relieve sombreado tridimensional",
+          `NASA POWER: 7 variables climáticas (${dataset.methodology.source_counts.nasa_power}/${dataset.sites.length} sitios)`,
+          "Copernicus DEM 90 m: pendiente y rugosidad en 5 puntos",
+          "NASA PDS: misiones LRO, MRO y Perseverance",
+          "NASA GIBS VIIRS y relieve 3D sombreado",
         ],
         brands: ["nasa-power", "copernicus", "nasa-pds"] as BrandId[],
       },
       {
-        step: "Etapa 2 — Analizar",
-        code: "02 // TELEMETRÍA Y PRIORS",
-        title: "Procesamiento topográfico, térmico y litológico",
+        step: "02 · Analizar",
+        code: "02 // TELEMETRÍA",
+        title: "Relieve, clima y litología",
         description:
-          "Cálculo de gradientes locales de pendiente por diferencias centrales a 0.01°, rugosidad superficial (σ), amplitud térmica anual e índice continuo de aridez terrestre, cruzados con perfiles litológicos documentados.",
+          "Pendientes, rugosidad, amplitud térmica, aridez y perfil de roca.",
         sources: [
-          "Gradiente topográfico por diferencias centrales cardinales (centro ± 0.01° N, S, E, O)",
-          "Índice continuo de aridez y balance de sequedad superficial",
-          "Superposición geológica difusa: basalto, regolito, sedimentario, evaporitas e impacto",
-          "Separación explícita entre telemetría medida en vivo y supuestos documentales",
+          "Gradiente local por diferencias centrales (±0.01°)",
+          "Índice continuo de aridez superficial",
+          "Superposición difusa: basalto, regolito, sales e impacto",
+          "Separación clara entre telemetría medida y supuestos",
         ],
         brands: ["python", "open-meteo", "nasa-power"] as BrandId[],
       },
       {
-        step: "Etapa 3 — Comparar",
-        code: "03 // MODELO ANALÓGICO ASI",
-        title: "Analog Similarity Index (ASI) en 5 dimensiones",
+        step: "03 · Comparar",
+        code: "03 // ÍNDICE ASI",
+        title: "Similitud ASI en 5 dimensiones",
         description:
-          "Cuantificación multidimensional que compara cada sitio terrestre contra los 6 destinos de referencia lunar y marciano, reportando fortalezas de misión y rupturas de analogía física.",
+          "Compara cada sitio terrestre contra 6 destinos de la Luna y Marte.",
         sources: [
-          "Puntuación global ASI (0 a 100%) ponderada según prioridad científica de misión",
-          "Superposición difusa de Jaccard para litología y vulcanismo basáltico",
-          "Advertencias obligatorias de límites físicos: gravedad, atmósfera y radiación cósmica",
-          "Validación cuantitativa de cálculos con suite automatizada de pruebas unitarias",
+          "Puntuación global ASI (0–100%) ponderada por misión",
+          "Jaccard difuso para litología y vulcanismo",
+          "Alertas físicas: gravedad, atmósfera y radiación",
+          "Validado con suite de pruebas unitarias",
         ],
         brands: ["python", "nasa-pds"] as BrandId[],
       },
       {
-        step: "Etapa 4 — Explorar",
-        code: "04 // ESTACIÓN INTERACTIVA",
-        title: "Cartografía 3D, prospección de áreas y exportación científica",
+        step: "04 · Explorar",
+        code: "04 // EXPLORADOR 3D",
+        title: "Estación interactiva de misión",
         description:
-          "Estación de misión interactiva con globo y terreno 3D, panel comparativo sincrónico de 3 columnas, sondeo de cualquier coordenada terrestre y exportación directa a QGIS y reportes.",
+          "Globo 3D, comparación lado a lado, sondeo libre y exportación QGIS.",
         sources: [
-          "Visor geoespacial interactivo 3D con navegación por cuerpo planetario y país",
-          "Sondeo puntual y prospección matricial de áreas (grillas 3x3 y 4x4) en tiempo real",
-          "Gráfico radar pentagonal de afinidad y análisis lado a lado sincronizado",
-          "Descarga instantánea en formatos interoperables: GeoJSON para QGIS, Markdown y JSON",
+          "Globo 3D con filtros por planeta y país",
+          "Sondeo puntual y grillas 3x3 / 4x4 en vivo",
+          "Radar pentagonal de afinidad y vista lado a lado",
+          "Exportación a GeoJSON (QGIS), Markdown y JSON",
         ],
         brands: ["nextjs", "maplibre", "github"] as BrandId[],
       },
@@ -1132,7 +1127,7 @@ export function MissionBriefingLanding({
                       </p>
 
                       <p className="mx-auto mt-3 max-w-xl text-base font-medium leading-snug text-slate-100 drop-shadow-[0_2px_10px_rgba(0,0,0,0.9)] sm:text-xl">
-                        ¿Y si para comprender otros planetas primero tuviéramos que volver a descubrir el nuestro?
+                        Para explorar otros mundos, primero desciframos el nuestro.
                       </p>
                     </div>
 
@@ -1198,14 +1193,10 @@ export function MissionBriefingLanding({
                           02 / APROXIMACIÓN A LA TIERRA · EL DESAFÍO CIENTÍFICO
                         </p>
                         <h2 className="mt-4 text-3xl font-semibold tracking-tight text-[#F1F5F9] sm:text-5xl lg:text-[3.35rem] lg:leading-[1.06]">
-                          Antes de llegar a otros mundos, debemos aprender aquí.
+                          Aprender en la Tierra antes de despegar.
                         </h2>
                         <p className="mt-4 max-w-2xl text-sm leading-relaxed text-[#CBD5E1] sm:text-base">
-                          A medida que nos aproximamos a la corteza terrestre, ciertos desiertos hiperáridos,
-                          campos volcánicos y cráteres polares actúan como bancos de prueba naturales.
-                          ATLANIA no busca inventar territorios perdidos; busca revelar lo extraordinario
-                          que ya existe, encontrando conexiones donde antes solo veíamos distancia para
-                          acercarnos a mundos que todavía no comprendemos por completo.
+                          Desiertos hiperáridos, campos volcánicos y cráteres polares funcionan como laboratorios naturales para ensayar misiones lunares y marcianas.
                         </p>
                       </div>
 
@@ -1301,8 +1292,8 @@ export function MissionBriefingLanding({
                 chapterNumber="04"
                 chapterTitle="Comparación Planetaria"
                 eyebrow="Tierra vs. Luna y Marte"
-                title="Qué compara ATLANIA entre nuestro planeta y otros mundos"
-                subtitle="Un análogo planetario es una región de la Tierra cuyas condiciones físicas o geológicas presentan similitudes medibles con entornos específicos de la Luna o Marte."
+                title="Tierra vs. Luna y Marte"
+                subtitle="Comparamos regiones terrestres con entornos de la Luna y Marte mediante variables medibles."
               >
                 {/* Clean Editorial Selector Bar */}
                 <div className="flex flex-wrap items-center justify-between gap-6 border-b border-white/10 pb-6">
@@ -1881,8 +1872,8 @@ export function MissionBriefingLanding({
                 chapterNumber="05"
                 chapterTitle="Acceso al Explorador"
                 eyebrow="Del Relato Científico a la Herramienta Geoespacial"
-                title="Inicia la exploración interactiva en ATLANIA"
-                subtitle="La cámara se aleja del paisaje para dar paso a la estación de trabajo completa en /explorer: globo 3D, comparación sincronizada Tierra vs. Luna/Marte, sondeo de coordenadas en vivo y exportación de dossiers."
+                title="Explora los análogos en 3D"
+                subtitle="Globo interactivo, comparación lado a lado, sondeo de coordenadas en vivo y exportación."
               >
                 <ExplorerTransition sites={translatedSites} />
               </MissionChapter>

@@ -37,50 +37,43 @@ const STRATA: StratumSpec[] = [
   {
     id: 1,
     number: "01",
-    title: "Superficie y Atmósfera (Clima a 2 m)",
+    title: "Superficie y Atmósfera",
     concept: "thermal",
-    natureBadge: "Telemetría Satelital Medida · NASA POWER",
+    natureBadge: "NASA POWER · Clima",
     accentColor: "#38BDF8",
     summary:
-      "7 parámetros climáticos satelitales: T2M_MAX, T2M_MIN, precipitación, viento, humedad, irradiancia solar y presión superficial.",
-    detail:
-      "El plano superior representa la frontera atmosférica; la grilla 3D es esquemática, mientras que los valores térmicos y de aridez provienen de NASA POWER API.",
+      "Temperatura, lluvia, viento, humedad e irradiancia solar satelital.",
+    detail: "Frontera atmosférica 3D + datos climáticos reales.",
   },
   {
     id: 2,
     number: "02",
-    title: "Relieve y Topografía (DEM 90 m)",
+    title: "Relieve y Topografía",
     concept: "topography",
-    natureBadge: "Muestreo DEM Medido + Malla 3D Esquemática",
+    natureBadge: "Copernicus DEM 90 m",
     accentColor: "#00D9F5",
-    summary:
-      "Pendiente media (dem_slope_deg) y rugosidad (dem_roughness_m) calculadas mediante 5 puntos cardinales (±0.01° N, S, E, O) en Copernicus DEM GLO-90.",
-    detail:
-      "La malla tridimensional con sombras muestra ilustrativamente cómo se evalúan gradientes y depresiones cratéricas para movilidad de rovers.",
+    summary: "Pendiente media y rugosidad superficial medidas en 5 puntos.",
+    detail: "Malla 3D ilustrativa para movilidad de rovers.",
   },
   {
     id: 3,
     number: "03",
     title: "Geología y Litología",
     concept: "geology",
-    natureBadge: "Prior Documental de Escenario · Jaccard Difuso",
+    natureBadge: "Litología · MRO CRISM",
     accentColor: "#F5B82E",
-    summary:
-      "Membresía en [0, 1] para basalto, regolito/tefra, sedimentario, evaporitas/sales e impacto comparada mediante Σ min / Σ max.",
-    detail:
-      "Representación esquemática de la corteza rocosa frente a firmas orbitales de MRO CRISM y LRO.",
+    summary: "Afinidad de basalto, regolito, sedimentos, sales e impacto.",
+    detail: "Corteza rocosa frente a firmas orbitales lunares y marcianas.",
   },
   {
     id: 4,
     number: "04",
-    title: "Subsuelo, Criósfera y Tubos de Lava",
+    title: "Subsuelo y Tubos de Lava",
     concept: "subsurface",
-    natureBadge: "Prior Operativo Ilustrativo · Sin Tomografía en Vivo",
+    natureBadge: "Subsuelo · Prior 3D",
     accentColor: "#E07A5F",
-    summary:
-      "Potencial de refugio subterráneo (tubos de lava basálticos) y presencia de permafrost/hielo para ensayos de perforación e ISRU.",
-    detail:
-      "El conducto cilíndrico en la base 3D es estrictamente esquemático; el motor no ejecuta radar de penetración terrestre (GPR) en tiempo real.",
+    summary: "Potencial de refugio volcánico e hielo para perforación e ISRU.",
+    detail: "Representación esquemática (sin radar GPR en vivo).",
   },
 ];
 
@@ -154,13 +147,11 @@ export function TerrainLayers({
               </h2>
 
               <p className="mt-4 max-w-xl text-sm leading-relaxed text-[#94A3B8] sm:text-base">
-                Al descender hacia la superficie terrestre, el bloque 3D se separa
-                en cuatro estratos sincronizados con el scroll.{" "}
+                Desplaza para separar los{" "}
                 <strong className="font-normal text-[#F5B82E]">
-                  Las geometrías 3D de relieve, roca y conductos son
-                  representaciones esquemáticas e ilustrativas
-                </strong>
-                , combinadas con telemetría satelital real.
+                  4 estratos
+                </strong>{" "}
+                que conectan la telemetría satelital con el terreno real.
               </p>
 
               {/* Editorial Hairline List of the 4 Strata (No boxy cards) */}
@@ -268,10 +259,10 @@ export function TerrainLayers({
               Arquitectura de Solución // 4 Etapas
             </span>
             <h3 className="mt-3 text-3xl font-bold tracking-tight text-[#F1F5F9] sm:text-4xl">
-              De los datos terrestres a la exploración planetaria.
+              De la Tierra a la Luna y Marte.
             </h3>
             <p className="mt-4 text-base leading-relaxed text-slate-200">
-              Cada estrato físico del terreno alimenta el modelo analógico ASI y la estación interactiva del explorador planetario.
+              Cada estrato alimenta el índice ASI y el explorador 3D.
             </p>
 
             {/* Official Source & Tech Logos */}
