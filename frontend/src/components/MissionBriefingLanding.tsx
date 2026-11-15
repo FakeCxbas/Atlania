@@ -12,6 +12,7 @@ import {
   ScientificIcon,
   type ScientificConcept,
 } from "@/components/briefing/ScientificIcon";
+import { AtlaniaLockup } from "@/components/AtlaniaBrand";
 import { ScrollScene } from "@/components/briefing/ScrollScene";
 import { MissionChapter } from "@/components/briefing/MissionChapter";
 import { TerrainLayers } from "@/components/briefing/TerrainLayers";
@@ -19,7 +20,6 @@ import { ExplorerTransition } from "@/components/briefing/ExplorerTransition";
 import {
   ArrowDown,
   ArrowUpRight,
-  Compass,
   ExternalLink,
   Menu,
   ShieldAlert,
@@ -590,12 +590,9 @@ export function MissionBriefingLanding({
           <div className="flex items-center gap-3">
             <Link
               href="/"
-              className="flex items-center gap-2.5 text-sm font-semibold tracking-[0.25em] text-[#E4DFD5] uppercase transition-opacity hover:opacity-80"
+              className="flex items-center transition-opacity hover:opacity-85"
             >
-              <Compass className="h-4 w-4 text-[#C5A36D]" aria-hidden="true" />
-              <span className="font-serif tracking-widest text-lg font-semibold text-[#E4DFD5]">
-                ATLANIA
-              </span>
+              <AtlaniaLockup size="sm" />
             </Link>
             <span className="hidden items-center gap-1.5 font-mono text-xs text-slate-400 sm:inline-flex">
               <span className="text-slate-600">/</span>

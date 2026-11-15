@@ -1,10 +1,10 @@
 "use client";
 
+import { AtlaniaIsotipo } from "@/components/AtlaniaBrand";
 import type { AnalogDataset, AnalogSite, TargetProfile } from "@/types/analog";
 import {
   ArrowRight,
   ChevronRight,
-  Compass,
   Cpu,
   Database,
   Globe2,
@@ -65,9 +65,7 @@ export function MissionPresentation({
       <header className="sticky top-0 z-30 border-b border-[#D4AF37]/30 bg-[#060913]/90 px-4 py-3 backdrop-blur-md sm:px-8">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg border border-[#D4AF37]/60 bg-[#D4AF37]/15 text-[#D4AF37]">
-              <Compass className="h-5 w-5" aria-hidden="true" />
-            </div>
+            <AtlaniaIsotipo className="h-9 w-9 shrink-0 drop-shadow-[0_0_12px_rgba(247,238,215,0.22)]" />
             <div>
               <nav aria-label="Ruta de navegación" className="flex items-center gap-1 font-mono text-xs text-slate-400">
                 <button type="button" onClick={onClose} className="transition-colors hover:text-[#00D9F5]">Inicio</button>

@@ -433,11 +433,32 @@ export function PlanetScene({
     terrainGroup.add(layer3Geology.group);
     terrainGroup.add(layer4Subsurface.group);
 
-    // Smooth camera interpolation vectors
+    // Smooth camera & object interpolation vectors
     const currentCamPos = new THREE.Vector3(0, 0.35, 9.2);
     const targetCamPos = new THREE.Vector3(0, 0.35, 9.2);
     const currentLookAt = new THREE.Vector3(0, -0.5, 0);
     const targetLookAt = new THREE.Vector3(0, -0.5, 0);
+
+    const targetEarthPos = new THREE.Vector3(0.35, -3.15, 0.2);
+    const targetMoonPos = new THREE.Vector3(-4.35, 1.85, -2.4);
+    const targetMarsPos = new THREE.Vector3(4.5, 2.25, -4.8);
+    let targetMoonScale = 1;
+    let targetMarsScale = 1;
+    let targetAtmoIntensity = 1.05;
+
+    let terrainPresence = 0;
+    let currentSep = 0.1;
+    const stratumFocusOpacity: Record<1 | 2 | 3 | 4, number> = {
+      1: 1,
+      2: 1,
+      3: 1,
+      4: 1,
+    };
+
+    const dampFactor = (dt: number, speed: number) =>
+      prefersReducedMotion ? 1 : 1 - Math.exp(-speed * Math.min(dt, 0.05));
+
+    const easeOutCubic = (x: number) => 1 - Math.pow(1 - x, 3);
 
     let animationFrameId = 0;
     const clock = new THREE.Clock();
@@ -446,7 +467,8 @@ export function PlanetScene({
       animationFrameId = window.requestAnimationFrame(renderLoop);
       if (document.hidden) return;
 
-      const elapsed = clock.getElapsedTime();
+      const dt = clock.getDelta();
+      const elapsed = clock.elapsedTime;
       const {
         scrollProgress: p,
         introProgress: introP,
@@ -462,73 +484,114 @@ export function PlanetScene({
       // =======================================================================
       if (ch <= 2) {
         // Chapters 1 & 2 shared continuous orbital approach:
-        // As introP goes 0 -> 1:
-        // - Camera advances directly toward Earth (z: 9.2 -> 4.95)
-        // - Earth rises and grows in the frame, atmosphere intensifies
-        // - Moon and Mars drift outward in parallax depth
         const t = Math.max(0, Math.min(1, introP));
         targetCamPos.set(0.18 * t, 0.35 - t * 0.55, 9.2 - t * 4.25);
         targetLookAt.set(0.25 * t, -0.55 - t * 0.35, 0);
 
-        earthGroup.position.set(
+        targetEarthPos.set(
           THREE.MathUtils.lerp(0.35, 0.75, t),
           THREE.MathUtils.lerp(-3.15, -2.05, t),
           THREE.MathUtils.lerp(0.2, 0.75, t)
         );
-        atmoUniforms.uIntensity.value = 1.05 + t * 0.65;
+        targetAtmoIntensity = 1.05 + t * 0.65;
 
-        moonMesh.position.set(
+        targetMoonPos.set(
           -4.35 - t * 1.4,
           1.85 + t * 0.65,
           -2.4 - t * 1.2
         );
-        marsMesh.position.set(
+        targetMarsPos.set(
           4.5 + t * 1.6,
           2.25 + t * 0.8,
           -4.8 - t * 1.5
         );
+        targetMoonScale = 1 - t * 0.18;
+        targetMarsScale = 1 - t * 0.18;
       } else if (ch === 3) {
         // Chapter 3: Camera descends to the 3D Stratified Terrain Block on the right
         const t = Math.max(0, Math.min(1, terrP));
         targetCamPos.set(0.1, 0.05, 5.35 - t * 0.25);
         targetLookAt.set(0.15, 0.0, 1.5);
 
-        // Push Earth limb lower/back so the 3D terrain block sits in clear dark space on the right
-        earthGroup.position.lerp(new THREE.Vector3(-1.35, -3.95, -1.2), 0.12);
-        atmoUniforms.uIntensity.value = 1.35;
+        targetEarthPos.set(-1.35, -3.95, -1.2);
+        targetAtmoIntensity = 1.35;
+
+        targetMoonPos.set(-6.4, 2.8, -5.2);
+        targetMarsPos.set(6.4, 3.0, -6.5);
+        targetMoonScale = 0.65;
+        targetMarsScale = 0.65;
       } else if (ch === 4) {
         // Chapter 4: Planetary Comparison (Earth on left, Moon or Mars on right)
         targetCamPos.set(0, 0.1, 6.8);
         targetLookAt.set(0, -0.15, 0);
 
-        earthGroup.position.lerp(new THREE.Vector3(-2.35, -1.85, -0.4), 0.08);
-        atmoUniforms.uIntensity.value = 1.2;
+        targetEarthPos.set(-2.35, -1.85, -0.4);
+        targetAtmoIntensity = 1.2;
 
         if (body === "Moon") {
-          moonMesh.position.lerp(new THREE.Vector3(2.25, 0.45, 2.3), 0.08);
-          marsMesh.position.lerp(new THREE.Vector3(5.8, 2.6, -5.5), 0.08);
+          targetMoonPos.set(2.25, 0.45, 2.3);
+          targetMarsPos.set(6.2, 2.8, -6.0);
+          targetMoonScale = 1.12;
+          targetMarsScale = 0.62;
         } else {
-          marsMesh.position.lerp(new THREE.Vector3(2.25, 0.45, 2.5), 0.08);
-          moonMesh.position.lerp(new THREE.Vector3(-5.8, 2.6, -5.5), 0.08);
+          targetMarsPos.set(2.25, 0.45, 2.5);
+          targetMoonPos.set(-6.2, 2.8, -6.0);
+          targetMarsScale = 1.12;
+          targetMoonScale = 0.62;
         }
       } else {
         // Chapter 5: High orbital pullback for Explorer transition
         targetCamPos.set(0, 0.6, 9.6);
         targetLookAt.set(0, -0.6, 0);
-        earthGroup.position.lerp(new THREE.Vector3(0, -3.35, 0), 0.08);
-        moonMesh.position.lerp(new THREE.Vector3(-4.2, 1.8, -2.5), 0.08);
-        marsMesh.position.lerp(new THREE.Vector3(4.4, 2.1, -4.5), 0.08);
+        targetEarthPos.set(0, -3.35, 0);
+        targetAtmoIntensity = 1.1;
+        targetMoonPos.set(-4.2, 1.8, -2.5);
+        targetMarsPos.set(4.4, 2.1, -4.5);
+        targetMoonScale = 0.95;
+        targetMarsScale = 0.95;
       }
 
-      const lerpFactor = prefersReducedMotion ? 0.25 : 0.09;
-      currentCamPos.lerp(targetCamPos, lerpFactor);
-      currentLookAt.lerp(targetLookAt, lerpFactor);
+      const camDamp = dampFactor(dt, 4.8);
+      const bodyDamp = dampFactor(dt, 4.2);
+
+      currentCamPos.lerp(targetCamPos, camDamp);
+      currentLookAt.lerp(targetLookAt, camDamp);
       camera.position.copy(currentCamPos);
       camera.lookAt(currentLookAt);
 
+      earthGroup.position.lerp(targetEarthPos, bodyDamp);
+      atmoUniforms.uIntensity.value = THREE.MathUtils.lerp(
+        atmoUniforms.uIntensity.value,
+        targetAtmoIntensity,
+        bodyDamp
+      );
+
+      moonMesh.position.lerp(targetMoonPos, bodyDamp);
+      marsMesh.position.lerp(targetMarsPos, bodyDamp);
+      const nextMoonScale = THREE.MathUtils.lerp(
+        moonMesh.scale.x,
+        targetMoonScale,
+        bodyDamp
+      );
+      const nextMarsScale = THREE.MathUtils.lerp(
+        marsMesh.scale.x,
+        targetMarsScale,
+        bodyDamp
+      );
+      moonMesh.scale.setScalar(nextMoonScale);
+      marsMesh.scale.setScalar(nextMarsScale);
+
       // Starfield parallax
-      starField.position.y = p * 3.1;
-      starField.position.z = p * 2.5;
+      starField.position.y = THREE.MathUtils.lerp(
+        starField.position.y,
+        p * 3.1,
+        camDamp
+      );
+      starField.position.z = THREE.MathUtils.lerp(
+        starField.position.z,
+        p * 2.5,
+        camDamp
+      );
       if (!prefersReducedMotion) {
         starField.rotation.y = elapsed * 0.006;
       }
@@ -542,43 +605,72 @@ export function PlanetScene({
         marsMesh.rotation.y = elapsed * 0.045 + p * 1.6;
       }
 
-      // Chapter 3 Volumetric 3D Terrain Layers separation & rotation
-      const showTerrain = ch === 3;
-      terrainGroup.visible = showTerrain;
-      if (showTerrain) {
-        terrainGroup.position.set(1.18, 0.02, 2.25);
+      // Chapter 3 Volumetric 3D Terrain Layers smooth enter / exit & separation
+      const targetPresence = ch === 3 ? 1 : 0;
+      const terrainDamp = dampFactor(dt, ch === 3 ? 4.2 : 5.5);
+      terrainPresence = THREE.MathUtils.lerp(
+        terrainPresence,
+        targetPresence,
+        terrainDamp
+      );
+
+      const isTerrainVisible = terrainPresence > 0.008;
+      terrainGroup.visible = isTerrainVisible;
+
+      if (isTerrainVisible) {
+        const easedPresence = easeOutCubic(
+          Math.max(0, Math.min(1, terrainPresence))
+        );
+        currentSep = THREE.MathUtils.lerp(
+          currentSep,
+          Math.max(0, Math.min(1, sep)),
+          dampFactor(dt, 5.2)
+        );
+
+        terrainGroup.scale.setScalar(0.62 + 0.38 * easedPresence);
+        terrainGroup.position.set(
+          1.18 + (1 - easedPresence) * 1.25,
+          0.02 - (1 - easedPresence) * 0.35,
+          2.25 - (1 - easedPresence) * 1.4
+        );
+
         // Vertical spacing between adjacent strata in 3D space: from 0.22 (compact) to 0.78 (expanded)
-        const stepZ = 0.22 + Math.max(0, Math.min(1, sep)) * 0.56;
+        const stepZ = 0.22 + currentSep * 0.56;
+        const stratumDamp = dampFactor(dt, 6.0);
 
         layer1Surface.group.position.z = THREE.MathUtils.lerp(
           layer1Surface.group.position.z,
           stepZ * 1.5,
-          0.12
+          stratumDamp
         );
         layer2Relief.group.position.z = THREE.MathUtils.lerp(
           layer2Relief.group.position.z,
           stepZ * 0.5,
-          0.12
+          stratumDamp
         );
         layer3Geology.group.position.z = THREE.MathUtils.lerp(
           layer3Geology.group.position.z,
           -stepZ * 0.5,
-          0.12
+          stratumDamp
         );
         layer4Subsurface.group.position.z = THREE.MathUtils.lerp(
           layer4Subsurface.group.position.z,
           -stepZ * 1.5,
-          0.12
+          stratumDamp
         );
 
         // Rotate terrain block gently with scroll + time to reveal 3D relief & thickness
         terrainGroup.rotation.z =
           0.52 +
-          sep * 0.38 +
+          currentSep * 0.38 +
+          (1 - easedPresence) * 0.22 +
           (prefersReducedMotion ? 0 : Math.sin(elapsed * 0.35) * 0.06);
+
+        pillarMat.opacity = 0.28 * easedPresence;
 
         const applyFocusOpacity = (
           stratum: {
+            group: THREE.Group;
             surfaceMat: THREE.MeshStandardMaterial;
             wireMat: THREE.MeshBasicMaterial;
             sideMat: THREE.MeshStandardMaterial;
@@ -586,9 +678,24 @@ export function PlanetScene({
           idx: 1 | 2 | 3 | 4
         ) => {
           const active = fLayer === 0 || fLayer === idx;
-          stratum.surfaceMat.opacity = active ? 0.88 : 0.14;
-          stratum.wireMat.opacity = active ? 0.45 : 0.08;
-          stratum.sideMat.opacity = active ? 0.46 : 0.06;
+          const targetFocus = active ? 1 : 0.16;
+          stratumFocusOpacity[idx] = THREE.MathUtils.lerp(
+            stratumFocusOpacity[idx],
+            targetFocus,
+            stratumDamp
+          );
+          const fAlpha = stratumFocusOpacity[idx] * easedPresence;
+          stratum.surfaceMat.opacity = 0.88 * fAlpha;
+          stratum.wireMat.opacity = 0.45 * fAlpha;
+          stratum.sideMat.opacity = 0.46 * fAlpha;
+
+          const targetStratumScale = active && fLayer !== 0 ? 1.04 : 1.0;
+          const nextScale = THREE.MathUtils.lerp(
+            stratum.group.scale.x,
+            targetStratumScale,
+            stratumDamp
+          );
+          stratum.group.scale.setScalar(nextScale);
         };
 
         applyFocusOpacity(layer1Surface, 1);
