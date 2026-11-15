@@ -1,15 +1,85 @@
 import test from "node:test";
+import { deflateSync } from "node:zlib";
 import assert from "node:assert/strict";
 import {
   latLonToTileFloat, tileToLatLon, metersPerPixelAtLat, decodeTerrariumPixel,
   computeTerrainMetrics, buildSlopeColorTextureData, buildHypsometricTextureData,
-  isLikelyBlankOrGrayTile, buildTerrainDataset,
+  isLikelyBlankOrGrayTile, buildTerrainDataset, decodePngToRgba,
 } from "../src/lib/terrainMesh.ts";
 
 const near = (actual, expected, tolerance = 1e-6) => assert.ok(Math.abs(actual - expected) <= tolerance, `${actual} != ${expected}`);
 const grid = (size, fn) => Float32Array.from({ length: size * size }, (_, i) => fn(i % size, Math.floor(i / size)));
 const rgba = (count, fn) => Uint8ClampedArray.from({ length: count * 4 }, (_, i) => fn(Math.floor(i / 4))[i % 4]);
 const color = (data, i) => Array.from(data.slice(i * 4, i * 4 + 4));
+
+// Encode independent fixtures with real chunk CRCs and split IDAT streams.
+function pngChunk(type, data) {
+  const body = Buffer.concat([Buffer.from(type), data]);
+  let crc = 0xffffffff;
+  for (const byte of body) {
+    crc ^= byte;
+    for (let bit = 0; bit < 8; bit++) crc = (crc >>> 1) ^ ((crc & 1) ? 0xedb88320 : 0);
+  }
+  const chunk = Buffer.alloc(data.length + 12);
+  chunk.writeUInt32BE(data.length);
+  body.copy(chunk, 4);
+  chunk.writeUInt32BE((crc ^ 0xffffffff) >>> 0, chunk.length - 4);
+  return chunk;
+}
+
+function makePng(width, height, channels, pixels, filter = 0) {
+  const stride = width * channels;
+  const scanlines = Buffer.alloc(height * (stride + 1));
+  for (let y = 0; y < height; y++) {
+    const f = typeof filter === "function" ? filter(y) : filter;
+    scanlines[y * (stride + 1)] = f;
+    for (let x = 0; x < stride; x++) {
+      const i = y * stride + x;
+      const left = x < channels ? 0 : pixels[i - channels];
+      const up = y === 0 ? 0 : pixels[i - stride];
+      const corner = y === 0 || x < channels ? 0 : pixels[i - stride - channels];
+      const estimate = left + up - corner;
+      const candidates = [left, up, corner];
+      const distances = candidates.map((v) => Math.abs(v - estimate));
+      const paeth = candidates[distances.indexOf(Math.min(...distances))];
+      const prediction = [0, left, up, Math.floor((left + up) / 2), paeth][f] ?? 0;
+      scanlines[y * (stride + 1) + 1 + x] = (pixels[i] - prediction + 256) % 256;
+    }
+  }
+  const header = Buffer.alloc(13);
+  header.writeUInt32BE(width);
+  header.writeUInt32BE(height, 4);
+  header[8] = 8;
+  header[9] = channels === 3 ? 2 : 6;
+  const compressed = deflateSync(scanlines);
+  const split = Math.floor(compressed.length / 2);
+  const png = Buffer.concat([Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]),
+    pngChunk("IHDR", header), pngChunk("tEXt", Buffer.from("test\0fixture")),
+    pngChunk("IDAT", compressed.subarray(0, split)), pngChunk("IDAT", compressed.subarray(split)),
+    pngChunk("IEND", Buffer.alloc(0))]);
+  return png.buffer.slice(png.byteOffset, png.byteOffset + png.byteLength);
+}
+
+for (const channels of [3, 4]) for (const filter of [0, 1, 2, 3, 4]) {
+  test(`PNG exact ${channels === 3 ? "RGB" : "RGBA"} bytes with filter ${filter}`, async () => {
+    const pixels = Uint8Array.from({ length: 7 * 6 * channels }, (_, i) => (i * 73 + i * i * 19) % 256);
+    const decoded = await decodePngToRgba(makePng(7, 6, channels, pixels, filter));
+    assert.equal(decoded.width, 7);
+    assert.equal(decoded.height, 6);
+    assert.ok(decoded.data instanceof Uint8ClampedArray);
+    assert.deepEqual(decoded.data, rgba(42, (i) => [...pixels.slice(i * channels, i * channels + 3), channels === 4 ? pixels[i * channels + 3] : 255]));
+  });
+}
+
+test("PNG rejects malformed, truncated, unsupported and invalid-filter data", async () => {
+  await assert.rejects(decodePngToRgba(new ArrayBuffer(8)), /Invalid PNG/);
+  const valid = makePng(1, 1, 3, [128, 0, 0]);
+  await assert.rejects(decodePngToRgba(valid.slice(0, -1)), /Invalid PNG/);
+  await assert.rejects(decodePngToRgba(makePng(1, 1, 3, [128, 0, 0], 5)), /Invalid PNG/);
+  const unsupported = valid.slice(0);
+  new Uint8Array(unsupported)[24] = 16;
+  await assert.rejects(decodePngToRgba(unsupported), /Unsupported PNG format/);
+});
 
 test("Web Mercator known landmarks, poles, unwrapped longitude and inverse", () => {
   assert.deepEqual(latLonToTileFloat(0, 0, 0), { x: 0.5, y: 0.5 });
@@ -175,6 +245,22 @@ test("blank detection retains textured color imagery and high-contrast grayscale
 // Deterministic browser doubles exercise the public loader without network/DOM.
 function mockBrowser(t, satelliteStatus = () => "good", demStatus = "dem") {
   const requests = [], draws = [];
+  t.mock.method(globalThis, "fetch", async (url, options) => {
+    assert.deepEqual(options, { mode: "cors" });
+    assert.ok(url.includes("terrarium"));
+    requests.push(url);
+    if (demStatus === "fail") return new Response(null, { status: 503 });
+    // A continuous plane in global DEM pixel coordinates, across seams.
+    const [z, x, y] = url.split("/").slice(-3).map((v) => parseInt(v, 10));
+    const pixels = rgba(65536, (i) => {
+      const worldX = x * 256 + i % 256, worldY = y * 256 + Math.floor(i / 256);
+      const height = 100 + (worldX - 2 ** z * 128) / 4 + (worldY - 2 ** z * 128) / 8;
+      // Wrapped test locations use a constant DEM to avoid overflow.
+      const encoded = 32768 + (Math.abs(height) < 30000 ? height : 100);
+      return [Math.floor(encoded / 256), Math.floor(encoded) % 256, Math.round((encoded % 1) * 256), 255];
+    });
+    return new Response(makePng(256, 256, 4, pixels, (y) => y % 5));
+  });
   class MockImage {
     naturalWidth = 256;
     naturalHeight = 256;
@@ -202,15 +288,7 @@ function mockBrowser(t, satelliteStatus = () => "good", demStatus = "dem") {
         drawImage(img, ...args) { image = img; if (canvas.width === 1024) draws.push({ canvas, args, url: img.url }); },
         getImageData() {
           if (image.status === "dem") {
-            // A continuous plane in global DEM pixel coordinates, across seams.
-            const [z, x, y] = image.url.split("/").slice(-3).map((v) => parseInt(v, 10));
-            return { data: rgba(65536, (i) => {
-              const worldX = x * 256 + i % 256, worldY = y * 256 + Math.floor(i / 256);
-              const height = 100 + (worldX - 2 ** z * 128) / 4 + (worldY - 2 ** z * 128) / 8;
-              // Wrapped test locations use a constant DEM to avoid overflow.
-              const encoded = 32768 + (Math.abs(height) < 30000 ? height : 100);
-              return [Math.floor(encoded / 256), Math.floor(encoded) % 256, Math.round((encoded % 1) * 256), 255];
-            }) };
+            throw new Error("DEM canvas readback must not occur");
           }
           return { data: image.status === "blank" ? rgba(65536, () => [180, 180, 180, 255]) : rgba(65536, (i) => [i % 251, i % 131, i % 71, 255]) };
         },
@@ -225,7 +303,7 @@ function mockBrowser(t, satelliteStatus = () => "good", demStatus = "dem") {
   return { requests, draws };
 }
 
-test("loader resamples a plane across DEM seams and crops the exact satellite square", async (t) => {
+test("loader fetches real PNG bytes without DEM canvas readback and resamples across seams", async (t) => {
   const { requests, draws } = mockBrowser(t);
   const result = await buildTerrainDataset({ lat: 0, lon: 0, radiusMeters: 100, gridSize: 3 });
   const mpp = metersPerPixelAtLat(0, 13);
@@ -249,6 +327,47 @@ test("loader resamples a plane across DEM seams and crops the exact satellite sq
     area += dw * dh;
   }
   near(area, 1024 * 1024, 1e-4);
+});
+
+for (const [delta, connected, expected] of [[256, false, 100], [-256, false, 100], [180, false, 280], [256, true, 356]]) {
+  test(`DEM despike delta=${delta}, connected=${connected}`, async (t) => {
+    mockBrowser(t);
+    const pixels = rgba(65536, (i) => {
+      const spike = i === 128 * 256 + 128 || (connected && i === 128 * 256 + 129);
+      const encoded = 32768 + 100 + (spike ? delta : 0);
+      return [Math.floor(encoded / 256), encoded % 256, 0, 255];
+    });
+    const png = makePng(256, 256, 4, pixels);
+    t.mock.method(globalThis, "fetch", async () => new Response(png));
+    const location = tileToLatLon(4096 + 128.5 / 256, 4096 + 128.5 / 256, 13);
+    const result = await buildTerrainDataset({ ...location, radiusMeters: 20, gridSize: 3, satZoom: 13 });
+    near(result.elevations[4], expected, 1e-4);
+  });
+}
+
+test("corrupt PNG and network failures never fall back to canvas", async (t) => {
+  const { requests } = mockBrowser(t);
+  t.mock.method(globalThis, "fetch", async () => new Response(new Uint8Array(8)));
+  await assert.rejects(buildTerrainDataset({ lat: 0, lon: 0, radiusMeters: 20, gridSize: 2 }), /Invalid PNG/);
+  t.mock.method(globalThis, "fetch", async () => { throw new Error("Network failure"); });
+  await assert.rejects(buildTerrainDataset({ lat: 0, lon: 0, radiusMeters: 20, gridSize: 2 }), /Network failure/);
+  assert.deepEqual(requests, []);
+});
+
+test("only unsupported PNG formats use the legacy image path", async (t) => {
+  const { requests } = mockBrowser(t, () => "good", "blank");
+  const header = Buffer.alloc(13);
+  header.writeUInt32BE(256);
+  header.writeUInt32BE(256, 4);
+  header[8] = 1;
+  header[9] = 0;
+  const png = Buffer.concat([Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]),
+    pngChunk("IHDR", header), pngChunk("IDAT", deflateSync(Buffer.alloc(256 * 33))),
+    pngChunk("IEND", Buffer.alloc(0))]);
+  t.mock.method(globalThis, "fetch", async () => new Response(png));
+  const result = await buildTerrainDataset({ lat: 0, lon: 0, radiusMeters: 20, gridSize: 2, satZoom: 13 });
+  assert.ok(requests.some((url) => url.includes("terrarium")));
+  assert.equal(result.elevations[0], decodeTerrariumPixel(180, 180, 180));
 });
 
 test("loader retries entire satellite levels after gray tiles and errors, through z13", async (t) => {

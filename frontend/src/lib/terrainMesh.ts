@@ -45,6 +45,79 @@ export function decodeTerrariumPixel(r: number, g: number, b: number): number {
   return r * 256 + g + b / 256 - 32768;
 }
 
+class UnsupportedPngFormatError extends Error {}
+
+/** Decode sample bytes directly: canvas readback can farble Terrarium elevations. */
+export async function decodePngToRgba(buffer: ArrayBuffer): Promise<{
+  width: number; height: number; data: Uint8ClampedArray;
+}> {
+  const bytes = new Uint8Array(buffer);
+  const view = new DataView(buffer);
+  const invalid = (): never => { throw new Error("Invalid PNG data"); };
+  if (bytes.length < 8 || ![137, 80, 78, 71, 13, 10, 26, 10].every((v, i) => bytes[i] === v)) invalid();
+  let width = 0, height = 0, channels = 0, ended = false;
+  const parts: Uint8Array<ArrayBuffer>[] = [];
+  for (let offset = 8; offset < bytes.length;) {
+    if (offset + 12 > bytes.length) invalid();
+    const length = view.getUint32(offset);
+    const start = offset + 8, end = start + length;
+    if (end + 4 > bytes.length) invalid();
+    const type = String.fromCharCode(...bytes.subarray(offset + 4, start));
+    if (offset === 8 && type !== "IHDR") invalid();
+    if (type === "IHDR") {
+      if (offset !== 8 || length !== 13) invalid();
+      width = view.getUint32(start);
+      height = view.getUint32(start + 4);
+      if (!width || !height) invalid();
+      if (bytes[start + 8] !== 8 || ![2, 6].includes(bytes[start + 9]) ||
+          bytes[start + 10] !== 0 || bytes[start + 11] !== 0 || bytes[start + 12] !== 0) {
+        throw new UnsupportedPngFormatError("Unsupported PNG format: expected non-interlaced 8-bit RGB or RGBA");
+      }
+      channels = bytes[start + 9] === 2 ? 3 : 4;
+    } else if (type === "IDAT") {
+      parts.push(bytes.slice(start, end));
+    } else if (type === "IEND") {
+      if (length !== 0 || !parts.length || end + 4 !== bytes.length) invalid();
+      ended = true;
+      break;
+    }
+    offset = end + 4;
+  }
+  if (!ended) invalid();
+  const inflated = new Uint8Array(await new Response(
+    new Blob(parts).stream().pipeThrough(new DecompressionStream("deflate")),
+  ).arrayBuffer());
+  const stride = width * channels;
+  if (inflated.length !== height * (stride + 1)) invalid();
+  const samples = new Uint8Array(height * stride);
+  for (let y = 0; y < height; y++) {
+    const filter = inflated[y * (stride + 1)];
+    if (filter > 4) invalid();
+    for (let x = 0; x < stride; x++) {
+      const i = y * stride + x;
+      const a = x >= channels ? samples[i - channels] : 0;
+      const b = y > 0 ? samples[i - stride] : 0;
+      const c = y > 0 && x >= channels ? samples[i - stride - channels] : 0;
+      let predictor = 0;
+      if (filter === 1) predictor = a;
+      if (filter === 2) predictor = b;
+      if (filter === 3) predictor = Math.floor((a + b) / 2);
+      if (filter === 4) {
+        const p = a + b - c;
+        const pa = Math.abs(p - a), pb = Math.abs(p - b), pc = Math.abs(p - c);
+        predictor = pa <= pb && pa <= pc ? a : pb <= pc ? b : c;
+      }
+      samples[i] = (inflated[y * (stride + 1) + 1 + x] + predictor) & 255;
+    }
+  }
+  const data = new Uint8ClampedArray(width * height * 4);
+  for (let i = 0; i < width * height; i++) {
+    data.set(samples.subarray(i * channels, i * channels + 3), i * 4);
+    data[i * 4 + 3] = channels === 4 ? samples[i * channels + 3] : 255;
+  }
+  return { width, height, data };
+}
+
 function validateGrid(values: Float32Array, size: number): void {
   if (!Number.isInteger(size) || size < 1 || values.length !== size * size) {
     throw new RangeError("gridSize must be positive and match the square grid length");
@@ -275,24 +348,55 @@ export async function buildTerrainDataset({ lat, lon, radiusMeters = 2800, gridS
   const demBounds = boundsAt(demZoom);
   const demTiles = new Map<string, Float32Array>();
   await visitTiles(tilesFor(demBounds, demZoom, true), async ({ x, y }) => {
-    const image = await loadImage(`https://s3.amazonaws.com/elevation-tiles-prod/terrarium/${demZoom}/${wrappedX(x, demZoom)}/${y}.png`);
-    const { canvas, context } = canvas2d(TILE_SIZE, TILE_SIZE);
-    context.drawImage(image, 0, 0);
-    const rgba = context.getImageData(0, 0, TILE_SIZE, TILE_SIZE).data;
+    const url = `https://s3.amazonaws.com/elevation-tiles-prod/terrarium/${demZoom}/${wrappedX(x, demZoom)}/${y}.png`;
+    const response = await fetch(url, { mode: "cors" });
+    if (!response.ok) throw new Error(`Unable to load tile: ${url} (HTTP ${response.status})`);
+    const buffer = await response.arrayBuffer();
+    let rgba: Uint8ClampedArray;
+    try {
+      const decoded = await decodePngToRgba(buffer);
+      if (decoded.width !== TILE_SIZE || decoded.height !== TILE_SIZE) throw new Error(`Invalid tile dimensions: ${url}`);
+      rgba = decoded.data;
+    } catch (error) {
+      if (!(error instanceof UnsupportedPngFormatError)) throw error;
+      const image = await loadImage(url);
+      const { canvas, context } = canvas2d(TILE_SIZE, TILE_SIZE);
+      try {
+        context.drawImage(image, 0, 0);
+        rgba = context.getImageData(0, 0, TILE_SIZE, TILE_SIZE).data;
+      } finally {
+        canvas.width = canvas.height = 0;
+      }
+    }
     const values = new Float32Array(TILE_SIZE * TILE_SIZE);
     for (let i = 0; i < values.length; i++) {
       if (rgba[i * 4 + 3] !== 255) throw new Error("DEM tile contains missing elevation pixels");
       values[i] = decodeTerrariumPixel(rgba[i * 4], rgba[i * 4 + 1], rgba[i * 4 + 2]);
     }
     demTiles.set(`${x},${y}`, values);
-    canvas.width = canvas.height = 0;
   });
   const pixel = (x: number, y: number): number => {
     y = clamp(y, 0, TILE_SIZE * 2 ** demZoom - 1);
     const tx = Math.floor(x / TILE_SIZE), ty = Math.floor(y / TILE_SIZE);
     const tile = demTiles.get(`${tx},${ty}`);
     if (!tile) throw new Error("Missing DEM interpolation tile");
-    return tile[(y - ty * TILE_SIZE) * TILE_SIZE + x - tx * TILE_SIZE];
+    const value = tile[(y - ty * TILE_SIZE) * TILE_SIZE + x - tx * TILE_SIZE];
+    // Read only original samples, including across seams. Never smooth slopes or
+    // connected features; replace only isolated >180 m spikes/pits with all 8 neighbors.
+    const neighbors: number[] = [];
+    for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
+      if (dx === 0 && dy === 0) continue;
+      const nx = x + dx, ny = y + dy;
+      const ntx = Math.floor(nx / TILE_SIZE), nty = Math.floor(ny / TILE_SIZE);
+      const adjacent = demTiles.get(`${ntx},${nty}`);
+      if (!adjacent) return value;
+      const neighbor = adjacent[(ny - nty * TILE_SIZE) * TILE_SIZE + nx - ntx * TILE_SIZE];
+      if (Math.abs(value - neighbor) <= 180) return value;
+      neighbors.push(neighbor);
+    }
+    if (!neighbors.every((v) => v < value) && !neighbors.every((v) => v > value)) return value;
+    neighbors.sort((a, b) => a - b);
+    return (neighbors[3] + neighbors[4]) / 2;
   };
   const elevations = new Float32Array(gridSize * gridSize);
   for (let row = 0; row < gridSize; row++) {
