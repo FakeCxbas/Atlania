@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0.0",
   "methodology": {
-    "name": "Exploratory Analog Similarity Index",
+    "name": "ATLANIA Planetary Analog Similarity Index",
     "version": "0.2.0",
     "score_range": [
       0,
@@ -328,6 +328,36 @@
         "Subsurface lava tube LiDAR",
         "Habitat geometry surveys"
       ],
+      "satellite_observatory": {
+        "optical": {
+          "mission": "Landsat 8 / Landsat 9",
+          "instrument": "OLI / OLI-2",
+          "spectrum": "Visible, near-infrared (VNIR), shortwave infrared (SWIR); panchromatic",
+          "collects": "Spectral radiance and derived surface reflectance for geomorphological texture and surface-cover contrasts; broadband albedo requires modeling.",
+          "site_application": "Map exposed surface contrasts in Santa Cruz basalt flows, vegetation gaps and candidate lava-tube surface expressions.",
+          "limitations": "Clouds, vegetation, illumination and pixel size limit interpretation; multispectral contrasts are not mineral assays.",
+          "source_url": "https://science.nasa.gov/mission/landsat/oli/"
+        },
+        "radar_sar": {
+          "mission": "Sentinel-1",
+          "instrument": "C-SAR",
+          "band": "C-band (5.405 GHz; approximately 5.6 cm)",
+          "collects": "Radar backscatter sensitive to surface roughness, dielectric properties and moisture; repeat-pass phase can support deformation mapping where coherence permits.",
+          "site_application": "Investigate roughness contrasts and structural surface lineaments in Santa Cruz basalt flows, vegetation gaps and candidate lava-tube surface expressions.",
+          "limitations": "Penetration depends on wavelength and material; C-band does not image lava tubes through solid rock. Faults and tube-related collapses require independent validation. Relief causes layover and shadow.",
+          "source_url": "https://sentiwiki.copernicus.eu/web/s1-mission"
+        },
+        "thermal_tir": {
+          "mission": "Landsat 8 / Landsat 9",
+          "instrument": "TIRS / TIRS-2",
+          "spectrum": "Thermal infrared (TIR), bands 10 and 11",
+          "collects": "Thermal radiance supporting surface-temperature retrieval with atmospheric and emissivity corrections.",
+          "site_application": "Compare surface thermal contrasts across Santa Cruz basalt flows, vegetation gaps and candidate lava-tube surface expressions.",
+          "limitations": "Cloud-free repeated scenes constrain sampled temperature variability, not a full diurnal cycle. Thermal inertia needs temporal sampling and a physical model; radiative balance also needs emissivity and incoming fluxes. No cave interior temperature is measured.",
+          "source_url": "https://science.nasa.gov/mission/landsat/tirs/"
+        },
+        "summary": "Galapagos Lava Tubes - Santa Cruz / Isabela: combine optical surface reflectance, C-band roughness/structure and thermal surface contrasts to characterize Santa Cruz basalt flows, vegetation gaps and candidate lava-tube surface expressions. Candidate observation profile only; local scene availability and resolution require verification. No imagery has been ingested and these metadata do not affect ASI."
+      },
       "terrain": {
         "slope_deg": 5,
         "roughness": 0.65,
@@ -586,6 +616,36 @@
         "Frost rover mobility",
         "Cold-soil drill procedures"
       ],
+      "satellite_observatory": {
+        "optical": {
+          "mission": "Landsat 8 / Landsat 9",
+          "instrument": "OLI / OLI-2",
+          "spectrum": "Visible, near-infrared (VNIR), shortwave infrared (SWIR); panchromatic",
+          "collects": "Spectral radiance and derived surface reflectance for geomorphological texture and surface-cover contrasts; broadband albedo requires modeling.",
+          "site_application": "Map exposed surface contrasts in high-altitude volcanic debris, snow margins and exposed cold soils.",
+          "limitations": "Clouds, vegetation, illumination and pixel size limit interpretation; multispectral contrasts are not mineral assays.",
+          "source_url": "https://science.nasa.gov/mission/landsat/oli/"
+        },
+        "radar_sar": {
+          "mission": "Sentinel-1",
+          "instrument": "C-SAR",
+          "band": "C-band (5.405 GHz; approximately 5.6 cm)",
+          "collects": "Radar backscatter sensitive to surface roughness, dielectric properties and moisture; repeat-pass phase can support deformation mapping where coherence permits.",
+          "site_application": "Investigate roughness contrasts and structural surface lineaments in high-altitude volcanic debris, snow margins and exposed cold soils.",
+          "limitations": "Penetration depends on wavelength and material; C-band does not image lava tubes through solid rock. Faults and tube-related collapses require independent validation. Relief causes layover and shadow.",
+          "source_url": "https://sentiwiki.copernicus.eu/web/s1-mission"
+        },
+        "thermal_tir": {
+          "mission": "Landsat 8 / Landsat 9",
+          "instrument": "TIRS / TIRS-2",
+          "spectrum": "Thermal infrared (TIR), bands 10 and 11",
+          "collects": "Thermal radiance supporting surface-temperature retrieval with atmospheric and emissivity corrections.",
+          "site_application": "Compare surface thermal contrasts across high-altitude volcanic debris, snow margins and exposed cold soils.",
+          "limitations": "Cloud-free repeated scenes constrain sampled temperature variability, not a full diurnal cycle. Thermal inertia needs temporal sampling and a physical model; radiative balance also needs emissivity and incoming fluxes. No cave interior temperature is measured.",
+          "source_url": "https://science.nasa.gov/mission/landsat/tirs/"
+        },
+        "summary": "Chimborazo High-Altitude Volcanic Permafrost: combine optical surface reflectance, C-band roughness/structure and thermal surface contrasts to characterize high-altitude volcanic debris, snow margins and exposed cold soils. Candidate observation profile only; local scene availability and resolution require verification. No imagery has been ingested and these metadata do not affect ASI."
+      },
       "terrain": {
         "slope_deg": 22,
         "roughness": 0.9,
@@ -841,6 +901,36 @@
         "Regolith wheel traction",
         "Dust seal abrasion"
       ],
+      "satellite_observatory": {
+        "optical": {
+          "mission": "Landsat 8 / Landsat 9",
+          "instrument": "OLI / OLI-2",
+          "spectrum": "Visible, near-infrared (VNIR), shortwave infrared (SWIR); panchromatic",
+          "collects": "Spectral radiance and derived surface reflectance for geomorphological texture and surface-cover contrasts; broadband albedo requires modeling.",
+          "site_application": "Map exposed surface contrasts in pyroclastic plains, ash deposits and glacier margins.",
+          "limitations": "Clouds, vegetation, illumination and pixel size limit interpretation; multispectral contrasts are not mineral assays.",
+          "source_url": "https://science.nasa.gov/mission/landsat/oli/"
+        },
+        "radar_sar": {
+          "mission": "Sentinel-1",
+          "instrument": "C-SAR",
+          "band": "C-band (5.405 GHz; approximately 5.6 cm)",
+          "collects": "Radar backscatter sensitive to surface roughness, dielectric properties and moisture; repeat-pass phase can support deformation mapping where coherence permits.",
+          "site_application": "Investigate roughness contrasts and structural surface lineaments in pyroclastic plains, ash deposits and glacier margins.",
+          "limitations": "Penetration depends on wavelength and material; C-band does not image lava tubes through solid rock. Faults and tube-related collapses require independent validation. Relief causes layover and shadow.",
+          "source_url": "https://sentiwiki.copernicus.eu/web/s1-mission"
+        },
+        "thermal_tir": {
+          "mission": "Landsat 8 / Landsat 9",
+          "instrument": "TIRS / TIRS-2",
+          "spectrum": "Thermal infrared (TIR), bands 10 and 11",
+          "collects": "Thermal radiance supporting surface-temperature retrieval with atmospheric and emissivity corrections.",
+          "site_application": "Compare surface thermal contrasts across pyroclastic plains, ash deposits and glacier margins.",
+          "limitations": "Cloud-free repeated scenes constrain sampled temperature variability, not a full diurnal cycle. Thermal inertia needs temporal sampling and a physical model; radiative balance also needs emissivity and incoming fluxes. No cave interior temperature is measured.",
+          "source_url": "https://science.nasa.gov/mission/landsat/tirs/"
+        },
+        "summary": "Cotopaxi Pyroclastic Plains: combine optical surface reflectance, C-band roughness/structure and thermal surface contrasts to characterize pyroclastic plains, ash deposits and glacier margins. Candidate observation profile only; local scene availability and resolution require verification. No imagery has been ingested and these metadata do not affect ASI."
+      },
       "terrain": {
         "slope_deg": 7,
         "roughness": 0.65,
@@ -1096,6 +1186,36 @@
         "Evaporite Raman spectroscopy",
         "Salt crust rover bearing tests"
       ],
+      "satellite_observatory": {
+        "optical": {
+          "mission": "Landsat 8 / Landsat 9",
+          "instrument": "OLI / OLI-2",
+          "spectrum": "Visible, near-infrared (VNIR), shortwave infrared (SWIR); panchromatic",
+          "collects": "Spectral radiance and derived surface reflectance for geomorphological texture and surface-cover contrasts; broadband albedo requires modeling.",
+          "site_application": "Map exposed surface contrasts in salt crust, seasonal inundation and basin sediments.",
+          "limitations": "Clouds, vegetation, illumination and pixel size limit interpretation; multispectral contrasts are not mineral assays.",
+          "source_url": "https://science.nasa.gov/mission/landsat/oli/"
+        },
+        "radar_sar": {
+          "mission": "Sentinel-1",
+          "instrument": "C-SAR",
+          "band": "C-band (5.405 GHz; approximately 5.6 cm)",
+          "collects": "Radar backscatter sensitive to surface roughness, dielectric properties and moisture; repeat-pass phase can support deformation mapping where coherence permits.",
+          "site_application": "Investigate roughness contrasts and structural surface lineaments in salt crust, seasonal inundation and basin sediments.",
+          "limitations": "Penetration depends on wavelength and material; C-band does not image lava tubes through solid rock. Faults and tube-related collapses require independent validation. Relief causes layover and shadow.",
+          "source_url": "https://sentiwiki.copernicus.eu/web/s1-mission"
+        },
+        "thermal_tir": {
+          "mission": "Landsat 8 / Landsat 9",
+          "instrument": "TIRS / TIRS-2",
+          "spectrum": "Thermal infrared (TIR), bands 10 and 11",
+          "collects": "Thermal radiance supporting surface-temperature retrieval with atmospheric and emissivity corrections.",
+          "site_application": "Compare surface thermal contrasts across salt crust, seasonal inundation and basin sediments.",
+          "limitations": "Cloud-free repeated scenes constrain sampled temperature variability, not a full diurnal cycle. Thermal inertia needs temporal sampling and a physical model; radiative balance also needs emissivity and incoming fluxes. No cave interior temperature is measured.",
+          "source_url": "https://science.nasa.gov/mission/landsat/tirs/"
+        },
+        "summary": "Salar de Uyuni: combine optical surface reflectance, C-band roughness/structure and thermal surface contrasts to characterize salt crust, seasonal inundation and basin sediments. Candidate observation profile only; local scene availability and resolution require verification. No imagery has been ingested and these metadata do not affect ASI."
+      },
       "terrain": {
         "slope_deg": 0.5,
         "roughness": 0.15,
@@ -1349,6 +1469,36 @@
         "Saline soil sample caching",
         "Rover autonomous navigation"
       ],
+      "satellite_observatory": {
+        "optical": {
+          "mission": "Landsat 8 / Landsat 9",
+          "instrument": "OLI / OLI-2",
+          "spectrum": "Visible, near-infrared (VNIR), shortwave infrared (SWIR); panchromatic",
+          "collects": "Spectral radiance and derived surface reflectance for geomorphological texture and surface-cover contrasts; broadband albedo requires modeling.",
+          "site_application": "Map exposed surface contrasts in saline sediments, dry channels and desert ridges.",
+          "limitations": "Clouds, vegetation, illumination and pixel size limit interpretation; multispectral contrasts are not mineral assays.",
+          "source_url": "https://science.nasa.gov/mission/landsat/oli/"
+        },
+        "radar_sar": {
+          "mission": "Sentinel-1",
+          "instrument": "C-SAR",
+          "band": "C-band (5.405 GHz; approximately 5.6 cm)",
+          "collects": "Radar backscatter sensitive to surface roughness, dielectric properties and moisture; repeat-pass phase can support deformation mapping where coherence permits.",
+          "site_application": "Investigate roughness contrasts and structural surface lineaments in saline sediments, dry channels and desert ridges.",
+          "limitations": "Penetration depends on wavelength and material; C-band does not image lava tubes through solid rock. Faults and tube-related collapses require independent validation. Relief causes layover and shadow.",
+          "source_url": "https://sentiwiki.copernicus.eu/web/s1-mission"
+        },
+        "thermal_tir": {
+          "mission": "Landsat 8 / Landsat 9",
+          "instrument": "TIRS / TIRS-2",
+          "spectrum": "Thermal infrared (TIR), bands 10 and 11",
+          "collects": "Thermal radiance supporting surface-temperature retrieval with atmospheric and emissivity corrections.",
+          "site_application": "Compare surface thermal contrasts across saline sediments, dry channels and desert ridges.",
+          "limitations": "Cloud-free repeated scenes constrain sampled temperature variability, not a full diurnal cycle. Thermal inertia needs temporal sampling and a physical model; radiative balance also needs emissivity and incoming fluxes. No cave interior temperature is measured.",
+          "source_url": "https://science.nasa.gov/mission/landsat/tirs/"
+        },
+        "summary": "Qaidam Basin: combine optical surface reflectance, C-band roughness/structure and thermal surface contrasts to characterize saline sediments, dry channels and desert ridges. Candidate observation profile only; local scene availability and resolution require verification. No imagery has been ingested and these metadata do not affect ASI."
+      },
       "terrain": {
         "slope_deg": 4,
         "roughness": 0.55,
@@ -1609,6 +1759,36 @@
         "Hydrothermal mineral spectroscopy",
         "Corrosion sensor deployment"
       ],
+      "satellite_observatory": {
+        "optical": {
+          "mission": "Landsat 8 / Landsat 9",
+          "instrument": "OLI / OLI-2",
+          "spectrum": "Visible, near-infrared (VNIR), shortwave infrared (SWIR); panchromatic",
+          "collects": "Spectral radiance and derived surface reflectance for geomorphological texture and surface-cover contrasts; broadband albedo requires modeling.",
+          "site_application": "Map exposed surface contrasts in hydrothermal salt deposits and exposed geothermal surfaces.",
+          "limitations": "Clouds, vegetation, illumination and pixel size limit interpretation; multispectral contrasts are not mineral assays.",
+          "source_url": "https://science.nasa.gov/mission/landsat/oli/"
+        },
+        "radar_sar": {
+          "mission": "Sentinel-1",
+          "instrument": "C-SAR",
+          "band": "C-band (5.405 GHz; approximately 5.6 cm)",
+          "collects": "Radar backscatter sensitive to surface roughness, dielectric properties and moisture; repeat-pass phase can support deformation mapping where coherence permits.",
+          "site_application": "Investigate roughness contrasts and structural surface lineaments in hydrothermal salt deposits and exposed geothermal surfaces.",
+          "limitations": "Penetration depends on wavelength and material; C-band does not image lava tubes through solid rock. Faults and tube-related collapses require independent validation. Relief causes layover and shadow.",
+          "source_url": "https://sentiwiki.copernicus.eu/web/s1-mission"
+        },
+        "thermal_tir": {
+          "mission": "Landsat 8 / Landsat 9",
+          "instrument": "TIRS / TIRS-2",
+          "spectrum": "Thermal infrared (TIR), bands 10 and 11",
+          "collects": "Thermal radiance supporting surface-temperature retrieval with atmospheric and emissivity corrections.",
+          "site_application": "Compare surface thermal contrasts across hydrothermal salt deposits and exposed geothermal surfaces.",
+          "limitations": "Cloud-free repeated scenes constrain sampled temperature variability, not a full diurnal cycle. Thermal inertia needs temporal sampling and a physical model; radiative balance also needs emissivity and incoming fluxes. No cave interior temperature is measured.",
+          "source_url": "https://science.nasa.gov/mission/landsat/tirs/"
+        },
+        "summary": "Dallol Salt / Hydrothermal: combine optical surface reflectance, C-band roughness/structure and thermal surface contrasts to characterize hydrothermal salt deposits and exposed geothermal surfaces. Candidate observation profile only; local scene availability and resolution require verification. No imagery has been ingested and these metadata do not affect ASI."
+      },
       "terrain": {
         "slope_deg": 3,
         "roughness": 0.7,
@@ -1866,6 +2046,36 @@
         "Lava tube robot navigation",
         "Basalt wheel abrasion"
       ],
+      "satellite_observatory": {
+        "optical": {
+          "mission": "Landsat 8 / Landsat 9",
+          "instrument": "OLI / OLI-2",
+          "spectrum": "Visible, near-infrared (VNIR), shortwave infrared (SWIR); panchromatic",
+          "collects": "Spectral radiance and derived surface reflectance for geomorphological texture and surface-cover contrasts; broadband albedo requires modeling.",
+          "site_application": "Map exposed surface contrasts in basalt flow textures and candidate lava-tube collapse features.",
+          "limitations": "Clouds, vegetation, illumination and pixel size limit interpretation; multispectral contrasts are not mineral assays.",
+          "source_url": "https://science.nasa.gov/mission/landsat/oli/"
+        },
+        "radar_sar": {
+          "mission": "Sentinel-1",
+          "instrument": "C-SAR",
+          "band": "C-band (5.405 GHz; approximately 5.6 cm)",
+          "collects": "Radar backscatter sensitive to surface roughness, dielectric properties and moisture; repeat-pass phase can support deformation mapping where coherence permits.",
+          "site_application": "Investigate roughness contrasts and structural surface lineaments in basalt flow textures and candidate lava-tube collapse features.",
+          "limitations": "Penetration depends on wavelength and material; C-band does not image lava tubes through solid rock. Faults and tube-related collapses require independent validation. Relief causes layover and shadow.",
+          "source_url": "https://sentiwiki.copernicus.eu/web/s1-mission"
+        },
+        "thermal_tir": {
+          "mission": "Landsat 8 / Landsat 9",
+          "instrument": "TIRS / TIRS-2",
+          "spectrum": "Thermal infrared (TIR), bands 10 and 11",
+          "collects": "Thermal radiance supporting surface-temperature retrieval with atmospheric and emissivity corrections.",
+          "site_application": "Compare surface thermal contrasts across basalt flow textures and candidate lava-tube collapse features.",
+          "limitations": "Cloud-free repeated scenes constrain sampled temperature variability, not a full diurnal cycle. Thermal inertia needs temporal sampling and a physical model; radiative balance also needs emissivity and incoming fluxes. No cave interior temperature is measured.",
+          "source_url": "https://science.nasa.gov/mission/landsat/tirs/"
+        },
+        "summary": "Craters of the Moon: combine optical surface reflectance, C-band roughness/structure and thermal surface contrasts to characterize basalt flow textures and candidate lava-tube collapse features. Candidate observation profile only; local scene availability and resolution require verification. No imagery has been ingested and these metadata do not affect ASI."
+      },
       "terrain": {
         "slope_deg": 6,
         "roughness": 0.85,
@@ -2124,6 +2334,36 @@
         "ISRU ice drilling procedures",
         "Polar rover communications"
       ],
+      "satellite_observatory": {
+        "optical": {
+          "mission": "Landsat 8 / Landsat 9",
+          "instrument": "OLI / OLI-2",
+          "spectrum": "Visible, near-infrared (VNIR), shortwave infrared (SWIR); panchromatic",
+          "collects": "Spectral radiance and derived surface reflectance for geomorphological texture and surface-cover contrasts; broadband albedo requires modeling.",
+          "site_application": "Map exposed surface contrasts in impact ejecta, carbonate terrain and seasonal snow.",
+          "limitations": "Clouds, vegetation, illumination and pixel size limit interpretation; multispectral contrasts are not mineral assays.",
+          "source_url": "https://science.nasa.gov/mission/landsat/oli/"
+        },
+        "radar_sar": {
+          "mission": "Sentinel-1",
+          "instrument": "C-SAR",
+          "band": "C-band (5.405 GHz; approximately 5.6 cm)",
+          "collects": "Radar backscatter sensitive to surface roughness, dielectric properties and moisture; repeat-pass phase can support deformation mapping where coherence permits.",
+          "site_application": "Investigate roughness contrasts and structural surface lineaments in impact ejecta, carbonate terrain and seasonal snow.",
+          "limitations": "Penetration depends on wavelength and material; C-band does not image lava tubes through solid rock. Faults and tube-related collapses require independent validation. Relief causes layover and shadow.",
+          "source_url": "https://sentiwiki.copernicus.eu/web/s1-mission"
+        },
+        "thermal_tir": {
+          "mission": "Landsat 8 / Landsat 9",
+          "instrument": "TIRS / TIRS-2",
+          "spectrum": "Thermal infrared (TIR), bands 10 and 11",
+          "collects": "Thermal radiance supporting surface-temperature retrieval with atmospheric and emissivity corrections.",
+          "site_application": "Compare surface thermal contrasts across impact ejecta, carbonate terrain and seasonal snow.",
+          "limitations": "Cloud-free repeated scenes constrain sampled temperature variability, not a full diurnal cycle. Thermal inertia needs temporal sampling and a physical model; radiative balance also needs emissivity and incoming fluxes. No cave interior temperature is measured.",
+          "source_url": "https://science.nasa.gov/mission/landsat/tirs/"
+        },
+        "summary": "Haughton Crater: combine optical surface reflectance, C-band roughness/structure and thermal surface contrasts to characterize impact ejecta, carbonate terrain and seasonal snow. Candidate observation profile only; local scene availability and resolution require verification. No imagery has been ingested and these metadata do not affect ASI."
+      },
       "terrain": {
         "slope_deg": 12,
         "roughness": 0.75,
@@ -2382,6 +2622,36 @@
         "Low-biomass sample contamination control",
         "Dry-soil drill testing"
       ],
+      "satellite_observatory": {
+        "optical": {
+          "mission": "Landsat 8 / Landsat 9",
+          "instrument": "OLI / OLI-2",
+          "spectrum": "Visible, near-infrared (VNIR), shortwave infrared (SWIR); panchromatic",
+          "collects": "Spectral radiance and derived surface reflectance for geomorphological texture and surface-cover contrasts; broadband albedo requires modeling.",
+          "site_application": "Map exposed surface contrasts in hyperarid soils, salt-bearing surfaces and dry drainage textures.",
+          "limitations": "Clouds, vegetation, illumination and pixel size limit interpretation; multispectral contrasts are not mineral assays.",
+          "source_url": "https://science.nasa.gov/mission/landsat/oli/"
+        },
+        "radar_sar": {
+          "mission": "Sentinel-1",
+          "instrument": "C-SAR",
+          "band": "C-band (5.405 GHz; approximately 5.6 cm)",
+          "collects": "Radar backscatter sensitive to surface roughness, dielectric properties and moisture; repeat-pass phase can support deformation mapping where coherence permits.",
+          "site_application": "Investigate roughness contrasts and structural surface lineaments in hyperarid soils, salt-bearing surfaces and dry drainage textures.",
+          "limitations": "Penetration depends on wavelength and material; C-band does not image lava tubes through solid rock. Faults and tube-related collapses require independent validation. Relief causes layover and shadow.",
+          "source_url": "https://sentiwiki.copernicus.eu/web/s1-mission"
+        },
+        "thermal_tir": {
+          "mission": "Landsat 8 / Landsat 9",
+          "instrument": "TIRS / TIRS-2",
+          "spectrum": "Thermal infrared (TIR), bands 10 and 11",
+          "collects": "Thermal radiance supporting surface-temperature retrieval with atmospheric and emissivity corrections.",
+          "site_application": "Compare surface thermal contrasts across hyperarid soils, salt-bearing surfaces and dry drainage textures.",
+          "limitations": "Cloud-free repeated scenes constrain sampled temperature variability, not a full diurnal cycle. Thermal inertia needs temporal sampling and a physical model; radiative balance also needs emissivity and incoming fluxes. No cave interior temperature is measured.",
+          "source_url": "https://science.nasa.gov/mission/landsat/tirs/"
+        },
+        "summary": "Atacama Yungay: combine optical surface reflectance, C-band roughness/structure and thermal surface contrasts to characterize hyperarid soils, salt-bearing surfaces and dry drainage textures. Candidate observation profile only; local scene availability and resolution require verification. No imagery has been ingested and these metadata do not affect ASI."
+      },
       "terrain": {
         "slope_deg": 3,
         "roughness": 0.5,
@@ -2642,6 +2912,36 @@
         "Basalt rover traverse",
         "Volcanic terrain photogrammetry"
       ],
+      "satellite_observatory": {
+        "optical": {
+          "mission": "Landsat 8 / Landsat 9",
+          "instrument": "OLI / OLI-2",
+          "spectrum": "Visible, near-infrared (VNIR), shortwave infrared (SWIR); panchromatic",
+          "collects": "Spectral radiance and derived surface reflectance for geomorphological texture and surface-cover contrasts; broadband albedo requires modeling.",
+          "site_application": "Map exposed surface contrasts in rough basalt flows, volcanic deposits and seasonal snow.",
+          "limitations": "Clouds, vegetation, illumination and pixel size limit interpretation; multispectral contrasts are not mineral assays.",
+          "source_url": "https://science.nasa.gov/mission/landsat/oli/"
+        },
+        "radar_sar": {
+          "mission": "Sentinel-1",
+          "instrument": "C-SAR",
+          "band": "C-band (5.405 GHz; approximately 5.6 cm)",
+          "collects": "Radar backscatter sensitive to surface roughness, dielectric properties and moisture; repeat-pass phase can support deformation mapping where coherence permits.",
+          "site_application": "Investigate roughness contrasts and structural surface lineaments in rough basalt flows, volcanic deposits and seasonal snow.",
+          "limitations": "Penetration depends on wavelength and material; C-band does not image lava tubes through solid rock. Faults and tube-related collapses require independent validation. Relief causes layover and shadow.",
+          "source_url": "https://sentiwiki.copernicus.eu/web/s1-mission"
+        },
+        "thermal_tir": {
+          "mission": "Landsat 8 / Landsat 9",
+          "instrument": "TIRS / TIRS-2",
+          "spectrum": "Thermal infrared (TIR), bands 10 and 11",
+          "collects": "Thermal radiance supporting surface-temperature retrieval with atmospheric and emissivity corrections.",
+          "site_application": "Compare surface thermal contrasts across rough basalt flows, volcanic deposits and seasonal snow.",
+          "limitations": "Cloud-free repeated scenes constrain sampled temperature variability, not a full diurnal cycle. Thermal inertia needs temporal sampling and a physical model; radiative balance also needs emissivity and incoming fluxes. No cave interior temperature is measured.",
+          "source_url": "https://science.nasa.gov/mission/landsat/tirs/"
+        },
+        "summary": "Askja Volcanic Field: combine optical surface reflectance, C-band roughness/structure and thermal surface contrasts to characterize rough basalt flows, volcanic deposits and seasonal snow. Candidate observation profile only; local scene availability and resolution require verification. No imagery has been ingested and these metadata do not affect ASI."
+      },
       "terrain": {
         "slope_deg": 10,
         "roughness": 0.9,
@@ -2899,6 +3199,36 @@
         "Basalt rover wheel abrasion",
         "Caldera photogrammetry"
       ],
+      "satellite_observatory": {
+        "optical": {
+          "mission": "Landsat 8 / Landsat 9",
+          "instrument": "OLI / OLI-2",
+          "spectrum": "Visible, near-infrared (VNIR), shortwave infrared (SWIR); panchromatic",
+          "collects": "Spectral radiance and derived surface reflectance for geomorphological texture and surface-cover contrasts; broadband albedo requires modeling.",
+          "site_application": "Map exposed surface contrasts in caldera structures and basaltic lava flow boundaries.",
+          "limitations": "Clouds, vegetation, illumination and pixel size limit interpretation; multispectral contrasts are not mineral assays.",
+          "source_url": "https://science.nasa.gov/mission/landsat/oli/"
+        },
+        "radar_sar": {
+          "mission": "Sentinel-1",
+          "instrument": "C-SAR",
+          "band": "C-band (5.405 GHz; approximately 5.6 cm)",
+          "collects": "Radar backscatter sensitive to surface roughness, dielectric properties and moisture; repeat-pass phase can support deformation mapping where coherence permits.",
+          "site_application": "Investigate roughness contrasts and structural surface lineaments in caldera structures and basaltic lava flow boundaries.",
+          "limitations": "Penetration depends on wavelength and material; C-band does not image lava tubes through solid rock. Faults and tube-related collapses require independent validation. Relief causes layover and shadow.",
+          "source_url": "https://sentiwiki.copernicus.eu/web/s1-mission"
+        },
+        "thermal_tir": {
+          "mission": "Landsat 8 / Landsat 9",
+          "instrument": "TIRS / TIRS-2",
+          "spectrum": "Thermal infrared (TIR), bands 10 and 11",
+          "collects": "Thermal radiance supporting surface-temperature retrieval with atmospheric and emissivity corrections.",
+          "site_application": "Compare surface thermal contrasts across caldera structures and basaltic lava flow boundaries.",
+          "limitations": "Cloud-free repeated scenes constrain sampled temperature variability, not a full diurnal cycle. Thermal inertia needs temporal sampling and a physical model; radiative balance also needs emissivity and incoming fluxes. No cave interior temperature is measured.",
+          "source_url": "https://science.nasa.gov/mission/landsat/tirs/"
+        },
+        "summary": "Sierra Negra Caldera: combine optical surface reflectance, C-band roughness/structure and thermal surface contrasts to characterize caldera structures and basaltic lava flow boundaries. Candidate observation profile only; local scene availability and resolution require verification. No imagery has been ingested and these metadata do not affect ASI."
+      },
       "terrain": {
         "slope_deg": 5,
         "roughness": 0.8,
@@ -3156,6 +3486,36 @@
         "ISRU ice drilling procedures",
         "Glacier ground-penetrating radar"
       ],
+      "satellite_observatory": {
+        "optical": {
+          "mission": "Landsat 8 / Landsat 9",
+          "instrument": "OLI / OLI-2",
+          "spectrum": "Visible, near-infrared (VNIR), shortwave infrared (SWIR); panchromatic",
+          "collects": "Spectral radiance and derived surface reflectance for geomorphological texture and surface-cover contrasts; broadband albedo requires modeling.",
+          "site_application": "Map exposed surface contrasts in glacier margins and exposed volcanic contacts.",
+          "limitations": "Clouds, vegetation, illumination and pixel size limit interpretation; multispectral contrasts are not mineral assays.",
+          "source_url": "https://science.nasa.gov/mission/landsat/oli/"
+        },
+        "radar_sar": {
+          "mission": "Sentinel-1",
+          "instrument": "C-SAR",
+          "band": "C-band (5.405 GHz; approximately 5.6 cm)",
+          "collects": "Radar backscatter sensitive to surface roughness, dielectric properties and moisture; repeat-pass phase can support deformation mapping where coherence permits.",
+          "site_application": "Investigate roughness contrasts and structural surface lineaments in glacier margins and exposed volcanic contacts.",
+          "limitations": "Penetration depends on wavelength and material; C-band does not image lava tubes through solid rock. Faults and tube-related collapses require independent validation. Relief causes layover and shadow.",
+          "source_url": "https://sentiwiki.copernicus.eu/web/s1-mission"
+        },
+        "thermal_tir": {
+          "mission": "Landsat 8 / Landsat 9",
+          "instrument": "TIRS / TIRS-2",
+          "spectrum": "Thermal infrared (TIR), bands 10 and 11",
+          "collects": "Thermal radiance supporting surface-temperature retrieval with atmospheric and emissivity corrections.",
+          "site_application": "Compare surface thermal contrasts across glacier margins and exposed volcanic contacts.",
+          "limitations": "Cloud-free repeated scenes constrain sampled temperature variability, not a full diurnal cycle. Thermal inertia needs temporal sampling and a physical model; radiative balance also needs emissivity and incoming fluxes. No cave interior temperature is measured.",
+          "source_url": "https://science.nasa.gov/mission/landsat/tirs/"
+        },
+        "summary": "Antisana Glacier-Basalt: combine optical surface reflectance, C-band roughness/structure and thermal surface contrasts to characterize glacier margins and exposed volcanic contacts. Candidate observation profile only; local scene availability and resolution require verification. No imagery has been ingested and these metadata do not affect ASI."
+      },
       "terrain": {
         "slope_deg": 20,
         "roughness": 0.85,
@@ -3411,6 +3771,36 @@
         "Thin-air rotorcraft control trials",
         "Raman salt mineral screening"
       ],
+      "satellite_observatory": {
+        "optical": {
+          "mission": "Landsat 8 / Landsat 9",
+          "instrument": "OLI / OLI-2",
+          "spectrum": "Visible, near-infrared (VNIR), shortwave infrared (SWIR); panchromatic",
+          "collects": "Spectral radiance and derived surface reflectance for geomorphological texture and surface-cover contrasts; broadband albedo requires modeling.",
+          "site_application": "Map exposed surface contrasts in high-altitude saline basins and volcanic sediment contacts.",
+          "limitations": "Clouds, vegetation, illumination and pixel size limit interpretation; multispectral contrasts are not mineral assays.",
+          "source_url": "https://science.nasa.gov/mission/landsat/oli/"
+        },
+        "radar_sar": {
+          "mission": "Sentinel-1",
+          "instrument": "C-SAR",
+          "band": "C-band (5.405 GHz; approximately 5.6 cm)",
+          "collects": "Radar backscatter sensitive to surface roughness, dielectric properties and moisture; repeat-pass phase can support deformation mapping where coherence permits.",
+          "site_application": "Investigate roughness contrasts and structural surface lineaments in high-altitude saline basins and volcanic sediment contacts.",
+          "limitations": "Penetration depends on wavelength and material; C-band does not image lava tubes through solid rock. Faults and tube-related collapses require independent validation. Relief causes layover and shadow.",
+          "source_url": "https://sentiwiki.copernicus.eu/web/s1-mission"
+        },
+        "thermal_tir": {
+          "mission": "Landsat 8 / Landsat 9",
+          "instrument": "TIRS / TIRS-2",
+          "spectrum": "Thermal infrared (TIR), bands 10 and 11",
+          "collects": "Thermal radiance supporting surface-temperature retrieval with atmospheric and emissivity corrections.",
+          "site_application": "Compare surface thermal contrasts across high-altitude saline basins and volcanic sediment contacts.",
+          "limitations": "Cloud-free repeated scenes constrain sampled temperature variability, not a full diurnal cycle. Thermal inertia needs temporal sampling and a physical model; radiative balance also needs emissivity and incoming fluxes. No cave interior temperature is measured.",
+          "source_url": "https://science.nasa.gov/mission/landsat/tirs/"
+        },
+        "summary": "Puna de Atacama / Laguna Verde: combine optical surface reflectance, C-band roughness/structure and thermal surface contrasts to characterize high-altitude saline basins and volcanic sediment contacts. Candidate observation profile only; local scene availability and resolution require verification. No imagery has been ingested and these metadata do not affect ASI."
+      },
       "terrain": {
         "slope_deg": 6,
         "roughness": 0.6,
@@ -3669,6 +4059,36 @@
         "Dune rover slip estimation",
         "Dust abrasion testing"
       ],
+      "satellite_observatory": {
+        "optical": {
+          "mission": "Landsat 8 / Landsat 9",
+          "instrument": "OLI / OLI-2",
+          "spectrum": "Visible, near-infrared (VNIR), shortwave infrared (SWIR); panchromatic",
+          "collects": "Spectral radiance and derived surface reflectance for geomorphological texture and surface-cover contrasts; broadband albedo requires modeling.",
+          "site_application": "Map exposed surface contrasts in dune morphology and exposed sand thermal contrasts.",
+          "limitations": "Clouds, vegetation, illumination and pixel size limit interpretation; multispectral contrasts are not mineral assays.",
+          "source_url": "https://science.nasa.gov/mission/landsat/oli/"
+        },
+        "radar_sar": {
+          "mission": "Sentinel-1",
+          "instrument": "C-SAR",
+          "band": "C-band (5.405 GHz; approximately 5.6 cm)",
+          "collects": "Radar backscatter sensitive to surface roughness, dielectric properties and moisture; repeat-pass phase can support deformation mapping where coherence permits.",
+          "site_application": "Investigate roughness contrasts and structural surface lineaments in dune morphology and exposed sand thermal contrasts.",
+          "limitations": "Penetration depends on wavelength and material; C-band does not image lava tubes through solid rock. Faults and tube-related collapses require independent validation. Relief causes layover and shadow.",
+          "source_url": "https://sentiwiki.copernicus.eu/web/s1-mission"
+        },
+        "thermal_tir": {
+          "mission": "Landsat 8 / Landsat 9",
+          "instrument": "TIRS / TIRS-2",
+          "spectrum": "Thermal infrared (TIR), bands 10 and 11",
+          "collects": "Thermal radiance supporting surface-temperature retrieval with atmospheric and emissivity corrections.",
+          "site_application": "Compare surface thermal contrasts across dune morphology and exposed sand thermal contrasts.",
+          "limitations": "Cloud-free repeated scenes constrain sampled temperature variability, not a full diurnal cycle. Thermal inertia needs temporal sampling and a physical model; radiative balance also needs emissivity and incoming fluxes. No cave interior temperature is measured.",
+          "source_url": "https://science.nasa.gov/mission/landsat/tirs/"
+        },
+        "summary": "Lut Desert / Rig-e Yalan: combine optical surface reflectance, C-band roughness/structure and thermal surface contrasts to characterize dune morphology and exposed sand thermal contrasts. Candidate observation profile only; local scene availability and resolution require verification. No imagery has been ingested and these metadata do not affect ASI."
+      },
       "terrain": {
         "slope_deg": 12,
         "roughness": 0.7,
@@ -3931,6 +4351,36 @@
         "Autonomous volcanic traverse navigation",
         "Portable LIBS rock screening"
       ],
+      "satellite_observatory": {
+        "optical": {
+          "mission": "Landsat 8 / Landsat 9",
+          "instrument": "OLI / OLI-2",
+          "spectrum": "Visible, near-infrared (VNIR), shortwave infrared (SWIR); panchromatic",
+          "collects": "Spectral radiance and derived surface reflectance for geomorphological texture and surface-cover contrasts; broadband albedo requires modeling.",
+          "site_application": "Map exposed surface contrasts in arid volcanic relief and rock outcrop boundaries.",
+          "limitations": "Clouds, vegetation, illumination and pixel size limit interpretation; multispectral contrasts are not mineral assays.",
+          "source_url": "https://science.nasa.gov/mission/landsat/oli/"
+        },
+        "radar_sar": {
+          "mission": "Sentinel-1",
+          "instrument": "C-SAR",
+          "band": "C-band (5.405 GHz; approximately 5.6 cm)",
+          "collects": "Radar backscatter sensitive to surface roughness, dielectric properties and moisture; repeat-pass phase can support deformation mapping where coherence permits.",
+          "site_application": "Investigate roughness contrasts and structural surface lineaments in arid volcanic relief and rock outcrop boundaries.",
+          "limitations": "Penetration depends on wavelength and material; C-band does not image lava tubes through solid rock. Faults and tube-related collapses require independent validation. Relief causes layover and shadow.",
+          "source_url": "https://sentiwiki.copernicus.eu/web/s1-mission"
+        },
+        "thermal_tir": {
+          "mission": "Landsat 8 / Landsat 9",
+          "instrument": "TIRS / TIRS-2",
+          "spectrum": "Thermal infrared (TIR), bands 10 and 11",
+          "collects": "Thermal radiance supporting surface-temperature retrieval with atmospheric and emissivity corrections.",
+          "site_application": "Compare surface thermal contrasts across arid volcanic relief and rock outcrop boundaries.",
+          "limitations": "Cloud-free repeated scenes constrain sampled temperature variability, not a full diurnal cycle. Thermal inertia needs temporal sampling and a physical model; radiative balance also needs emissivity and incoming fluxes. No cave interior temperature is measured.",
+          "source_url": "https://science.nasa.gov/mission/landsat/tirs/"
+        },
+        "summary": "Tibesti Volcanic Field: combine optical surface reflectance, C-band roughness/structure and thermal surface contrasts to characterize arid volcanic relief and rock outcrop boundaries. Candidate observation profile only; local scene availability and resolution require verification. No imagery has been ingested and these metadata do not affect ASI."
+      },
       "terrain": {
         "slope_deg": 15,
         "roughness": 0.85,
@@ -4194,6 +4644,36 @@
         "Subsurface lava tube LiDAR",
         "Cave robot communications relay"
       ],
+      "satellite_observatory": {
+        "optical": {
+          "mission": "Landsat 8 / Landsat 9",
+          "instrument": "OLI / OLI-2",
+          "spectrum": "Visible, near-infrared (VNIR), shortwave infrared (SWIR); panchromatic",
+          "collects": "Spectral radiance and derived surface reflectance for geomorphological texture and surface-cover contrasts; broadband albedo requires modeling.",
+          "site_application": "Map exposed surface contrasts in lava textures and candidate tube-related surface collapses.",
+          "limitations": "Clouds, vegetation, illumination and pixel size limit interpretation; multispectral contrasts are not mineral assays.",
+          "source_url": "https://science.nasa.gov/mission/landsat/oli/"
+        },
+        "radar_sar": {
+          "mission": "Sentinel-1",
+          "instrument": "C-SAR",
+          "band": "C-band (5.405 GHz; approximately 5.6 cm)",
+          "collects": "Radar backscatter sensitive to surface roughness, dielectric properties and moisture; repeat-pass phase can support deformation mapping where coherence permits.",
+          "site_application": "Investigate roughness contrasts and structural surface lineaments in lava textures and candidate tube-related surface collapses.",
+          "limitations": "Penetration depends on wavelength and material; C-band does not image lava tubes through solid rock. Faults and tube-related collapses require independent validation. Relief causes layover and shadow.",
+          "source_url": "https://sentiwiki.copernicus.eu/web/s1-mission"
+        },
+        "thermal_tir": {
+          "mission": "Landsat 8 / Landsat 9",
+          "instrument": "TIRS / TIRS-2",
+          "spectrum": "Thermal infrared (TIR), bands 10 and 11",
+          "collects": "Thermal radiance supporting surface-temperature retrieval with atmospheric and emissivity corrections.",
+          "site_application": "Compare surface thermal contrasts across lava textures and candidate tube-related surface collapses.",
+          "limitations": "Cloud-free repeated scenes constrain sampled temperature variability, not a full diurnal cycle. Thermal inertia needs temporal sampling and a physical model; radiative balance also needs emissivity and incoming fluxes. No cave interior temperature is measured.",
+          "source_url": "https://science.nasa.gov/mission/landsat/tirs/"
+        },
+        "summary": "Timanfaya Lava Tubes: combine optical surface reflectance, C-band roughness/structure and thermal surface contrasts to characterize lava textures and candidate tube-related surface collapses. Candidate observation profile only; local scene availability and resolution require verification. No imagery has been ingested and these metadata do not affect ASI."
+      },
       "terrain": {
         "slope_deg": 8,
         "roughness": 0.9,
@@ -4456,6 +4936,36 @@
         "Steep-slope hazard autonomous navigation",
         "Fresh lava flow LiDAR mapping"
       ],
+      "satellite_observatory": {
+        "optical": {
+          "mission": "Landsat 8 / Landsat 9",
+          "instrument": "OLI / OLI-2",
+          "spectrum": "Visible, near-infrared (VNIR), shortwave infrared (SWIR); panchromatic",
+          "collects": "Spectral radiance and derived surface reflectance for geomorphological texture and surface-cover contrasts; broadband albedo requires modeling.",
+          "site_application": "Map exposed surface contrasts in fresh lava flows, scarps and cloud-forest margins.",
+          "limitations": "Clouds, vegetation, illumination and pixel size limit interpretation; multispectral contrasts are not mineral assays.",
+          "source_url": "https://science.nasa.gov/mission/landsat/oli/"
+        },
+        "radar_sar": {
+          "mission": "Sentinel-1",
+          "instrument": "C-SAR",
+          "band": "C-band (5.405 GHz; approximately 5.6 cm)",
+          "collects": "Radar backscatter sensitive to surface roughness, dielectric properties and moisture; repeat-pass phase can support deformation mapping where coherence permits.",
+          "site_application": "Investigate roughness contrasts and structural surface lineaments in fresh lava flows, scarps and cloud-forest margins.",
+          "limitations": "Penetration depends on wavelength and material; C-band does not image lava tubes through solid rock. Faults and tube-related collapses require independent validation. Relief causes layover and shadow.",
+          "source_url": "https://sentiwiki.copernicus.eu/web/s1-mission"
+        },
+        "thermal_tir": {
+          "mission": "Landsat 8 / Landsat 9",
+          "instrument": "TIRS / TIRS-2",
+          "spectrum": "Thermal infrared (TIR), bands 10 and 11",
+          "collects": "Thermal radiance supporting surface-temperature retrieval with atmospheric and emissivity corrections.",
+          "site_application": "Compare surface thermal contrasts across fresh lava flows, scarps and cloud-forest margins.",
+          "limitations": "Cloud-free repeated scenes constrain sampled temperature variability, not a full diurnal cycle. Thermal inertia needs temporal sampling and a physical model; radiative balance also needs emissivity and incoming fluxes. No cave interior temperature is measured.",
+          "source_url": "https://science.nasa.gov/mission/landsat/tirs/"
+        },
+        "summary": "El Reventador Volcanic Complex: combine optical surface reflectance, C-band roughness/structure and thermal surface contrasts to characterize fresh lava flows, scarps and cloud-forest margins. Candidate observation profile only; local scene availability and resolution require verification. No imagery has been ingested and these metadata do not affect ASI."
+      },
       "terrain": {
         "slope_deg": 24,
         "roughness": 0.9,
@@ -4711,6 +5221,36 @@
         "High-incline tephra traction trials",
         "Airborne volcanic ash seal testing"
       ],
+      "satellite_observatory": {
+        "optical": {
+          "mission": "Landsat 8 / Landsat 9",
+          "instrument": "OLI / OLI-2",
+          "spectrum": "Visible, near-infrared (VNIR), shortwave infrared (SWIR); panchromatic",
+          "collects": "Spectral radiance and derived surface reflectance for geomorphological texture and surface-cover contrasts; broadband albedo requires modeling.",
+          "site_application": "Map exposed surface contrasts in ash-covered slopes, tephra deposits and snow cover.",
+          "limitations": "Clouds, vegetation, illumination and pixel size limit interpretation; multispectral contrasts are not mineral assays.",
+          "source_url": "https://science.nasa.gov/mission/landsat/oli/"
+        },
+        "radar_sar": {
+          "mission": "Sentinel-1",
+          "instrument": "C-SAR",
+          "band": "C-band (5.405 GHz; approximately 5.6 cm)",
+          "collects": "Radar backscatter sensitive to surface roughness, dielectric properties and moisture; repeat-pass phase can support deformation mapping where coherence permits.",
+          "site_application": "Investigate roughness contrasts and structural surface lineaments in ash-covered slopes, tephra deposits and snow cover.",
+          "limitations": "Penetration depends on wavelength and material; C-band does not image lava tubes through solid rock. Faults and tube-related collapses require independent validation. Relief causes layover and shadow.",
+          "source_url": "https://sentiwiki.copernicus.eu/web/s1-mission"
+        },
+        "thermal_tir": {
+          "mission": "Landsat 8 / Landsat 9",
+          "instrument": "TIRS / TIRS-2",
+          "spectrum": "Thermal infrared (TIR), bands 10 and 11",
+          "collects": "Thermal radiance supporting surface-temperature retrieval with atmospheric and emissivity corrections.",
+          "site_application": "Compare surface thermal contrasts across ash-covered slopes, tephra deposits and snow cover.",
+          "limitations": "Cloud-free repeated scenes constrain sampled temperature variability, not a full diurnal cycle. Thermal inertia needs temporal sampling and a physical model; radiative balance also needs emissivity and incoming fluxes. No cave interior temperature is measured.",
+          "source_url": "https://science.nasa.gov/mission/landsat/tirs/"
+        },
+        "summary": "Sangay Pyroclastic & Ash Cone: combine optical surface reflectance, C-band roughness/structure and thermal surface contrasts to characterize ash-covered slopes, tephra deposits and snow cover. Candidate observation profile only; local scene availability and resolution require verification. No imagery has been ingested and these metadata do not affect ASI."
+      },
       "terrain": {
         "slope_deg": 26,
         "roughness": 0.88,
@@ -4966,6 +5506,36 @@
         "Crater-rim autonomous descent planning",
         "Hydrothermal sulfate-carbonate spectroscopy"
       ],
+      "satellite_observatory": {
+        "optical": {
+          "mission": "Landsat 8 / Landsat 9",
+          "instrument": "OLI / OLI-2",
+          "spectrum": "Visible, near-infrared (VNIR), shortwave infrared (SWIR); panchromatic",
+          "collects": "Spectral radiance and derived surface reflectance for geomorphological texture and surface-cover contrasts; broadband albedo requires modeling.",
+          "site_application": "Map exposed surface contrasts in crater-lake margins and exposed tuff walls.",
+          "limitations": "Clouds, vegetation, illumination and pixel size limit interpretation; multispectral contrasts are not mineral assays.",
+          "source_url": "https://science.nasa.gov/mission/landsat/oli/"
+        },
+        "radar_sar": {
+          "mission": "Sentinel-1",
+          "instrument": "C-SAR",
+          "band": "C-band (5.405 GHz; approximately 5.6 cm)",
+          "collects": "Radar backscatter sensitive to surface roughness, dielectric properties and moisture; repeat-pass phase can support deformation mapping where coherence permits.",
+          "site_application": "Investigate roughness contrasts and structural surface lineaments in crater-lake margins and exposed tuff walls.",
+          "limitations": "Penetration depends on wavelength and material; C-band does not image lava tubes through solid rock. Faults and tube-related collapses require independent validation. Relief causes layover and shadow.",
+          "source_url": "https://sentiwiki.copernicus.eu/web/s1-mission"
+        },
+        "thermal_tir": {
+          "mission": "Landsat 8 / Landsat 9",
+          "instrument": "TIRS / TIRS-2",
+          "spectrum": "Thermal infrared (TIR), bands 10 and 11",
+          "collects": "Thermal radiance supporting surface-temperature retrieval with atmospheric and emissivity corrections.",
+          "site_application": "Compare surface thermal contrasts across crater-lake margins and exposed tuff walls.",
+          "limitations": "Cloud-free repeated scenes constrain sampled temperature variability, not a full diurnal cycle. Thermal inertia needs temporal sampling and a physical model; radiative balance also needs emissivity and incoming fluxes. No cave interior temperature is measured.",
+          "source_url": "https://science.nasa.gov/mission/landsat/tirs/"
+        },
+        "summary": "Quilotoa Volcanic Crater: combine optical surface reflectance, C-band roughness/structure and thermal surface contrasts to characterize crater-lake margins and exposed tuff walls. Candidate observation profile only; local scene availability and resolution require verification. No imagery has been ingested and these metadata do not affect ASI."
+      },
       "terrain": {
         "slope_deg": 18,
         "roughness": 0.75,
@@ -5222,6 +5792,36 @@
         "Evaporite canyon autonomous traverse",
         "Subsurface salt-cave micro-rover deployment"
       ],
+      "satellite_observatory": {
+        "optical": {
+          "mission": "Landsat 8 / Landsat 9",
+          "instrument": "OLI / OLI-2",
+          "spectrum": "Visible, near-infrared (VNIR), shortwave infrared (SWIR); panchromatic",
+          "collects": "Spectral radiance and derived surface reflectance for geomorphological texture and surface-cover contrasts; broadband albedo requires modeling.",
+          "site_application": "Map exposed surface contrasts in folded evaporite ridges and salt-cave surface expressions.",
+          "limitations": "Clouds, vegetation, illumination and pixel size limit interpretation; multispectral contrasts are not mineral assays.",
+          "source_url": "https://science.nasa.gov/mission/landsat/oli/"
+        },
+        "radar_sar": {
+          "mission": "Sentinel-1",
+          "instrument": "C-SAR",
+          "band": "C-band (5.405 GHz; approximately 5.6 cm)",
+          "collects": "Radar backscatter sensitive to surface roughness, dielectric properties and moisture; repeat-pass phase can support deformation mapping where coherence permits.",
+          "site_application": "Investigate roughness contrasts and structural surface lineaments in folded evaporite ridges and salt-cave surface expressions.",
+          "limitations": "Penetration depends on wavelength and material; C-band does not image lava tubes through solid rock. Faults and tube-related collapses require independent validation. Relief causes layover and shadow.",
+          "source_url": "https://sentiwiki.copernicus.eu/web/s1-mission"
+        },
+        "thermal_tir": {
+          "mission": "Landsat 8 / Landsat 9",
+          "instrument": "TIRS / TIRS-2",
+          "spectrum": "Thermal infrared (TIR), bands 10 and 11",
+          "collects": "Thermal radiance supporting surface-temperature retrieval with atmospheric and emissivity corrections.",
+          "site_application": "Compare surface thermal contrasts across folded evaporite ridges and salt-cave surface expressions.",
+          "limitations": "Cloud-free repeated scenes constrain sampled temperature variability, not a full diurnal cycle. Thermal inertia needs temporal sampling and a physical model; radiative balance also needs emissivity and incoming fluxes. No cave interior temperature is measured.",
+          "source_url": "https://science.nasa.gov/mission/landsat/tirs/"
+        },
+        "summary": "Valle de la Luna - Cordillera de la Sal: combine optical surface reflectance, C-band roughness/structure and thermal surface contrasts to characterize folded evaporite ridges and salt-cave surface expressions. Candidate observation profile only; local scene availability and resolution require verification. No imagery has been ingested and these metadata do not affect ASI."
+      },
       "terrain": {
         "slope_deg": 11,
         "roughness": 0.72,
@@ -5482,6 +6082,36 @@
         "Aeolian yardang obstacle avoidance",
         "High-wind particulate sensor calibration"
       ],
+      "satellite_observatory": {
+        "optical": {
+          "mission": "Landsat 8 / Landsat 9",
+          "instrument": "OLI / OLI-2",
+          "spectrum": "Visible, near-infrared (VNIR), shortwave infrared (SWIR); panchromatic",
+          "collects": "Spectral radiance and derived surface reflectance for geomorphological texture and surface-cover contrasts; broadband albedo requires modeling.",
+          "site_application": "Map exposed surface contrasts in ignimbrite yardangs and dark gravel contrasts.",
+          "limitations": "Clouds, vegetation, illumination and pixel size limit interpretation; multispectral contrasts are not mineral assays.",
+          "source_url": "https://science.nasa.gov/mission/landsat/oli/"
+        },
+        "radar_sar": {
+          "mission": "Sentinel-1",
+          "instrument": "C-SAR",
+          "band": "C-band (5.405 GHz; approximately 5.6 cm)",
+          "collects": "Radar backscatter sensitive to surface roughness, dielectric properties and moisture; repeat-pass phase can support deformation mapping where coherence permits.",
+          "site_application": "Investigate roughness contrasts and structural surface lineaments in ignimbrite yardangs and dark gravel contrasts.",
+          "limitations": "Penetration depends on wavelength and material; C-band does not image lava tubes through solid rock. Faults and tube-related collapses require independent validation. Relief causes layover and shadow.",
+          "source_url": "https://sentiwiki.copernicus.eu/web/s1-mission"
+        },
+        "thermal_tir": {
+          "mission": "Landsat 8 / Landsat 9",
+          "instrument": "TIRS / TIRS-2",
+          "spectrum": "Thermal infrared (TIR), bands 10 and 11",
+          "collects": "Thermal radiance supporting surface-temperature retrieval with atmospheric and emissivity corrections.",
+          "site_application": "Compare surface thermal contrasts across ignimbrite yardangs and dark gravel contrasts.",
+          "limitations": "Cloud-free repeated scenes constrain sampled temperature variability, not a full diurnal cycle. Thermal inertia needs temporal sampling and a physical model; radiative balance also needs emissivity and incoming fluxes. No cave interior temperature is measured.",
+          "source_url": "https://science.nasa.gov/mission/landsat/tirs/"
+        },
+        "summary": "Campo de Piedra Pomez Yardangs: combine optical surface reflectance, C-band roughness/structure and thermal surface contrasts to characterize ignimbrite yardangs and dark gravel contrasts. Candidate observation profile only; local scene availability and resolution require verification. No imagery has been ingested and these metadata do not affect ASI."
+      },
       "terrain": {
         "slope_deg": 7,
         "roughness": 0.78,
@@ -5739,6 +6369,36 @@
         "Ultralow-biomass life-detection assays",
         "Autonomous soil trenching and caching"
       ],
+      "satellite_observatory": {
+        "optical": {
+          "mission": "Landsat 8 / Landsat 9",
+          "instrument": "OLI / OLI-2",
+          "spectrum": "Visible, near-infrared (VNIR), shortwave infrared (SWIR); panchromatic",
+          "collects": "Spectral radiance and derived surface reflectance for geomorphological texture and surface-cover contrasts; broadband albedo requires modeling.",
+          "site_application": "Map exposed surface contrasts in hyperarid soil surfaces and coastal moisture contrasts.",
+          "limitations": "Clouds, vegetation, illumination and pixel size limit interpretation; multispectral contrasts are not mineral assays.",
+          "source_url": "https://science.nasa.gov/mission/landsat/oli/"
+        },
+        "radar_sar": {
+          "mission": "Sentinel-1",
+          "instrument": "C-SAR",
+          "band": "C-band (5.405 GHz; approximately 5.6 cm)",
+          "collects": "Radar backscatter sensitive to surface roughness, dielectric properties and moisture; repeat-pass phase can support deformation mapping where coherence permits.",
+          "site_application": "Investigate roughness contrasts and structural surface lineaments in hyperarid soil surfaces and coastal moisture contrasts.",
+          "limitations": "Penetration depends on wavelength and material; C-band does not image lava tubes through solid rock. Faults and tube-related collapses require independent validation. Relief causes layover and shadow.",
+          "source_url": "https://sentiwiki.copernicus.eu/web/s1-mission"
+        },
+        "thermal_tir": {
+          "mission": "Landsat 8 / Landsat 9",
+          "instrument": "TIRS / TIRS-2",
+          "spectrum": "Thermal infrared (TIR), bands 10 and 11",
+          "collects": "Thermal radiance supporting surface-temperature retrieval with atmospheric and emissivity corrections.",
+          "site_application": "Compare surface thermal contrasts across hyperarid soil surfaces and coastal moisture contrasts.",
+          "limitations": "Cloud-free repeated scenes constrain sampled temperature variability, not a full diurnal cycle. Thermal inertia needs temporal sampling and a physical model; radiative balance also needs emissivity and incoming fluxes. No cave interior temperature is measured.",
+          "source_url": "https://science.nasa.gov/mission/landsat/tirs/"
+        },
+        "summary": "Pampas de La Joya Hyperarid Soils: combine optical surface reflectance, C-band roughness/structure and thermal surface contrasts to characterize hyperarid soil surfaces and coastal moisture contrasts. Candidate observation profile only; local scene availability and resolution require verification. No imagery has been ingested and these metadata do not affect ASI."
+      },
       "terrain": {
         "slope_deg": 3,
         "roughness": 0.45,
@@ -5999,6 +6659,36 @@
         "Fumarolic gas-plume sniffer drone trials",
         "High-UV ferric sediment spectroscopy"
       ],
+      "satellite_observatory": {
+        "optical": {
+          "mission": "Landsat 8 / Landsat 9",
+          "instrument": "OLI / OLI-2",
+          "spectrum": "Visible, near-infrared (VNIR), shortwave infrared (SWIR); panchromatic",
+          "collects": "Spectral radiance and derived surface reflectance for geomorphological texture and surface-cover contrasts; broadband albedo requires modeling.",
+          "site_application": "Map exposed surface contrasts in playalake margins, salt crusts and geothermal surface contrasts.",
+          "limitations": "Clouds, vegetation, illumination and pixel size limit interpretation; multispectral contrasts are not mineral assays.",
+          "source_url": "https://science.nasa.gov/mission/landsat/oli/"
+        },
+        "radar_sar": {
+          "mission": "Sentinel-1",
+          "instrument": "C-SAR",
+          "band": "C-band (5.405 GHz; approximately 5.6 cm)",
+          "collects": "Radar backscatter sensitive to surface roughness, dielectric properties and moisture; repeat-pass phase can support deformation mapping where coherence permits.",
+          "site_application": "Investigate roughness contrasts and structural surface lineaments in playalake margins, salt crusts and geothermal surface contrasts.",
+          "limitations": "Penetration depends on wavelength and material; C-band does not image lava tubes through solid rock. Faults and tube-related collapses require independent validation. Relief causes layover and shadow.",
+          "source_url": "https://sentiwiki.copernicus.eu/web/s1-mission"
+        },
+        "thermal_tir": {
+          "mission": "Landsat 8 / Landsat 9",
+          "instrument": "TIRS / TIRS-2",
+          "spectrum": "Thermal infrared (TIR), bands 10 and 11",
+          "collects": "Thermal radiance supporting surface-temperature retrieval with atmospheric and emissivity corrections.",
+          "site_application": "Compare surface thermal contrasts across playalake margins, salt crusts and geothermal surface contrasts.",
+          "limitations": "Cloud-free repeated scenes constrain sampled temperature variability, not a full diurnal cycle. Thermal inertia needs temporal sampling and a physical model; radiative balance also needs emissivity and incoming fluxes. No cave interior temperature is measured.",
+          "source_url": "https://science.nasa.gov/mission/landsat/tirs/"
+        },
+        "summary": "Laguna Colorada & Sol de Manana: combine optical surface reflectance, C-band roughness/structure and thermal surface contrasts to characterize playalake margins, salt crusts and geothermal surface contrasts. Candidate observation profile only; local scene availability and resolution require verification. No imagery has been ingested and these metadata do not affect ASI."
+      },
       "terrain": {
         "slope_deg": 5,
         "roughness": 0.55,
@@ -6258,6 +6948,36 @@
         "Cryogenic permafrost core drilling",
         "Cold-trap volatile analyzer validation"
       ],
+      "satellite_observatory": {
+        "optical": {
+          "mission": "Landsat 8 / Landsat 9",
+          "instrument": "OLI / OLI-2",
+          "spectrum": "Visible, near-infrared (VNIR), shortwave infrared (SWIR); panchromatic",
+          "collects": "Spectral radiance and derived surface reflectance for geomorphological texture and surface-cover contrasts; broadband albedo requires modeling.",
+          "site_application": "Map exposed surface contrasts in ice-free valley floors, glacier margins and exposed dolerite.",
+          "limitations": "Clouds, vegetation, illumination and pixel size limit interpretation; multispectral contrasts are not mineral assays.",
+          "source_url": "https://science.nasa.gov/mission/landsat/oli/"
+        },
+        "radar_sar": {
+          "mission": "Sentinel-1",
+          "instrument": "C-SAR",
+          "band": "C-band (5.405 GHz; approximately 5.6 cm)",
+          "collects": "Radar backscatter sensitive to surface roughness, dielectric properties and moisture; repeat-pass phase can support deformation mapping where coherence permits.",
+          "site_application": "Investigate roughness contrasts and structural surface lineaments in ice-free valley floors, glacier margins and exposed dolerite.",
+          "limitations": "Penetration depends on wavelength and material; C-band does not image lava tubes through solid rock. Faults and tube-related collapses require independent validation. Relief causes layover and shadow.",
+          "source_url": "https://sentiwiki.copernicus.eu/web/s1-mission"
+        },
+        "thermal_tir": {
+          "mission": "Landsat 8 / Landsat 9",
+          "instrument": "TIRS / TIRS-2",
+          "spectrum": "Thermal infrared (TIR), bands 10 and 11",
+          "collects": "Thermal radiance supporting surface-temperature retrieval with atmospheric and emissivity corrections.",
+          "site_application": "Compare surface thermal contrasts across ice-free valley floors, glacier margins and exposed dolerite.",
+          "limitations": "Cloud-free repeated scenes constrain sampled temperature variability, not a full diurnal cycle. Thermal inertia needs temporal sampling and a physical model; radiative balance also needs emissivity and incoming fluxes. No cave interior temperature is measured.",
+          "source_url": "https://science.nasa.gov/mission/landsat/tirs/"
+        },
+        "summary": "McMurdo Dry Valleys - Wright Valley: combine optical surface reflectance, C-band roughness/structure and thermal surface contrasts to characterize ice-free valley floors, glacier margins and exposed dolerite. Candidate observation profile only; local scene availability and resolution require verification. No imagery has been ingested and these metadata do not affect ASI."
+      },
       "terrain": {
         "slope_deg": 14,
         "roughness": 0.75,
@@ -6519,6 +7239,36 @@
         "Jarosite Mossbauer & Raman calibration",
         "Acid-resistant fluid sampling actuators"
       ],
+      "satellite_observatory": {
+        "optical": {
+          "mission": "Landsat 8 / Landsat 9",
+          "instrument": "OLI / OLI-2",
+          "spectrum": "Visible, near-infrared (VNIR), shortwave infrared (SWIR); panchromatic",
+          "collects": "Spectral radiance and derived surface reflectance for geomorphological texture and surface-cover contrasts; broadband albedo requires modeling.",
+          "site_application": "Map exposed surface contrasts in iron-stained sediments and river-margin alteration patterns.",
+          "limitations": "Clouds, vegetation, illumination and pixel size limit interpretation; multispectral contrasts are not mineral assays.",
+          "source_url": "https://science.nasa.gov/mission/landsat/oli/"
+        },
+        "radar_sar": {
+          "mission": "Sentinel-1",
+          "instrument": "C-SAR",
+          "band": "C-band (5.405 GHz; approximately 5.6 cm)",
+          "collects": "Radar backscatter sensitive to surface roughness, dielectric properties and moisture; repeat-pass phase can support deformation mapping where coherence permits.",
+          "site_application": "Investigate roughness contrasts and structural surface lineaments in iron-stained sediments and river-margin alteration patterns.",
+          "limitations": "Penetration depends on wavelength and material; C-band does not image lava tubes through solid rock. Faults and tube-related collapses require independent validation. Relief causes layover and shadow.",
+          "source_url": "https://sentiwiki.copernicus.eu/web/s1-mission"
+        },
+        "thermal_tir": {
+          "mission": "Landsat 8 / Landsat 9",
+          "instrument": "TIRS / TIRS-2",
+          "spectrum": "Thermal infrared (TIR), bands 10 and 11",
+          "collects": "Thermal radiance supporting surface-temperature retrieval with atmospheric and emissivity corrections.",
+          "site_application": "Compare surface thermal contrasts across iron-stained sediments and river-margin alteration patterns.",
+          "limitations": "Cloud-free repeated scenes constrain sampled temperature variability, not a full diurnal cycle. Thermal inertia needs temporal sampling and a physical model; radiative balance also needs emissivity and incoming fluxes. No cave interior temperature is measured.",
+          "source_url": "https://science.nasa.gov/mission/landsat/tirs/"
+        },
+        "summary": "Rio Tinto Acidic Iron-Sulfate Basin: combine optical surface reflectance, C-band roughness/structure and thermal surface contrasts to characterize iron-stained sediments and river-margin alteration patterns. Candidate observation profile only; local scene availability and resolution require verification. No imagery has been ingested and these metadata do not affect ASI."
+      },
       "terrain": {
         "slope_deg": 9,
         "roughness": 0.6,
@@ -6776,6 +7526,36 @@
         "Crewed habitat EVA workflow simulation",
         "Skylight tether and cave-entry robotics"
       ],
+      "satellite_observatory": {
+        "optical": {
+          "mission": "Landsat 8 / Landsat 9",
+          "instrument": "OLI / OLI-2",
+          "spectrum": "Visible, near-infrared (VNIR), shortwave infrared (SWIR); panchromatic",
+          "collects": "Spectral radiance and derived surface reflectance for geomorphological texture and surface-cover contrasts; broadband albedo requires modeling.",
+          "site_application": "Map exposed surface contrasts in basalt flow textures and candidate skylight surface expressions.",
+          "limitations": "Clouds, vegetation, illumination and pixel size limit interpretation; multispectral contrasts are not mineral assays.",
+          "source_url": "https://science.nasa.gov/mission/landsat/oli/"
+        },
+        "radar_sar": {
+          "mission": "Sentinel-1",
+          "instrument": "C-SAR",
+          "band": "C-band (5.405 GHz; approximately 5.6 cm)",
+          "collects": "Radar backscatter sensitive to surface roughness, dielectric properties and moisture; repeat-pass phase can support deformation mapping where coherence permits.",
+          "site_application": "Investigate roughness contrasts and structural surface lineaments in basalt flow textures and candidate skylight surface expressions.",
+          "limitations": "Penetration depends on wavelength and material; C-band does not image lava tubes through solid rock. Faults and tube-related collapses require independent validation. Relief causes layover and shadow.",
+          "source_url": "https://sentiwiki.copernicus.eu/web/s1-mission"
+        },
+        "thermal_tir": {
+          "mission": "Landsat 8 / Landsat 9",
+          "instrument": "TIRS / TIRS-2",
+          "spectrum": "Thermal infrared (TIR), bands 10 and 11",
+          "collects": "Thermal radiance supporting surface-temperature retrieval with atmospheric and emissivity corrections.",
+          "site_application": "Compare surface thermal contrasts across basalt flow textures and candidate skylight surface expressions.",
+          "limitations": "Cloud-free repeated scenes constrain sampled temperature variability, not a full diurnal cycle. Thermal inertia needs temporal sampling and a physical model; radiative balance also needs emissivity and incoming fluxes. No cave interior temperature is measured.",
+          "source_url": "https://science.nasa.gov/mission/landsat/tirs/"
+        },
+        "summary": "Mauna Loa Basalt & HI-SEAS Skylights: combine optical surface reflectance, C-band roughness/structure and thermal surface contrasts to characterize basalt flow textures and candidate skylight surface expressions. Candidate observation profile only; local scene availability and resolution require verification. No imagery has been ingested and these metadata do not affect ASI."
+      },
       "terrain": {
         "slope_deg": 7,
         "roughness": 0.82,
@@ -7033,6 +7813,36 @@
         "Impact ejecta stratigraphic traversing",
         "Crater-wall steep-grade rover ascent"
       ],
+      "satellite_observatory": {
+        "optical": {
+          "mission": "Landsat 8 / Landsat 9",
+          "instrument": "OLI / OLI-2",
+          "spectrum": "Visible, near-infrared (VNIR), shortwave infrared (SWIR); panchromatic",
+          "collects": "Spectral radiance and derived surface reflectance for geomorphological texture and surface-cover contrasts; broadband albedo requires modeling.",
+          "site_application": "Map exposed surface contrasts in crater walls, ejecta textures and sedimentary outcrops.",
+          "limitations": "Clouds, vegetation, illumination and pixel size limit interpretation; multispectral contrasts are not mineral assays.",
+          "source_url": "https://science.nasa.gov/mission/landsat/oli/"
+        },
+        "radar_sar": {
+          "mission": "Sentinel-1",
+          "instrument": "C-SAR",
+          "band": "C-band (5.405 GHz; approximately 5.6 cm)",
+          "collects": "Radar backscatter sensitive to surface roughness, dielectric properties and moisture; repeat-pass phase can support deformation mapping where coherence permits.",
+          "site_application": "Investigate roughness contrasts and structural surface lineaments in crater walls, ejecta textures and sedimentary outcrops.",
+          "limitations": "Penetration depends on wavelength and material; C-band does not image lava tubes through solid rock. Faults and tube-related collapses require independent validation. Relief causes layover and shadow.",
+          "source_url": "https://sentiwiki.copernicus.eu/web/s1-mission"
+        },
+        "thermal_tir": {
+          "mission": "Landsat 8 / Landsat 9",
+          "instrument": "TIRS / TIRS-2",
+          "spectrum": "Thermal infrared (TIR), bands 10 and 11",
+          "collects": "Thermal radiance supporting surface-temperature retrieval with atmospheric and emissivity corrections.",
+          "site_application": "Compare surface thermal contrasts across crater walls, ejecta textures and sedimentary outcrops.",
+          "limitations": "Cloud-free repeated scenes constrain sampled temperature variability, not a full diurnal cycle. Thermal inertia needs temporal sampling and a physical model; radiative balance also needs emissivity and incoming fluxes. No cave interior temperature is measured.",
+          "source_url": "https://science.nasa.gov/mission/landsat/tirs/"
+        },
+        "summary": "Barringer Meteor Crater: combine optical surface reflectance, C-band roughness/structure and thermal surface contrasts to characterize crater walls, ejecta textures and sedimentary outcrops. Candidate observation profile only; local scene availability and resolution require verification. No imagery has been ingested and these metadata do not affect ASI."
+      },
       "terrain": {
         "slope_deg": 19,
         "roughness": 0.8,
@@ -7290,6 +8100,36 @@
         "Cryo-volcanic astrobiology sterile sampling",
         "Arctic permafrost GPR profiling"
       ],
+      "satellite_observatory": {
+        "optical": {
+          "mission": "Landsat 8 / Landsat 9",
+          "instrument": "OLI / OLI-2",
+          "spectrum": "Visible, near-infrared (VNIR), shortwave infrared (SWIR); panchromatic",
+          "collects": "Spectral radiance and derived surface reflectance for geomorphological texture and surface-cover contrasts; broadband albedo requires modeling.",
+          "site_application": "Map exposed surface contrasts in volcanic outcrops, seasonal snow and Arctic drainage patterns.",
+          "limitations": "Clouds, vegetation, illumination and pixel size limit interpretation; multispectral contrasts are not mineral assays.",
+          "source_url": "https://science.nasa.gov/mission/landsat/oli/"
+        },
+        "radar_sar": {
+          "mission": "Sentinel-1",
+          "instrument": "C-SAR",
+          "band": "C-band (5.405 GHz; approximately 5.6 cm)",
+          "collects": "Radar backscatter sensitive to surface roughness, dielectric properties and moisture; repeat-pass phase can support deformation mapping where coherence permits.",
+          "site_application": "Investigate roughness contrasts and structural surface lineaments in volcanic outcrops, seasonal snow and Arctic drainage patterns.",
+          "limitations": "Penetration depends on wavelength and material; C-band does not image lava tubes through solid rock. Faults and tube-related collapses require independent validation. Relief causes layover and shadow.",
+          "source_url": "https://sentiwiki.copernicus.eu/web/s1-mission"
+        },
+        "thermal_tir": {
+          "mission": "Landsat 8 / Landsat 9",
+          "instrument": "TIRS / TIRS-2",
+          "spectrum": "Thermal infrared (TIR), bands 10 and 11",
+          "collects": "Thermal radiance supporting surface-temperature retrieval with atmospheric and emissivity corrections.",
+          "site_application": "Compare surface thermal contrasts across volcanic outcrops, seasonal snow and Arctic drainage patterns.",
+          "limitations": "Cloud-free repeated scenes constrain sampled temperature variability, not a full diurnal cycle. Thermal inertia needs temporal sampling and a physical model; radiative balance also needs emissivity and incoming fluxes. No cave interior temperature is measured.",
+          "source_url": "https://science.nasa.gov/mission/landsat/tirs/"
+        },
+        "summary": "Svalbard Bockfjord Volcanic-Permafrost: combine optical surface reflectance, C-band roughness/structure and thermal surface contrasts to characterize volcanic outcrops, seasonal snow and Arctic drainage patterns. Candidate observation profile only; local scene availability and resolution require verification. No imagery has been ingested and these metadata do not affect ASI."
+      },
       "terrain": {
         "slope_deg": 16,
         "roughness": 0.8,
@@ -7546,6 +8386,36 @@
         "Megadune slip-face autonomous traction",
         "Aeolian dust-devil triboelectric sensing"
       ],
+      "satellite_observatory": {
+        "optical": {
+          "mission": "Landsat 8 / Landsat 9",
+          "instrument": "OLI / OLI-2",
+          "spectrum": "Visible, near-infrared (VNIR), shortwave infrared (SWIR); panchromatic",
+          "collects": "Spectral radiance and derived surface reflectance for geomorphological texture and surface-cover contrasts; broadband albedo requires modeling.",
+          "site_application": "Map exposed surface contrasts in megadune morphology and interdune clay pans.",
+          "limitations": "Clouds, vegetation, illumination and pixel size limit interpretation; multispectral contrasts are not mineral assays.",
+          "source_url": "https://science.nasa.gov/mission/landsat/oli/"
+        },
+        "radar_sar": {
+          "mission": "Sentinel-1",
+          "instrument": "C-SAR",
+          "band": "C-band (5.405 GHz; approximately 5.6 cm)",
+          "collects": "Radar backscatter sensitive to surface roughness, dielectric properties and moisture; repeat-pass phase can support deformation mapping where coherence permits.",
+          "site_application": "Investigate roughness contrasts and structural surface lineaments in megadune morphology and interdune clay pans.",
+          "limitations": "Penetration depends on wavelength and material; C-band does not image lava tubes through solid rock. Faults and tube-related collapses require independent validation. Relief causes layover and shadow.",
+          "source_url": "https://sentiwiki.copernicus.eu/web/s1-mission"
+        },
+        "thermal_tir": {
+          "mission": "Landsat 8 / Landsat 9",
+          "instrument": "TIRS / TIRS-2",
+          "spectrum": "Thermal infrared (TIR), bands 10 and 11",
+          "collects": "Thermal radiance supporting surface-temperature retrieval with atmospheric and emissivity corrections.",
+          "site_application": "Compare surface thermal contrasts across megadune morphology and interdune clay pans.",
+          "limitations": "Cloud-free repeated scenes constrain sampled temperature variability, not a full diurnal cycle. Thermal inertia needs temporal sampling and a physical model; radiative balance also needs emissivity and incoming fluxes. No cave interior temperature is measured.",
+          "source_url": "https://science.nasa.gov/mission/landsat/tirs/"
+        },
+        "summary": "Namib Desert - Sossusvlei Megadunes: combine optical surface reflectance, C-band roughness/structure and thermal surface contrasts to characterize megadune morphology and interdune clay pans. Candidate observation profile only; local scene availability and resolution require verification. No imagery has been ingested and these metadata do not affect ASI."
+      },
       "terrain": {
         "slope_deg": 15,
         "roughness": 0.68,
@@ -7808,6 +8678,36 @@
         "Unconsolidated basalt scoria wheel-sinkage",
         "Cold-climate lava tube roof stability sonar"
       ],
+      "satellite_observatory": {
+        "optical": {
+          "mission": "Landsat 8 / Landsat 9",
+          "instrument": "OLI / OLI-2",
+          "spectrum": "Visible, near-infrared (VNIR), shortwave infrared (SWIR); panchromatic",
+          "collects": "Spectral radiance and derived surface reflectance for geomorphological texture and surface-cover contrasts; broadband albedo requires modeling.",
+          "site_application": "Map exposed surface contrasts in basaltic scoria, fissures and lava-tube collapse expressions.",
+          "limitations": "Clouds, vegetation, illumination and pixel size limit interpretation; multispectral contrasts are not mineral assays.",
+          "source_url": "https://science.nasa.gov/mission/landsat/oli/"
+        },
+        "radar_sar": {
+          "mission": "Sentinel-1",
+          "instrument": "C-SAR",
+          "band": "C-band (5.405 GHz; approximately 5.6 cm)",
+          "collects": "Radar backscatter sensitive to surface roughness, dielectric properties and moisture; repeat-pass phase can support deformation mapping where coherence permits.",
+          "site_application": "Investigate roughness contrasts and structural surface lineaments in basaltic scoria, fissures and lava-tube collapse expressions.",
+          "limitations": "Penetration depends on wavelength and material; C-band does not image lava tubes through solid rock. Faults and tube-related collapses require independent validation. Relief causes layover and shadow.",
+          "source_url": "https://sentiwiki.copernicus.eu/web/s1-mission"
+        },
+        "thermal_tir": {
+          "mission": "Landsat 8 / Landsat 9",
+          "instrument": "TIRS / TIRS-2",
+          "spectrum": "Thermal infrared (TIR), bands 10 and 11",
+          "collects": "Thermal radiance supporting surface-temperature retrieval with atmospheric and emissivity corrections.",
+          "site_application": "Compare surface thermal contrasts across basaltic scoria, fissures and lava-tube collapse expressions.",
+          "limitations": "Cloud-free repeated scenes constrain sampled temperature variability, not a full diurnal cycle. Thermal inertia needs temporal sampling and a physical model; radiative balance also needs emissivity and incoming fluxes. No cave interior temperature is measured.",
+          "source_url": "https://science.nasa.gov/mission/landsat/tirs/"
+        },
+        "summary": "Tolbachik Basaltic Fissure & Scoria: combine optical surface reflectance, C-band roughness/structure and thermal surface contrasts to characterize basaltic scoria, fissures and lava-tube collapse expressions. Candidate observation profile only; local scene availability and resolution require verification. No imagery has been ingested and these metadata do not affect ASI."
+      },
       "terrain": {
         "slope_deg": 11,
         "roughness": 0.88,

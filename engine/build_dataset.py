@@ -27,7 +27,7 @@ def build_dataset(*, offline: bool = False, timeout: float = 10.0,
     return {
         "schema_version": "1.0.0",
         "methodology": {
-            "name": "Exploratory Analog Similarity Index", "version": "0.2.0",
+            "name": "ATLANIA Planetary Analog Similarity Index", "version": "0.2.0",
             "score_range": [0, 100], "dimensions": DIMENSIONS,
             "geology_order": GEOLOGY, "climatology_units": UNITS,
             "prior_status": PRIOR_NOTE,
