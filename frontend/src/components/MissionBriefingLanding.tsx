@@ -411,6 +411,9 @@ export function MissionBriefingLanding({
   const [destinationFilter, setDestinationFilter] = useState<
     "ALL" | "Moon" | "Mars"
   >("ALL");
+  const [expandedDestinationId, setExpandedDestinationId] = useState<
+    string | null
+  >(null);
 
   const translatedSites = useMemo(
     () => dataset.sites.map((site) => translateSite(site)),
@@ -1223,9 +1226,9 @@ export function MissionBriefingLanding({
                       </figure>
                     </div>
 
-                    {/* Clean Hairline Comparison Rows (Zero Card Borders) */}
-                    <div className="border-t border-white/15">
-                      <div className="hidden grid-cols-12 gap-6 border-b border-white/10 py-3 font-mono text-[11px] tracking-[0.16em] text-[#94A3B8] uppercase md:grid">
+                    {/* Minimalist High-Contrast Glassmorphism Comparison Table */}
+                    <div className="rounded-2xl border border-white/10 bg-[#060d18]/88 p-6 shadow-xl backdrop-blur-md md:p-8">
+                      <div className="hidden grid-cols-12 gap-6 border-b border-white/10 pb-3.5 font-mono text-[11px] tracking-[0.16em] text-[#94A3B8] uppercase md:grid">
                         <div className="col-span-3">Dimensión evaluada</div>
                         <div className="col-span-4 text-[#00D9F5]">
                           Condición en la Tierra ({activeComparativeSite.name})
@@ -1241,21 +1244,16 @@ export function MissionBriefingLanding({
                           (row) => (
                             <div
                               key={row.label}
-                              className="grid grid-cols-1 gap-3 py-5 md:grid-cols-12 md:items-baseline md:gap-6"
+                              className="grid grid-cols-1 gap-3 py-5 md:grid-cols-12 md:items-center md:gap-6"
                             >
-                              <div className="flex items-center gap-2.5 md:col-span-3">
+                              <div className="flex items-center gap-3 md:col-span-3">
                                 <ScientificIcon
                                   concept={row.concept}
                                   className="h-4 w-4 shrink-0 text-[#00D9F5]"
                                 />
-                                <div>
-                                  <p className="text-sm font-semibold text-[#F1F5F9]">
-                                    {row.label}
-                                  </p>
-                                  <p className="font-mono text-xs text-slate-300">
-                                    {row.sourceTag}
-                                  </p>
-                                </div>
+                                <p className="text-sm font-semibold text-[#F8FAFC]">
+                                  {row.label}
+                                </p>
                               </div>
 
                               <div className="font-mono text-sm font-medium text-slate-100 tabular-nums md:col-span-4">
@@ -1551,7 +1549,7 @@ export function MissionBriefingLanding({
                     </div>
                   </div>
 
-                  <div className="mt-12 grid grid-cols-1 gap-x-8 gap-y-14 md:grid-cols-2 lg:grid-cols-3">
+                  <div className="mt-12 grid grid-cols-1 items-start gap-8 md:grid-cols-2 lg:grid-cols-3">
                     {filteredDestinations.map((target) => {
                       const media = TARGET_MEDIA[target.id];
                       const isMars = target.body === "Mars";
@@ -1563,72 +1561,96 @@ export function MissionBriefingLanding({
                         .sort((a, b) => b.score - a.score)
                         .slice(0, 2);
                       const topAnalog = rankedAnalogs[0];
+                      const isTappedOpen = expandedDestinationId === target.id;
 
                       return (
                         <article
                           key={target.id}
-                          className="group flex flex-col justify-between border-t border-white/15 pt-5"
+                          tabIndex={0}
+                          data-open={isTappedOpen}
+                          onClick={() =>
+                            setExpandedDestinationId((prev) =>
+                              prev === target.id ? null : target.id
+                            )
+                          }
+                          className="group cursor-pointer overflow-hidden rounded-2xl border border-white/10 bg-[#060d18]/90 transition-colors duration-300 hover:border-white/25 focus-within:border-[#00D9F5]/45 focus:outline-none"
                         >
-                          <div>
-                            <div className="flex items-center justify-between font-mono text-[11px] text-[#94A3B8]">
-                              <span
-                                className={
-                                  isMars ? "text-[#F5B82E]" : "text-[#00D9F5]"
-                                }
-                              >
-                                {isMars ? "MARTE" : "LUNA"}
-                              </span>
-                              <span className="tabular-nums">
-                                {target.instrument ?? "NASA PDS"}
-                              </span>
-                            </div>
-
-                            <h4 className="mt-2 text-2xl font-bold text-[#F1F5F9]">
-                              {target.name}
-                            </h4>
-
-                            {media && (
-                              <div className="relative mt-4 h-48 w-full overflow-hidden rounded-xl">
-                                <Image
-                                  src={media.image}
-                                  alt={media.alt}
-                                  fill
-                                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                                  className="object-cover transition-transform duration-700 group-hover:scale-105"
-                                />
-                              </div>
-                            )}
-
-                            <p className="mt-4 text-sm leading-relaxed text-[#94A3B8]">
-                              {target.context}
-                            </p>
-                          </div>
-
-                          <div className="mt-6 border-t border-white/10 pt-4">
-                            <div className="flex items-center justify-between font-mono text-xs">
-                              <span className="text-[#94A3B8]">
-                                Mejor análogo:{" "}
-                                <strong className="font-normal text-[#F1F5F9]">
-                                  {topAnalog?.site.name}
-                                </strong>
-                              </span>
-                              <span className="font-bold text-[#00D9F5] tabular-nums">
-                                {topAnalog?.score.toFixed(1)}
-                              </span>
-                            </div>
-
-                            <Link
-                              href={`/explorer?body=${target.body}&target=${target.id}${
-                                topAnalog ? `&site=${topAnalog.site.id}` : ""
-                              }`}
-                              className="mt-4 inline-flex items-center gap-2 text-xs font-semibold tracking-wider text-[#F1F5F9] uppercase transition-colors hover:text-[#00D9F5]"
-                            >
-                              <span>Inspeccionar en el explorador</span>
-                              <ArrowUpRight
-                                className="h-3.5 w-3.5"
-                                aria-hidden="true"
+                          {media && (
+                            <div className="relative h-56 w-full overflow-hidden">
+                              <Image
+                                src={media.image}
+                                alt={media.alt}
+                                fill
+                                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                                className="object-cover transition-transform duration-700 group-hover:scale-105"
                               />
-                            </Link>
+                            </div>
+                          )}
+
+                          {/* Expandable Dark Glass Panel Revealed Downwards on Hover / Focus / Tap */}
+                          <div
+                            className={`grid transition-all duration-300 ease-out ${
+                              isTappedOpen
+                                ? "grid-rows-[1fr] opacity-100"
+                                : "grid-rows-[0fr] opacity-0 group-hover:grid-rows-[1fr] group-hover:opacity-100 group-focus-within:grid-rows-[1fr] group-focus-within:opacity-100"
+                            }`}
+                          >
+                            <div className="overflow-hidden">
+                              <div className="border-t border-white/10 bg-[#060d18]/95 p-5 backdrop-blur-md">
+                                <div className="flex items-center justify-between font-mono text-[11px] text-[#94A3B8]">
+                                  <span
+                                    className={
+                                      isMars
+                                        ? "text-[#F5B82E]"
+                                        : "text-[#00D9F5]"
+                                    }
+                                  >
+                                    {isMars ? "MARTE" : "LUNA"}
+                                  </span>
+                                  <span className="tabular-nums">
+                                    {target.instrument ?? "NASA PDS"}
+                                  </span>
+                                </div>
+
+                                <h4 className="mt-2 text-xl font-bold text-[#F8FAFC]">
+                                  {target.name}
+                                </h4>
+
+                                <p className="mt-2.5 text-sm leading-relaxed text-slate-300">
+                                  {target.context}
+                                </p>
+
+                                <div className="mt-5 border-t border-white/10 pt-4">
+                                  <div className="flex items-center justify-between font-mono text-xs">
+                                    <span className="text-[#94A3B8]">
+                                      Mejor análogo:{" "}
+                                      <strong className="font-normal text-[#F8FAFC]">
+                                        {topAnalog?.site.name}
+                                      </strong>
+                                    </span>
+                                    <span className="font-bold text-[#00D9F5] tabular-nums">
+                                      {topAnalog?.score.toFixed(1)}
+                                    </span>
+                                  </div>
+
+                                  <Link
+                                    href={`/explorer?body=${target.body}&target=${target.id}${
+                                      topAnalog
+                                        ? `&site=${topAnalog.site.id}`
+                                        : ""
+                                    }`}
+                                    onClick={(e) => e.stopPropagation()}
+                                    className="mt-4 inline-flex items-center gap-2 text-xs font-semibold tracking-wider text-[#00D9F5] uppercase transition-colors hover:text-[#F8FAFC]"
+                                  >
+                                    <span>Inspeccionar en el explorador</span>
+                                    <ArrowUpRight
+                                      className="h-3.5 w-3.5"
+                                      aria-hidden="true"
+                                    />
+                                  </Link>
+                                </div>
+                              </div>
+                            </div>
                           </div>
                         </article>
                       );
