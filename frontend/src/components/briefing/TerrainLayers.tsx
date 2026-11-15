@@ -190,14 +190,22 @@ export function TerrainLayers({
                         </span>
                       </div>
 
-                      {isCurrent && (
-                        <div className="mt-2.5 pl-7 text-sm leading-relaxed text-slate-200">
-                          <p className="font-medium text-slate-100">{s.summary}</p>
-                          <p className="mt-1 font-mono text-xs text-slate-300">
-                            {s.detail}
-                          </p>
+                      <div
+                        className={`grid transition-[grid-template-rows,opacity] duration-500 ease-out motion-reduce:transition-none ${
+                          isCurrent
+                            ? "grid-rows-[1fr] opacity-100"
+                            : "grid-rows-[0fr] opacity-0"
+                        }`}
+                      >
+                        <div className="overflow-hidden">
+                          <div className="mt-2.5 pl-7 text-sm leading-relaxed text-slate-200">
+                            <p className="font-medium text-slate-100">{s.summary}</p>
+                            <p className="mt-1 font-mono text-xs text-slate-300">
+                              {s.detail}
+                            </p>
+                          </div>
                         </div>
-                      )}
+                      </div>
                     </button>
                   );
                 })}

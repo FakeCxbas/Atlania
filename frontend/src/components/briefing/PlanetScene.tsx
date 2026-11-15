@@ -114,12 +114,14 @@ export function PlanetScene({
     );
     camera.position.set(0, 0.35, 9.2);
 
-    // Physically convincing space illumination: strong solar key light + deep space fill
-    const ambientLight = new THREE.AmbientLight(0x0f172a, 0.95);
+    // Physically convincing space illumination: single warm solar key light + subtle deep-space fill
+    const sunDirection = new THREE.Vector3(9.5, 6.8, 2.2).normalize();
+
+    const ambientLight = new THREE.AmbientLight(0x0b1120, 0.52);
     scene.add(ambientLight);
 
-    const sunLight = new THREE.DirectionalLight(0xfffbeb, 3.2);
-    sunLight.position.set(8, 6, 7);
+    const sunLight = new THREE.DirectionalLight(0xfff4dc, 3.6);
+    sunLight.position.copy(sunDirection).multiplyScalar(14);
     if (!isLowPowerDevice) {
       sunLight.castShadow = true;
       sunLight.shadow.mapSize.width = 1024;
@@ -135,9 +137,9 @@ export function PlanetScene({
     }
     scene.add(sunLight);
 
-    const earthshineLight = new THREE.DirectionalLight(0x00d9f5, 1.15);
-    earthshineLight.position.set(-7, -3, 4);
-    scene.add(earthshineLight);
+    const spaceFillLight = new THREE.DirectionalLight(0x475569, 0.34);
+    spaceFillLight.position.set(-7, -3, 4);
+    scene.add(spaceFillLight);
 
     // 1. Multi-depth Parallax Starfield
     const starCount = isLowPowerDevice ? 800 : 1800;
@@ -171,18 +173,16 @@ export function PlanetScene({
 
     // 2. Load NASA Textures
     const textureLoader = new THREE.TextureLoader();
-    const earthTexture = textureLoader.load("/nasa/earth-blue-marble.jpg");
+    const earthTexture = textureLoader.load("/nasa/earth-equirectangular.jpg");
     earthTexture.colorSpace = THREE.SRGBColorSpace;
-
-    const moonTexture = textureLoader.load("/nasa/moon-orb.jpg");
+    const moonTexture = textureLoader.load("/nasa/moon-equirectangular.jpg");
     moonTexture.colorSpace = THREE.SRGBColorSpace;
-
-    const marsTexture = textureLoader.load("/nasa/mars-orb.jpg");
+    const marsTexture = textureLoader.load("/nasa/mars-equirectangular.jpg");
     marsTexture.colorSpace = THREE.SRGBColorSpace;
 
     // 3. Dominant 3D Earth Group with Fresnel Atmosphere Shader
     const earthGroup = new THREE.Group();
-    earthGroup.position.set(0.45, -3.15, 0.2);
+    earthGroup.position.set(0, -1.65, 0.2);
     scene.add(earthGroup);
 
     const sphereSegments = isLowPowerDevice ? 48 : 72;
@@ -194,59 +194,101 @@ export function PlanetScene({
     );
     const earthMat = new THREE.MeshStandardMaterial({
       map: earthTexture,
-      roughness: 0.58,
-      metalness: 0.1,
+      roughness: 0.62,
+      metalness: 0.08,
+      transparent: true,
+      opacity: 1,
     });
     const earthMesh = new THREE.Mesh(earthGeo, earthMat);
     earthMesh.rotation.z = 0.18;
+    earthMesh.rotation.y = -1.35;
     earthGroup.add(earthMesh);
 
-    // Custom Fresnel Atmospheric Scattering Shader
-    const atmoUniforms = {
-      uAtmosphereColor: { value: new THREE.Color(0x00d9f5) },
-      uHorizonColor: { value: new THREE.Color(0x38bdf8) },
-      uIntensity: { value: 1.05 },
+    // Sun-aligned Volumetric Atmospheric & Rim Scattering Helper
+    const createVolumetricScatterMat = (opts: {
+      horizonColor: number;
+      atmosphereColor: number;
+      terminatorColor: number;
+      intensity: number;
+      fresnelPower: number;
+      nightFloor: number;
+    }) => {
+      const uniforms = {
+        uSunDir: { value: sunDirection },
+        uHorizonColor: { value: new THREE.Color(opts.horizonColor) },
+        uAtmosphereColor: { value: new THREE.Color(opts.atmosphereColor) },
+        uTerminatorColor: { value: new THREE.Color(opts.terminatorColor) },
+        uIntensity: { value: opts.intensity },
+        uPower: { value: opts.fresnelPower },
+        uNightFloor: { value: opts.nightFloor },
+      };
+      const material = new THREE.ShaderMaterial({
+        uniforms,
+        vertexShader: `
+          varying vec3 vViewNormal;
+          varying vec3 vWorldNormal;
+          varying vec3 vViewPosition;
+          void main() {
+            vViewNormal = normalize(normalMatrix * normal);
+            vWorldNormal = normalize(mat3(modelMatrix) * normal);
+            vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
+            vViewPosition = -mvPosition.xyz;
+            gl_Position = projectionMatrix * mvPosition;
+          }
+        `,
+        fragmentShader: `
+          uniform vec3 uSunDir;
+          uniform vec3 uHorizonColor;
+          uniform vec3 uAtmosphereColor;
+          uniform vec3 uTerminatorColor;
+          uniform float uIntensity;
+          uniform float uPower;
+          uniform float uNightFloor;
+          varying vec3 vViewNormal;
+          varying vec3 vWorldNormal;
+          varying vec3 vViewPosition;
+          void main() {
+            vec3 viewDir = normalize(vViewPosition);
+            float ndotv = max(dot(normalize(vViewNormal), viewDir), 0.0);
+            float fresnel = pow(1.0 - ndotv, uPower);
+
+            float sunAlign = dot(normalize(vWorldNormal), normalize(uSunDir));
+            float dayMask = smoothstep(-0.32, 0.58, sunAlign);
+            float terminator = smoothstep(-0.26, 0.06, sunAlign) * (1.0 - smoothstep(0.06, 0.52, sunAlign));
+
+            vec3 baseCol = mix(uHorizonColor, uAtmosphereColor, fresnel);
+            vec3 col = mix(baseCol, uTerminatorColor, terminator * 0.65);
+            float edgeFade = smoothstep(0.02, 0.42, ndotv);
+            float alpha = fresnel * edgeFade * mix(uNightFloor, 1.0, dayMask) * uIntensity;
+            gl_FragColor = vec4(col, alpha);
+          }
+        `,
+        transparent: true,
+        blending: THREE.AdditiveBlending,
+        side: THREE.FrontSide,
+        depthWrite: false,
+      });
+      return { material, uniforms };
     };
+
+    const { material: atmoMat, uniforms: atmoUniforms } =
+      createVolumetricScatterMat({
+        horizonColor: 0x38bdf8,
+        atmosphereColor: 0x00d9f5,
+        terminatorColor: 0xfde68a,
+        intensity: 1.05,
+        fresnelPower: 3.1,
+        nightFloor: 0.08,
+      });
     const atmoGeo = new THREE.SphereGeometry(
-      earthRadius * 1.038,
+      earthRadius * 1.028,
       sphereSegments,
       sphereSegments
     );
-    const atmoMat = new THREE.ShaderMaterial({
-      uniforms: atmoUniforms,
-      vertexShader: `
-        varying vec3 vNormal;
-        varying vec3 vViewPosition;
-        void main() {
-          vNormal = normalize(normalMatrix * normal);
-          vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
-          vViewPosition = -mvPosition.xyz;
-          gl_Position = projectionMatrix * mvPosition;
-        }
-      `,
-      fragmentShader: `
-        uniform vec3 uAtmosphereColor;
-        uniform vec3 uHorizonColor;
-        uniform float uIntensity;
-        varying vec3 vNormal;
-        varying vec3 vViewPosition;
-        void main() {
-          vec3 viewDir = normalize(vViewPosition);
-          float fresnel = pow(1.0 - abs(dot(vNormal, viewDir)), 2.6);
-          vec3 col = mix(uHorizonColor, uAtmosphereColor, fresnel);
-          gl_FragColor = vec4(col, fresnel * 0.68 * uIntensity);
-        }
-      `,
-      transparent: true,
-      blending: THREE.AdditiveBlending,
-      side: THREE.BackSide,
-      depthWrite: false,
-    });
     const atmoMesh = new THREE.Mesh(atmoGeo, atmoMat);
     earthGroup.add(atmoMesh);
 
-    // 4. Moon & Mars in Distinct Depth Planes (No competing with Hero text)
-    // Moon: Mid-ground upper-left orbital plane
+    // 4. Moon & Mars in Distinct Depth Planes (Sun-aligned volumetric rim & dust haze)
     const moonGeo = new THREE.SphereGeometry(0.46, 40, 40);
     const moonMat = new THREE.MeshStandardMaterial({
       map: moonTexture,
@@ -255,17 +297,39 @@ export function PlanetScene({
     });
     const moonMesh = new THREE.Mesh(moonGeo, moonMat);
     moonMesh.position.set(-4.35, 1.85, -2.4);
+    const { material: moonRimMat } = createVolumetricScatterMat({
+      horizonColor: 0xe2e8f0,
+      atmosphereColor: 0xf8fafc,
+      terminatorColor: 0xfef3c7,
+      intensity: 0.42,
+      fresnelPower: 4.0,
+      nightFloor: 0.02,
+    });
+    moonMesh.add(
+      new THREE.Mesh(new THREE.SphereGeometry(0.46 * 1.032, 40, 40), moonRimMat)
+    );
     scene.add(moonMesh);
 
-    // Mars: Deep-background upper-right orbital plane
-    const marsGeo = new THREE.SphereGeometry(0.32, 36, 36);
+    // Mars: Deep-background upper-right orbital plane + dusty golden-amber atmosphere
+    const marsGeo = new THREE.SphereGeometry(0.46, 40, 40);
     const marsMat = new THREE.MeshStandardMaterial({
       map: marsTexture,
-      roughness: 0.8,
+      roughness: 0.78,
       metalness: 0.04,
     });
     const marsMesh = new THREE.Mesh(marsGeo, marsMat);
     marsMesh.position.set(4.5, 2.25, -4.8);
+    const { material: marsAtmoMat } = createVolumetricScatterMat({
+      horizonColor: 0xe07a5f,
+      atmosphereColor: 0xf5b971,
+      terminatorColor: 0xfef08a,
+      intensity: 0.88,
+      fresnelPower: 2.8,
+      nightFloor: 0.05,
+    });
+    marsMesh.add(
+      new THREE.Mesh(new THREE.SphereGeometry(0.46 * 1.048, 40, 40), marsAtmoMat)
+    );
     scene.add(marsMesh);
 
     // 5. Chapter 3 Volumetric 4-Layer 3D Terrain Block (Surface/Climate, Relief/DEM, Geology, Subsurface)
@@ -433,11 +497,32 @@ export function PlanetScene({
     terrainGroup.add(layer3Geology.group);
     terrainGroup.add(layer4Subsurface.group);
 
-    // Smooth camera interpolation vectors
+    // Smooth camera & object interpolation vectors
     const currentCamPos = new THREE.Vector3(0, 0.35, 9.2);
     const targetCamPos = new THREE.Vector3(0, 0.35, 9.2);
     const currentLookAt = new THREE.Vector3(0, -0.5, 0);
     const targetLookAt = new THREE.Vector3(0, -0.5, 0);
+
+    const targetEarthPos = new THREE.Vector3(0.35, -3.15, 0.2);
+    const targetMoonPos = new THREE.Vector3(-4.35, 1.85, -2.4);
+    const targetMarsPos = new THREE.Vector3(4.5, 2.25, -4.8);
+    let targetMoonScale = 1;
+    let targetMarsScale = 1;
+    let targetAtmoIntensity = 1.05;
+
+    let terrainPresence = 0;
+    let currentSep = 0.1;
+    const stratumFocusOpacity: Record<1 | 2 | 3 | 4, number> = {
+      1: 1,
+      2: 1,
+      3: 1,
+      4: 1,
+    };
+
+    const dampFactor = (dt: number, speed: number) =>
+      prefersReducedMotion ? 1 : 1 - Math.exp(-speed * Math.min(dt, 0.05));
+
+    const easeOutCubic = (x: number) => 1 - Math.pow(1 - x, 3);
 
     let animationFrameId = 0;
     const clock = new THREE.Clock();
@@ -446,7 +531,8 @@ export function PlanetScene({
       animationFrameId = window.requestAnimationFrame(renderLoop);
       if (document.hidden) return;
 
-      const elapsed = clock.getElapsedTime();
+      const dt = clock.getDelta();
+      const elapsed = clock.elapsedTime;
       const {
         scrollProgress: p,
         introProgress: introP,
@@ -460,75 +546,124 @@ export function PlanetScene({
       // =======================================================================
       // CONTINUOUS CAMERA & PLANET CHOREOGRAPHY ACROSS CHAPTERS 1 -> 5
       // =======================================================================
+      let targetEarthOpacity = 1;
       if (ch <= 2) {
         // Chapters 1 & 2 shared continuous orbital approach:
-        // As introP goes 0 -> 1:
-        // - Camera advances directly toward Earth (z: 9.2 -> 4.95)
-        // - Earth rises and grows in the frame, atmosphere intensifies
-        // - Moon and Mars drift outward in parallax depth
         const t = Math.max(0, Math.min(1, introP));
         targetCamPos.set(0.18 * t, 0.35 - t * 0.55, 9.2 - t * 4.25);
-        targetLookAt.set(0.25 * t, -0.55 - t * 0.35, 0);
+        targetLookAt.set(0.25 * t, -0.35 - t * 0.55, 0);
 
-        earthGroup.position.set(
-          THREE.MathUtils.lerp(0.35, 0.75, t),
-          THREE.MathUtils.lerp(-3.15, -2.05, t),
+        targetEarthPos.set(
+          THREE.MathUtils.lerp(0, 0.75, t),
+          THREE.MathUtils.lerp(-1.65, -2.05, t),
           THREE.MathUtils.lerp(0.2, 0.75, t)
         );
-        atmoUniforms.uIntensity.value = 1.05 + t * 0.65;
+        targetAtmoIntensity = 1.05 + t * 0.65;
 
-        moonMesh.position.set(
+        targetMoonPos.set(
           -4.35 - t * 1.4,
           1.85 + t * 0.65,
           -2.4 - t * 1.2
         );
-        marsMesh.position.set(
+        targetMarsPos.set(
           4.5 + t * 1.6,
           2.25 + t * 0.8,
           -4.8 - t * 1.5
         );
+        targetMoonScale = 1 - t * 0.18;
+        targetMarsScale = 1 - t * 0.18;
       } else if (ch === 3) {
         // Chapter 3: Camera descends to the 3D Stratified Terrain Block on the right
         const t = Math.max(0, Math.min(1, terrP));
         targetCamPos.set(0.1, 0.05, 5.35 - t * 0.25);
         targetLookAt.set(0.15, 0.0, 1.5);
 
-        // Push Earth limb lower/back so the 3D terrain block sits in clear dark space on the right
-        earthGroup.position.lerp(new THREE.Vector3(-1.35, -3.95, -1.2), 0.12);
-        atmoUniforms.uIntensity.value = 1.35;
+        targetEarthPos.set(-1.35, -6.8, -2.5);
+        targetAtmoIntensity = 0;
+        targetEarthOpacity = 0;
+
+        targetMoonPos.set(-6.4, 2.8, -5.2);
+        targetMarsPos.set(6.4, 3.0, -6.5);
+        targetMoonScale = 0.65;
+        targetMarsScale = 0.65;
       } else if (ch === 4) {
         // Chapter 4: Planetary Comparison (Earth on left, Moon or Mars on right)
         targetCamPos.set(0, 0.1, 6.8);
         targetLookAt.set(0, -0.15, 0);
 
-        earthGroup.position.lerp(new THREE.Vector3(-2.35, -1.85, -0.4), 0.08);
-        atmoUniforms.uIntensity.value = 1.2;
+        targetEarthPos.set(-2.35, -1.85, -0.4);
+        targetAtmoIntensity = 1.2;
 
         if (body === "Moon") {
-          moonMesh.position.lerp(new THREE.Vector3(2.25, 0.45, 2.3), 0.08);
-          marsMesh.position.lerp(new THREE.Vector3(5.8, 2.6, -5.5), 0.08);
+          targetMoonPos.set(2.25, 0.45, 2.3);
+          targetMarsPos.set(6.2, 2.8, -6.0);
+          targetMoonScale = 1.12;
+          targetMarsScale = 0.62;
         } else {
-          marsMesh.position.lerp(new THREE.Vector3(2.25, 0.45, 2.5), 0.08);
-          moonMesh.position.lerp(new THREE.Vector3(-5.8, 2.6, -5.5), 0.08);
+          targetMarsPos.set(2.25, 0.45, 2.5);
+          targetMoonPos.set(-6.2, 2.8, -6.0);
+          targetMarsScale = 1.18;
+          targetMoonScale = 0.62;
         }
       } else {
         // Chapter 5: High orbital pullback for Explorer transition
         targetCamPos.set(0, 0.6, 9.6);
         targetLookAt.set(0, -0.6, 0);
-        earthGroup.position.lerp(new THREE.Vector3(0, -3.35, 0), 0.08);
-        moonMesh.position.lerp(new THREE.Vector3(-4.2, 1.8, -2.5), 0.08);
-        marsMesh.position.lerp(new THREE.Vector3(4.4, 2.1, -4.5), 0.08);
+        targetEarthPos.set(0, -3.35, 0);
+        targetAtmoIntensity = 1.1;
+        targetMoonPos.set(-4.2, 1.8, -2.5);
+        targetMarsPos.set(4.4, 2.1, -4.5);
+        targetMoonScale = 0.95;
+        targetMarsScale = 0.85;
       }
 
-      const lerpFactor = prefersReducedMotion ? 0.25 : 0.09;
-      currentCamPos.lerp(targetCamPos, lerpFactor);
-      currentLookAt.lerp(targetLookAt, lerpFactor);
+      const camDamp = dampFactor(dt, 4.8);
+      const bodyDamp = dampFactor(dt, 4.2);
+
+      currentCamPos.lerp(targetCamPos, camDamp);
+      currentLookAt.lerp(targetLookAt, camDamp);
       camera.position.copy(currentCamPos);
       camera.lookAt(currentLookAt);
 
+      earthGroup.position.lerp(targetEarthPos, bodyDamp);
+      earthMat.opacity = THREE.MathUtils.lerp(
+        earthMat.opacity,
+        targetEarthOpacity,
+        bodyDamp
+      );
+      earthGroup.visible = earthMat.opacity > 0.01;
+      atmoUniforms.uIntensity.value = THREE.MathUtils.lerp(
+        atmoUniforms.uIntensity.value,
+        targetAtmoIntensity,
+        bodyDamp
+      );
+
+      moonMesh.position.lerp(targetMoonPos, bodyDamp);
+      marsMesh.position.lerp(targetMarsPos, bodyDamp);
+      const nextMoonScale = THREE.MathUtils.lerp(
+        moonMesh.scale.x,
+        targetMoonScale,
+        bodyDamp
+      );
+      const nextMarsScale = THREE.MathUtils.lerp(
+        marsMesh.scale.x,
+        targetMarsScale,
+        bodyDamp
+      );
+      moonMesh.scale.setScalar(nextMoonScale);
+      marsMesh.scale.setScalar(nextMarsScale);
+
       // Starfield parallax
-      starField.position.y = p * 3.1;
-      starField.position.z = p * 2.5;
+      starField.position.y = THREE.MathUtils.lerp(
+        starField.position.y,
+        p * 3.1,
+        camDamp
+      );
+      starField.position.z = THREE.MathUtils.lerp(
+        starField.position.z,
+        p * 2.5,
+        camDamp
+      );
       if (!prefersReducedMotion) {
         starField.rotation.y = elapsed * 0.006;
       }
@@ -542,43 +677,72 @@ export function PlanetScene({
         marsMesh.rotation.y = elapsed * 0.045 + p * 1.6;
       }
 
-      // Chapter 3 Volumetric 3D Terrain Layers separation & rotation
-      const showTerrain = ch === 3;
-      terrainGroup.visible = showTerrain;
-      if (showTerrain) {
-        terrainGroup.position.set(1.18, 0.02, 2.25);
+      // Chapter 3 Volumetric 3D Terrain Layers smooth enter / exit & separation
+      const targetPresence = ch === 3 ? 1 : 0;
+      const terrainDamp = dampFactor(dt, ch === 3 ? 4.2 : 5.5);
+      terrainPresence = THREE.MathUtils.lerp(
+        terrainPresence,
+        targetPresence,
+        terrainDamp
+      );
+
+      const isTerrainVisible = terrainPresence > 0.008;
+      terrainGroup.visible = isTerrainVisible;
+
+      if (isTerrainVisible) {
+        const easedPresence = easeOutCubic(
+          Math.max(0, Math.min(1, terrainPresence))
+        );
+        currentSep = THREE.MathUtils.lerp(
+          currentSep,
+          Math.max(0, Math.min(1, sep)),
+          dampFactor(dt, 5.2)
+        );
+
+        terrainGroup.scale.setScalar(0.62 + 0.38 * easedPresence);
+        terrainGroup.position.set(
+          1.18 + (1 - easedPresence) * 1.25,
+          0.02 - (1 - easedPresence) * 0.35,
+          2.25 - (1 - easedPresence) * 1.4
+        );
+
         // Vertical spacing between adjacent strata in 3D space: from 0.22 (compact) to 0.78 (expanded)
-        const stepZ = 0.22 + Math.max(0, Math.min(1, sep)) * 0.56;
+        const stepZ = 0.22 + currentSep * 0.56;
+        const stratumDamp = dampFactor(dt, 6.0);
 
         layer1Surface.group.position.z = THREE.MathUtils.lerp(
           layer1Surface.group.position.z,
           stepZ * 1.5,
-          0.12
+          stratumDamp
         );
         layer2Relief.group.position.z = THREE.MathUtils.lerp(
           layer2Relief.group.position.z,
           stepZ * 0.5,
-          0.12
+          stratumDamp
         );
         layer3Geology.group.position.z = THREE.MathUtils.lerp(
           layer3Geology.group.position.z,
           -stepZ * 0.5,
-          0.12
+          stratumDamp
         );
         layer4Subsurface.group.position.z = THREE.MathUtils.lerp(
           layer4Subsurface.group.position.z,
           -stepZ * 1.5,
-          0.12
+          stratumDamp
         );
 
         // Rotate terrain block gently with scroll + time to reveal 3D relief & thickness
         terrainGroup.rotation.z =
           0.52 +
-          sep * 0.38 +
+          currentSep * 0.38 +
+          (1 - easedPresence) * 0.22 +
           (prefersReducedMotion ? 0 : Math.sin(elapsed * 0.35) * 0.06);
+
+        pillarMat.opacity = 0.28 * easedPresence;
 
         const applyFocusOpacity = (
           stratum: {
+            group: THREE.Group;
             surfaceMat: THREE.MeshStandardMaterial;
             wireMat: THREE.MeshBasicMaterial;
             sideMat: THREE.MeshStandardMaterial;
@@ -586,9 +750,24 @@ export function PlanetScene({
           idx: 1 | 2 | 3 | 4
         ) => {
           const active = fLayer === 0 || fLayer === idx;
-          stratum.surfaceMat.opacity = active ? 0.88 : 0.14;
-          stratum.wireMat.opacity = active ? 0.45 : 0.08;
-          stratum.sideMat.opacity = active ? 0.46 : 0.06;
+          const targetFocus = active ? 1 : 0.16;
+          stratumFocusOpacity[idx] = THREE.MathUtils.lerp(
+            stratumFocusOpacity[idx],
+            targetFocus,
+            stratumDamp
+          );
+          const fAlpha = stratumFocusOpacity[idx] * easedPresence;
+          stratum.surfaceMat.opacity = 0.88 * fAlpha;
+          stratum.wireMat.opacity = 0.45 * fAlpha;
+          stratum.sideMat.opacity = 0.46 * fAlpha;
+
+          const targetStratumScale = active && fLayer !== 0 ? 1.04 : 1.0;
+          const nextScale = THREE.MathUtils.lerp(
+            stratum.group.scale.x,
+            targetStratumScale,
+            stratumDamp
+          );
+          stratum.group.scale.setScalar(nextScale);
         };
 
         applyFocusOpacity(layer1Surface, 1);
