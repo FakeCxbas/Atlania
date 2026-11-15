@@ -275,6 +275,8 @@ def test_prior_validation():
 
 def test_dataset_roundtrip_geojson_and_reproducibility(tmp_path):
     data = build_dataset(offline=True)
+    assert data["methodology"]["name"] == "ATLANIA Planetary Analog Similarity Index"
+    assert data["methodology"]["version"] == "0.2.0"
     assert data["methodology"]["source_counts"] == {"nasa_power": 0, "fallback": 30}
     paths = write_dataset(data, tmp_path)
     serialized_data = json.loads(json.dumps(data))
@@ -290,6 +292,25 @@ def test_dataset_roundtrip_geojson_and_reproducibility(tmp_path):
     write_dataset(build_dataset(offline=True), tmp_path)
     assert [p.read_bytes() for p in paths] == before
     assert to_geojson(data)["references"] == data["references"]
+
+
+@pytest.mark.parametrize("site", EARTH_SITES, ids=lambda s: s.id)
+def test_satellite_observatory_catalog_and_serialization(site):
+    profile = site.satellite_observatory
+    assert set(profile) == {"optical", "radar_sar", "thermal_tir", "summary"}
+    assert site.name in profile["summary"]
+    for category in ("optical", "radar_sar", "thermal_tir"):
+        sensor = profile[category]
+        for key in ("mission", "instrument", "collects", "site_application", "limitations", "source_url"):
+            assert isinstance(sensor[key], str) and sensor[key].strip()
+        assert sensor["source_url"].startswith("https://")
+    assert profile["optical"]["spectrum"]
+    assert profile["radar_sar"]["band"]
+    result = score_site(site, site.fallback)
+    assert result["satellite_observatory"] == profile
+    assert result["scores"] == score_site(replace(site, satellite_observatory={}), site.fallback)["scores"]
+    result["satellite_observatory"]["optical"]["mission"] = "changed"
+    assert profile["optical"]["mission"] != "changed"
 
 
 def test_pipeline_mixed_sources():

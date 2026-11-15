@@ -11,7 +11,7 @@ import calendar
 import math
 import random
 import time
-from dataclasses import asdict, dataclass, replace
+from dataclasses import asdict, dataclass, field, replace
 from typing import Any, Mapping
 
 import httpx
@@ -96,6 +96,7 @@ class Site:
     caveat: str
     discovery_tier: str = "Benchmark"
     mission_testbeds: tuple[str, ...] = ("Rover traverse planning", "Surface sampling procedures")
+    satellite_observatory: dict[str, Any] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
         if not -90 <= finite(self.latitude, "latitude") <= 90:
@@ -291,6 +292,76 @@ EARTH_SITES += (
     Site('namib-sossusvlei', 'Namib Desert - Sossusvlei Megadunes', 'Namibia', -24.73, 15.36, 600, Terrain(15, .68, (.1, .9, .85, .3, 0), 0, .2, 0, .05), Climate(30, 13, .06, 5, 28), 'Iron-oxide coated linear megadunes and interdune clay pans analogous to Bagnold Dunes in Gale Crater on Mars.', 'Higher terrestrial air density drives different saltation thresholds than the 0.6 kPa Martian atmosphere.', 'Under-Recognized', ('Megadune slip-face autonomous traction', 'Aeolian dust-devil triboelectric sensing')),
     Site('kamchatka-tolbachik', 'Tolbachik Basaltic Fissure & Scoria', 'Russia', 55.83, 160.33, 1600, Terrain(11, .88, (1, .95, .05, 0, 0), .7, .1, .75, .7), Climate(1, -10, 1.6, 6, 72), 'Extensive loose basaltic scoria plains and collapsing lava tubes historically used to test Lunokhod and Marsokhod chassis.', 'Heavy winter snowpack and subarctic precipitation contrast with dry lunar maria.', 'Under-Recognized', ('Unconsolidated basalt scoria wheel-sinkage', 'Cold-climate lava tube roof stability sonar')),
 )
+# Observation targets, not confirmed satellite detections or acquired scenes.
+_SATELLITE_TARGETS = {
+    "galapagos-lava-tubes": "Santa Cruz basalt flows, vegetation gaps and candidate lava-tube surface expressions",
+    "chimborazo": "high-altitude volcanic debris, snow margins and exposed cold soils",
+    "cotopaxi": "pyroclastic plains, ash deposits and glacier margins",
+    "salar-de-uyuni": "salt crust, seasonal inundation and basin sediments",
+    "qaidam-basin": "saline sediments, dry channels and desert ridges",
+    "dallol": "hydrothermal salt deposits and exposed geothermal surfaces",
+    "craters-of-the-moon": "basalt flow textures and candidate lava-tube collapse features",
+    "haughton-crater": "impact ejecta, carbonate terrain and seasonal snow",
+    "atacama-yungay": "hyperarid soils, salt-bearing surfaces and dry drainage textures",
+    "askja": "rough basalt flows, volcanic deposits and seasonal snow",
+    "sierra-negra": "caldera structures and basaltic lava flow boundaries",
+    "antisana": "glacier margins and exposed volcanic contacts",
+    "puna-laguna-verde": "high-altitude saline basins and volcanic sediment contacts",
+    "lut-rig-e-yalan": "dune morphology and exposed sand thermal contrasts",
+    "tibesti": "arid volcanic relief and rock outcrop boundaries",
+    "timanfaya": "lava textures and candidate tube-related surface collapses",
+    "el-reventador": "fresh lava flows, scarps and cloud-forest margins",
+    "sangay-volcano": "ash-covered slopes, tephra deposits and snow cover",
+    "quilotoa-caldera": "crater-lake margins and exposed tuff walls",
+    "valle-de-la-luna": "folded evaporite ridges and salt-cave surface expressions",
+    "campo-piedra-pomez": "ignimbrite yardangs and dark gravel contrasts",
+    "pampas-de-la-joya": "hyperarid soil surfaces and coastal moisture contrasts",
+    "laguna-colorada": "playalake margins, salt crusts and geothermal surface contrasts",
+    "mcmurdo-dry-valleys": "ice-free valley floors, glacier margins and exposed dolerite",
+    "rio-tinto": "iron-stained sediments and river-margin alteration patterns",
+    "mauna-loa-hiseas": "basalt flow textures and candidate skylight surface expressions",
+    "barringer-crater": "crater walls, ejecta textures and sedimentary outcrops",
+    "svalbard-bockfjord": "volcanic outcrops, seasonal snow and Arctic drainage patterns",
+    "namib-sossusvlei": "megadune morphology and interdune clay pans",
+    "kamchatka-tolbachik": "basaltic scoria, fissures and lava-tube collapse expressions",
+}
+
+
+def satellite_observatory(site: Site) -> dict[str, Any]:
+    """Describe candidate archive uses; no satellite data enter the ASI score."""
+    target = _SATELLITE_TARGETS[site.id]
+    return {
+        "optical": {
+            "mission": "Landsat 8 / Landsat 9",
+            "instrument": "OLI / OLI-2",
+            "spectrum": "Visible, near-infrared (VNIR), shortwave infrared (SWIR); panchromatic",
+            "collects": "Spectral radiance and derived surface reflectance for geomorphological texture and surface-cover contrasts; broadband albedo requires modeling.",
+            "site_application": f"Map exposed surface contrasts in {target}.",
+            "limitations": "Clouds, vegetation, illumination and pixel size limit interpretation; multispectral contrasts are not mineral assays.",
+            "source_url": "https://science.nasa.gov/mission/landsat/oli/",
+        },
+        "radar_sar": {
+            "mission": "Sentinel-1",
+            "instrument": "C-SAR",
+            "band": "C-band (5.405 GHz; approximately 5.6 cm)",
+            "collects": "Radar backscatter sensitive to surface roughness, dielectric properties and moisture; repeat-pass phase can support deformation mapping where coherence permits.",
+            "site_application": f"Investigate roughness contrasts and structural surface lineaments in {target}.",
+            "limitations": "Penetration depends on wavelength and material; C-band does not image lava tubes through solid rock. Faults and tube-related collapses require independent validation. Relief causes layover and shadow.",
+            "source_url": "https://sentiwiki.copernicus.eu/web/s1-mission",
+        },
+        "thermal_tir": {
+            "mission": "Landsat 8 / Landsat 9",
+            "instrument": "TIRS / TIRS-2",
+            "spectrum": "Thermal infrared (TIR), bands 10 and 11",
+            "collects": "Thermal radiance supporting surface-temperature retrieval with atmospheric and emissivity corrections.",
+            "site_application": f"Compare surface thermal contrasts across {target}.",
+            "limitations": "Cloud-free repeated scenes constrain sampled temperature variability, not a full diurnal cycle. Thermal inertia needs temporal sampling and a physical model; radiative balance also needs emissivity and incoming fluxes. No cave interior temperature is measured.",
+            "source_url": "https://science.nasa.gov/mission/landsat/tirs/",
+        },
+        "summary": f"{site.name}: combine optical surface reflectance, C-band roughness/structure and thermal surface contrasts to characterize {target}. Candidate observation profile only; local scene availability and resolution require verification. No imagery has been ingested and these metadata do not affect ASI.",
+    }
+
+
 _SITE_TESTBEDS = (
     ("Subsurface lava tube LiDAR", "Habitat geometry surveys"),
     ("Frost rover mobility", "Cold-soil drill procedures"),
@@ -304,6 +375,7 @@ _SITE_TESTBEDS = (
     ("Basalt rover traverse", "Volcanic terrain photogrammetry"),
 )
 EARTH_SITES = tuple(replace(site,
+    satellite_observatory=satellite_observatory(site),
     discovery_tier="Regional Highlight" if i < 3 else site.discovery_tier,
     mission_testbeds=_SITE_TESTBEDS[i] if i < 10 else site.mission_testbeds,
     fallback=replace(site.fallback, surface_pressure_kpa=round(101.325 * math.exp(-site.elevation_m / 8434.5), 3)))
@@ -640,6 +712,7 @@ def score_site(site: Site, climate: Climate, dem_telemetry: dict[str, Any] | Non
             "latitude": site.latitude, "longitude": site.longitude, "elevation_m": dem["elevation_m"] if dem["source"] == "open_meteo" else site.elevation_m,
             "dem_telemetry": dem, "discovery_tier": site.discovery_tier,
             "mission_testbeds": list(site.mission_testbeds),
+            "satellite_observatory": asdict(site)["satellite_observatory"],
             "terrain": asdict(site.terrain), "climatology": asdict(climate),
             "rationale": site.rationale, "prior_status": PRIOR_NOTE,
             "scores": scores, "best_target": best, "overall_asi": scores[best]["overall_asi"],
