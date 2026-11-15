@@ -118,7 +118,7 @@ const HERO_SATELLITES: Record<HeroSatelliteMeta["id"], HeroSatelliteMeta> = {
     resolution: "15 m pancromático · 30 m VNIR/SWIR · 100 m térmico",
     spectrum: "Visible, NIR, SWIR y bandas térmicas 10–11",
     roleInAtlania:
-      "Perfil de observatorio candidato para mapear textura geomorfológica, contrastes litológicos y variabilidad térmica superficial en los 35 sitios análogos de ATLANIA.",
+      "Perfil de observatorio candidato para mapear textura geomorfológica, contrastes litológicos y variabilidad térmica superficial en los 60 sitios análogos de ATLANIA.",
     analogSites:
       "Galápagos (tubos basálticos), Salar de Atacama, Cráter Barringer, Mauna Loa e Isla Devon.",
     limitations:
@@ -676,17 +676,19 @@ export function MissionBriefingLanding({
     [translatedSites, dataset.methodology.dimensions, dataset.references]
   );
 
-  const pipelineSteps = useMemo(
-    () => [
+  const pipelineSteps = useMemo(() => {
+    const totalSites = dataset.sites.length;
+    const powerCount = dataset.methodology.source_counts.nasa_power;
+    const demCount = dataset.methodology.dem_source_counts?.open_meteo ?? totalSites;
+    return [
       {
         step: "01 · Recopilar",
         code: "01 // FUENTES ABIERTAS",
         title: "Datos satelitales y archivos NASA",
-        description:
-          "Clima (NASA POWER), relieve (Copernicus DEM 90 m) y misiones PDS.",
+        description: `Clima real de NASA POWER (${powerCount}/${totalSites}) y relieve Copernicus DEM 90 m (${demCount}/${totalSites}).`,
         sources: [
-          `NASA POWER (${dataset.methodology.source_counts.nasa_power} sitios)`,
-          "Copernicus DEM 90 m",
+          `NASA POWER (${powerCount}/${totalSites} sitios)`,
+          `Copernicus DEM 90 m (${demCount}/${totalSites})`,
           "NASA PDS (LRO / MRO)",
           "NASA GIBS VIIRS",
         ],
@@ -694,29 +696,28 @@ export function MissionBriefingLanding({
       },
       {
         step: "02 · Analizar",
-        code: "02 // TELEMETRÍA",
+        code: "02 // MOTOR ASI_ENGINE.PY",
         title: "Relieve, clima y litología",
         description:
-          "Pendientes, rugosidad, amplitud térmica, aridez y perfil de roca.",
+          "Nuestro motor calcula pendientes por gradiente en cruz (0.01°), rugosidad, 7 parámetros POWER y aridez.",
         sources: [
-          "Gradiente topográfico 90 m",
-          "Índice de aridez",
-          "Litología difusa",
-          "Telemetría verificada",
+          "Gradiente topográfico 5 pts",
+          "7 parámetros climáticos",
+          "Litología difusa (priors)",
+          "Telemetría verificada (0 fallbacks)",
         ],
         brands: ["python", "open-meteo", "nasa-power"] as BrandId[],
       },
       {
         step: "03 · Comparar",
-        code: "03 // ÍNDICE ASI",
+        code: "03 // ÍNDICE ASI + ML",
         title: "Similitud ASI en 5 dimensiones",
-        description:
-          "Compara cada sitio terrestre contra 6 destinos de la Luna y Marte.",
+        description: `Compara los ${totalSites} sitios contra 6 blancos en Luna y Marte con K-Means (k=3) y vecinos k-NN.`,
         sources: [
           "ASI 0–100 ponderado",
           "Jaccard litológico",
-          "Límites físicos reales",
-          "Pruebas unitarias",
+          "K-Means & k-NN determinista",
+          "270 pruebas pytest + 53 Node",
         ],
         brands: ["python", "nasa-pds"] as BrandId[],
       },
@@ -725,18 +726,17 @@ export function MissionBriefingLanding({
         code: "04 // EXPLORADOR 3D",
         title: "Estación interactiva de misión",
         description:
-          "Globo 3D, comparación lado a lado, sondeo libre y exportación QGIS.",
+          "Globo 3D, comparación lado a lado, sondeo libre en cualquier coordenada o grilla 10×10 y exportación QGIS.",
         sources: [
           "Globo 3D interactivo",
-          "Sondeo libre en vivo",
+          "Sondeo libre / grilla 10×10",
           "Radar de 5 ejes",
           "Exportación GeoJSON / QGIS",
         ],
         brands: ["nextjs", "maplibre", "github"] as BrandId[],
       },
-    ],
-    [dataset.methodology]
-  );
+    ];
+  }, [dataset.methodology, dataset.sites.length]);
 
   const currentAsiValue = selectedAsiScore?.overall_asi ?? 0;
   const isSelectedTargetMars = selectedAsiTarget?.body === "Mars";
@@ -1869,7 +1869,7 @@ export function MissionBriefingLanding({
 
                       <div className="mt-8 flex flex-wrap items-center justify-between gap-4 border-t border-[#55527D]/30 pt-6 text-xs text-[#A3A1BD]">
                         <span>
-                          ATLANIA · Motor ASI v{dataset.methodology.version}
+                          ATLANIA · Motor ASI v{dataset.methodology.version} · {dataset.sites.length} sitios calculados en vivo
                         </span>
                         <div className="flex items-center gap-6">
                           <a

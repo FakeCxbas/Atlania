@@ -34,9 +34,170 @@ const COUNTRY_TRANSLATIONS: Record<string, string> = {
   Russia: "Rusia",
   India: "India",
   Australia: "Australia",
+  "Colombia": "Colombia",
+  "Brazil": "Brasil",
+  "Costa Rica": "Costa Rica",
+  "Italy": "Italia",
+  "Jordan": "Jordania",
+  "Botswana": "Botsuana",
+  "Germany": "Alemania",
+  "South Africa": "Sudáfrica",
+  "Algeria": "Argelia",
+  "Libya": "Libia",
+  "South Korea": "Corea del Sur",
 };
 
 export const SITE_TRANSLATIONS: Record<string, SiteTranslation> = {
+  "fernandina-caldera": {
+    "name": "Caldera Basáltica de Fernandina",
+    "country": "Ecuador",
+    "rationale": "La caldera de colapso y las coladas del escudo basáltico ofrecen análogos de morfología volcánica y cartografía remota del terreno.",
+    "caveat": "La elevación representa el interior de la caldera, no la cumbre de 1476 m; las erupciones, paredes inestables y ecosistemas protegidos impiden asumir un acceso seguro."
+  },
+  "alcedo-hydrothermal": {
+    "name": "Caldera Hidrotermal de Alcedo",
+    "country": "Ecuador",
+    "rationale": "La alteración fumarólica de un escudo de Galápagos con basaltos y riolitas permite comparaciones con el hidrotermalismo del Marte primitivo.",
+    "caveat": "Alcedo no es uniformemente basáltico; las fumarolas, meteorización húmeda y fauna protegida limitan el muestreo. El punto representa la caldera, no una fumarola verificada."
+  },
+  "cayambe-glacier": {
+    "name": "Márgenes Glaciares del Cayambe",
+    "country": "Ecuador",
+    "rationale": "Los márgenes glaciares ecuatoriales y detritos volcánicos permiten ensayos en interfaces de hielo y roca y movilidad en terreno frío.",
+    "caveat": "El punto del flanco glaciar occidental está bajo la cumbre; el hielo templado y las rocas andesíticas y dacíticas difieren de las trampas frías lunares y del Marte basáltico."
+  },
+  "altar-crater-lake": {
+    "name": "Laguna Amarilla y Cráter de El Altar",
+    "country": "Ecuador",
+    "rationale": "El anfiteatro volcánico modificado por glaciares y la Laguna Amarilla ofrecen análogos de sedimentación en cuencas y retroceso del hielo.",
+    "caveat": "La erosión glaciar contribuye a la forma de la cuenca; el lago actual de deshielo no es un cráter de impacto ni prueba de un paleolago de tipo marciano."
+  },
+  "payunia-volcanic": {
+    "name": "Campo Volcánico de La Payunia",
+    "country": "Argentina",
+    "rationale": "Las extensas coladas basálticas y conos de escoria permiten comparar volcanismo fisural planetario y recorridos por superficies rugosas.",
+    "caveat": "El volcanismo regional incluye composiciones evolucionadas; el acceso a tubos no está verificado y la meteorización terrestre difiere del regolito lunar."
+  },
+  "salar-atacama-pajonales": {
+    "name": "Salar de Pajonales - Región de Atacama",
+    "country": "Chile",
+    "rationale": "Las costras salinas con yeso y hábitats microbianos estudiados para buscar biofirmas ofrecen un análogo evaporítico de Marte.",
+    "caveat": "Pajonales es un salar separado al sur del Salar de Atacama; sus microbios actuales y agua intermitente no implican vida en Marte."
+  },
+  "nevado-tres-cruces": {
+    "name": "Flanco Volcánico Alto del Nevado Tres Cruces",
+    "country": "Chile",
+    "rationale": "Los detritos volcánicos fríos y áridos bajo las cumbres ofrecen escenarios de heladas y movilidad sobre regolito a gran altitud.",
+    "caveat": "El punto representa el flanco occidental, no una cumbre ni las lagunas del parque; el permafrost es un supuesto que requiere validación en campo."
+  },
+  "tatacoa-badlands": {
+    "name": "Tierras Erosionadas de Tatacoa",
+    "country": "Colombia",
+    "rationale": "Los estratos sedimentarios miocenos y cárcavas permiten ensayos de navegación en terreno estratificado y comparaciones de estratigrafía fluvial.",
+    "caveat": "Tatacoa es un paisaje erosionado de bosque seco tropical, no un desierto hiperárido; la lluvia, fósiles y biología del suelo difieren del Marte actual."
+  },
+  "lencois-maranhenses": {
+    "name": "Dunas Costeras de Lençóis Maranhenses",
+    "country": "Brasil",
+    "rationale": "Las dunas móviles de arena cuarzosa y lagunas interdunares permiten comparar formas eólicas y movilidad sobre arena seca y húmeda.",
+    "caveat": "Este campo costero lluvioso no es un desierto; el cuarzo, agua dulce estacional y densidad del aire difieren de las dunas marcianas."
+  },
+  "pariaqaqa-permafrost": {
+    "name": "Terreno Periglaciar de Pariaqaqa",
+    "country": "Perú",
+    "rationale": "El retroceso glaciar documentado y las morrenas de la cordillera de Pariacaca motivan escenarios de gelifracción y exploración de hielo y detritos.",
+    "caveat": "El permafrost es un supuesto no medido, no una extensión local confirmada; los glaciares tropicales y el deshielo estacional difieren de los depósitos de hielo planetarios."
+  },
+  "poas-acid-crater": {
+    "name": "Lago Cratérico Ácido del Poás",
+    "country": "Costa Rica",
+    "rationale": "Los fluidos ácidos y la alteración hidrotermal rica en azufre permiten comparaciones mineralógicas y de extremófilos con el Marte primitivo.",
+    "caveat": "La extensión y química del lago varían con la actividad; gases corrosivos, erupciones y clima tropical húmedo limitan la transferencia operativa."
+  },
+  "kilauea-caldera": {
+    "name": "Caldera Cimera del Kīlauea",
+    "country": "Estados Unidos",
+    "rationale": "Las estructuras de colapso y superficies basálticas permiten cartografía volcánica y comparaciones del emplazamiento de coladas planetarias.",
+    "caveat": "Los respiraderos activos, gases y geometría cambiante impiden asumir terreno transitable; este punto de la caldera no localiza un tubo accesible."
+  },
+  "mount-etna": {
+    "name": "Flanco Basáltico del Etna",
+    "country": "Italia",
+    "rationale": "Las coladas basálticas, tefra y conductos volcánicos ofrecen escenarios de movilidad de rovers y morfología de flujos planetarios.",
+    "caveat": "El punto representa un flanco meridional alto, no la cumbre cambiante; la nieve, erupciones y acceso no verificado a tubos limitan las comparaciones."
+  },
+  "white-sands-gypsum": {
+    "name": "Dunas de Yeso de White Sands",
+    "country": "Estados Unidos",
+    "rationale": "Las dunas de yeso conectan el aporte de sedimentos evaporíticos con el transporte eólico y permiten comparaciones con sulfatos marcianos.",
+    "caveat": "El agua subterránea somera y los umbrales de viento terrestres afectan la cohesión; los hábitats y recursos arqueológicos protegidos limitan los ensayos."
+  },
+  "channeled-scablands": {
+    "name": "Channeled Scablands - Dry Falls",
+    "country": "Estados Unidos",
+    "rationale": "Los canales de inundaciones glaciares catastróficas excavados en basalto permiten comparar procesos con los canales de desbordamiento marcianos.",
+    "caveat": "La escala de inundación, gravedad y aporte sedimentario difieren de Marte; Dry Falls representa solo una parte de la red regional."
+  },
+  "wadi-rum": {
+    "name": "Desierto de Arenisca de Wadi Rum",
+    "country": "Jordania",
+    "rationale": "Los acantilados de arenisca, fracturas y corredores de dunas permiten ensayos de navegación desértica y cartografía de afloramientos sedimentarios.",
+    "caveat": "La meteorización de arenisca y el transporte eólico terrestre difieren de la geología basáltica marciana; el patrimonio cultural y paisaje protegido limitan los despliegues."
+  },
+  "makgadikgadi-pans": {
+    "name": "Salares de Makgadikgadi",
+    "country": "Botsuana",
+    "rationale": "Los fondos de paleolagos, costras salinas e inundación estacional ofrecen análogos de cuencas evaporíticas y patrones de desecación.",
+    "caveat": "Las inundaciones, fauna y sedimentos biológicamente activos difieren de los paleolagos secos marcianos; la resistencia de la costra varía mucho."
+  },
+  "lake-tyrrell": {
+    "name": "Sedimentos Salinos del Lago Tyrrell",
+    "country": "Australia",
+    "rationale": "Los sedimentos hipersalinos y descargas subterráneas localmente ácidas ricas en hierro permiten estudios análogos de ciclos de hierro y azufre y biofirmas.",
+    "caveat": "La acidez varía dentro del lago; los tapetes microbianos vivos, salmueras someras y clima templado no reproducen el Marte actual."
+  },
+  "sudbury-basin": {
+    "name": "Cuenca de Impacto de Sudbury",
+    "country": "Canadá",
+    "rationale": "Las rocas antiguas de fusión por impacto y depósitos de cuenca permiten comparar diferenciación y alteración posteriores a grandes impactos.",
+    "caveat": "La erosión, deformación tectónica, vegetación y minería ocultan el cráter original; no es una superficie intacta de cuenca lunar."
+  },
+  "ries-crater": {
+    "name": "Cráter de Impacto de Nördlinger Ries",
+    "country": "Alemania",
+    "rationale": "Las brechas de impacto de suevita y la morfología conservada de la cuenca permiten comparar metamorfismo de choque y cartografía de eyecta.",
+    "caveat": "Las rocas sedimentarias, depósitos lacustres posteriores y tierras cultivadas difieren de los mares lunares; el acceso a afloramientos requiere acuerdos locales."
+  },
+  "vredefort-dome": {
+    "name": "Domo de Impacto de Vredefort",
+    "country": "Sudáfrica",
+    "rationale": "El levantamiento central erosionado y la corteza antigua chocada documentan deformación por grandes impactos relevante para interiores de cuencas planetarias.",
+    "caveat": "El domo expone corteza profunda tras erosión prolongada; no es el borde original del cráter ni una cuenca intacta de tipo lunar."
+  },
+  "tassili-najjer": {
+    "name": "Meseta de Arenisca de Tassili nAjjer",
+    "country": "Argelia",
+    "rationale": "Las mesetas erosionadas, arcos rocosos y valles secos permiten cartografía de terreno estratificado y planificación de rutas desérticas.",
+    "caveat": "La erosión combina procesos de antiguos climas húmedos con aridez actual; la protección arqueológica y ecológica limita los ensayos."
+  },
+  "waw-an-namus": {
+    "name": "Caldera Volcánica de Waw an Namus",
+    "country": "Libia",
+    "rationale": "La tefra basáltica oscura alrededor de una caldera sahariana ofrece análogos de transporte de ceniza y contraste espectral.",
+    "caveat": "Hay lagos y vegetación de oasis dentro de la depresión; la edad volcánica y el acceso son inciertos, y los depósitos oscuros no demuestran tubos de lava."
+  },
+  "jeju-manjanggul": {
+    "name": "Tubo de Lava Manjanggul de Jeju",
+    "country": "Corea del Sur",
+    "rationale": "El sistema documentado de tubos basálticos ofrece análogos de geometría de conductos, localización robótica y comunicaciones subterráneas.",
+    "caveat": "La humedad, colonización biológica y acceso protegido limitan la comparación de refugios; la relevancia del tubo no implica que esté listo para ser un hábitat."
+  },
+  "undara-lava-tubes": {
+    "name": "Sistema de Tubos de Lava de Undara",
+    "country": "Australia",
+    "rationale": "Los largos conductos basálticos con secciones de techo colapsado ofrecen análogos de geometría y navegación robótica en cuevas.",
+    "caveat": "La humedad estacional, hábitats de murciélagos, vegetación y estabilidad del techo requieren evaluación; los supuestos de refugio no establecen idoneidad como hábitat lunar."
+  },
   "galapagos-lava-tubes": {
     name: "Tubos de Lava de Galápagos - Santa Cruz / Isabela",
     country: "Ecuador",
