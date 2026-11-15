@@ -1,7 +1,15 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import * as maplibregl from "maplibre-gl";
+import {
+  Box,
+  ChevronDown,
+  ChevronUp,
+  RotateCcw,
+  RotateCw,
+  Square,
+} from "lucide-react";
 import type { AnalogSite, TargetProfile } from "@/types/analog";
 import type { RegionBounds, RegionEvaluationResult } from "@/lib/evaluateRegion";
 
@@ -35,6 +43,7 @@ interface AnalogMapProps {
   onProbeRegion?: (bounds: RegionBounds) => void;
   regionResult?: RegionEvaluationResult | null;
   cameraTarget?: CameraTarget | null;
+  hasExpandedSubmenu?: boolean;
 }
 
 type BasemapMode = "satellite" | "dark" | "nasa-gibs";
@@ -194,6 +203,7 @@ export function AnalogMap({
   onProbeRegion,
   regionResult = null,
   cameraTarget,
+  hasExpandedSubmenu = false,
 }: AnalogMapProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
@@ -213,12 +223,78 @@ export function AnalogMap({
 
   const [basemap, setBasemap] = useState<BasemapMode>("satellite");
   const [terrain3d, setTerrain3d] = useState(true);
+  const [cameraView, setCameraView] = useState<{ pitch: number; bearing: number }>({
+    pitch: selectedSiteId ? 42 : 24,
+    bearing: 0,
+  });
   const [dragBox, setDragBox] = useState<{
     startX: number;
     startY: number;
     curX: number;
     curY: number;
   } | null>(null);
+
+  const getFlyDuration = useCallback((ms: number) => {
+    if (typeof window === "undefined") return ms;
+    return window.matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : ms;
+  }, []);
+
+  const handleSet2D = useCallback(() => {
+    const map = mapRef.current;
+    if (!map) return;
+    map.easeTo({
+      pitch: 0,
+      bearing: 0,
+      duration: getFlyDuration(450),
+    });
+  }, [getFlyDuration]);
+
+  const handleSet3D = useCallback(() => {
+    const map = mapRef.current;
+    if (!map) return;
+    setTerrain3d(true);
+    map.easeTo({
+      pitch: 60,
+      duration: getFlyDuration(500),
+    });
+  }, [getFlyDuration]);
+
+  const handleAdjustBearing = useCallback(
+    (delta: number) => {
+      const map = mapRef.current;
+      if (!map) return;
+      map.easeTo({
+        bearing: map.getBearing() + delta,
+        duration: getFlyDuration(280),
+      });
+    },
+    [getFlyDuration]
+  );
+
+  const handleResetBearing = useCallback(() => {
+    const map = mapRef.current;
+    if (!map) return;
+    map.easeTo({
+      bearing: 0,
+      duration: getFlyDuration(320),
+    });
+  }, [getFlyDuration]);
+
+  const handleAdjustPitch = useCallback(
+    (delta: number) => {
+      const map = mapRef.current;
+      if (!map) return;
+      const nextPitch = Math.max(0, Math.min(60, Math.round(map.getPitch() + delta)));
+      if (nextPitch > 0) {
+        setTerrain3d(true);
+      }
+      map.easeTo({
+        pitch: nextPitch,
+        duration: getFlyDuration(260),
+      });
+    },
+    [getFlyDuration]
+  );
 
   // Register tile cache Service Worker once on client
   useEffect(() => {
@@ -282,6 +358,20 @@ export function AnalogMap({
       const c = map.getCenter();
       updateHudCoords(c.lat, c.lng, map.getZoom());
     });
+
+    const syncCameraView = () => {
+      const nextPitch = Math.round(map.getPitch());
+      const rawBearing = Math.round(map.getBearing());
+      const nextBearing = ((rawBearing % 360) + 360) % 360;
+      setCameraView((prev) =>
+        prev.pitch === nextPitch && prev.bearing === nextBearing
+          ? prev
+          : { pitch: nextPitch, bearing: nextBearing }
+      );
+    };
+
+    map.on("move", syncCameraView);
+    syncCameraView();
 
     mapRef.current = map;
 
@@ -990,7 +1080,11 @@ export function AnalogMap({
       />
 
       {/* Selector de capa de mapa base y modos de prospección */}
-      <div className="absolute right-14 top-[112px] z-10 flex flex-col items-end gap-2">
+      <div
+        className={`absolute right-14 z-10 flex flex-col items-end gap-2 transition-all duration-200 ${
+          hasExpandedSubmenu ? "top-[152px]" : "top-[112px]"
+        }`}
+      >
         <div
           className="flex items-center gap-1 rounded-lg border border-slate-800/80 bg-[#060913]/90 p-1 shadow-xl backdrop-blur-md"
           role="group"
@@ -1184,6 +1278,107 @@ export function AnalogMap({
             </span>
           </>
         )}
+      </div>
+
+      {/* Control compacto de perspectiva 2D / 3D y ángulos CAD */}
+      <div
+        className="absolute bottom-9 right-3 z-10 flex flex-col gap-1 rounded-lg border border-slate-800/80 bg-[#060913]/90 p-1.5 shadow-xl backdrop-blur-md"
+        role="group"
+        aria-label="Control de perspectiva 2D y 3D"
+      >
+        <div className="flex items-center gap-1">
+          <button
+            type="button"
+            onClick={handleSet2D}
+            aria-pressed={cameraView.pitch < 10}
+            title="Vista Plana 2D (inclinación 0°, norte 0°)"
+            className={`flex flex-1 items-center justify-center gap-1 rounded px-2 py-1 text-[11px] font-semibold transition-colors ${
+              cameraView.pitch < 10
+                ? "border border-[#D4AF37]/60 bg-[#D4AF37]/20 text-[#D4AF37]"
+                : "border border-transparent text-slate-400 hover:bg-slate-800/60 hover:text-slate-100"
+            }`}
+          >
+            <Square className="h-3 w-3" aria-hidden="true" />
+            <span>2D</span>
+          </button>
+          <button
+            type="button"
+            onClick={handleSet3D}
+            aria-pressed={cameraView.pitch >= 10}
+            title="Vista Terreno 3D inclinada (60°)"
+            className={`flex flex-1 items-center justify-center gap-1 rounded px-2 py-1 text-[11px] font-semibold transition-colors ${
+              cameraView.pitch >= 10
+                ? "border border-cyan-500/60 bg-cyan-500/20 text-cyan-200"
+                : "border border-transparent text-slate-400 hover:bg-slate-800/60 hover:text-slate-100"
+            }`}
+          >
+            <Box className="h-3 w-3" aria-hidden="true" />
+            <span>3D</span>
+          </button>
+        </div>
+
+        <div className="flex items-center justify-between gap-1.5 border-t border-slate-800/80 pt-1">
+          <div className="flex items-center gap-0.5" title="Rotación de ángulo (Bearing)">
+            <button
+              type="button"
+              onClick={() => handleAdjustBearing(-45)}
+              aria-label="Rotar vista -45 grados"
+              title="Rotar -45°"
+              className="rounded p-1 text-slate-400 transition-colors hover:bg-slate-800/80 hover:text-cyan-300"
+            >
+              <RotateCcw className="h-3 w-3" aria-hidden="true" />
+            </button>
+            <button
+              type="button"
+              onClick={handleResetBearing}
+              aria-label="Restablecer orientación al norte"
+              title="Restablecer norte (0°)"
+              className="min-w-[30px] rounded px-1 py-0.5 text-center font-mono text-[10px] tabular-nums text-slate-300 transition-colors hover:bg-slate-800/80 hover:text-cyan-300"
+            >
+              {String(cameraView.bearing).padStart(3, "0")}°
+            </button>
+            <button
+              type="button"
+              onClick={() => handleAdjustBearing(45)}
+              aria-label="Rotar vista +45 grados"
+              title="Rotar +45°"
+              className="rounded p-1 text-slate-400 transition-colors hover:bg-slate-800/80 hover:text-cyan-300"
+            >
+              <RotateCw className="h-3 w-3" aria-hidden="true" />
+            </button>
+          </div>
+
+          <span className="h-3 w-px bg-slate-800" aria-hidden="true" />
+
+          <div className="flex items-center gap-0.5" title="Inclinación lateral (Pitch)">
+            <button
+              type="button"
+              onClick={() => handleAdjustPitch(-15)}
+              disabled={cameraView.pitch <= 0}
+              aria-label="Reducir inclinación 15 grados"
+              title="Reducir inclinación (-15°)"
+              className="rounded p-1 text-slate-400 transition-colors hover:bg-slate-800/80 hover:text-cyan-300 disabled:opacity-35 disabled:hover:bg-transparent disabled:hover:text-slate-400"
+            >
+              <ChevronDown className="h-3 w-3" aria-hidden="true" />
+            </button>
+            <span
+              className="min-w-[26px] text-center font-mono text-[10px] tabular-nums text-cyan-300"
+              aria-label={`Inclinación actual ${cameraView.pitch} grados`}
+            >
+              {cameraView.pitch}°
+            </span>
+            <button
+              type="button"
+              onClick={() => handleAdjustPitch(15)}
+              disabled={cameraView.pitch >= 60}
+              aria-label="Aumentar inclinación 15 grados"
+              title="Aumentar inclinación (+15°)"
+              className="rounded p-1 text-slate-400 transition-colors hover:bg-slate-800/80 hover:text-cyan-300 disabled:opacity-35 disabled:hover:bg-transparent disabled:hover:text-slate-400"
+            >
+              <ChevronUp className="h-3 w-3" aria-hidden="true" />
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   );
