@@ -173,9 +173,9 @@ export function PlanetScene({
     const textureLoader = new THREE.TextureLoader();
     const earthTexture = textureLoader.load("/nasa/earth-equirectangular.jpg");
     earthTexture.colorSpace = THREE.SRGBColorSpace;
-    const moonTexture = textureLoader.load("/nasa/moon-orb.jpg");
+    const moonTexture = textureLoader.load("/nasa/moon-equirectangular.jpg");
     moonTexture.colorSpace = THREE.SRGBColorSpace;
-    const marsTexture = textureLoader.load("/nasa/mars-orb.jpg");
+    const marsTexture = textureLoader.load("/nasa/mars-equirectangular.jpg");
     marsTexture.colorSpace = THREE.SRGBColorSpace;
 
     // 3. Dominant 3D Earth Group with Fresnel Atmosphere Shader
@@ -194,6 +194,8 @@ export function PlanetScene({
       map: earthTexture,
       roughness: 0.62,
       metalness: 0.08,
+      transparent: true,
+      opacity: 1,
     });
     const earthMesh = new THREE.Mesh(earthGeo, earthMat);
     earthMesh.rotation.z = 0.18;
@@ -258,10 +260,10 @@ export function PlanetScene({
     scene.add(moonMesh);
 
     // Mars: Deep-background upper-right orbital plane
-    const marsGeo = new THREE.SphereGeometry(0.32, 36, 36);
+    const marsGeo = new THREE.SphereGeometry(0.46, 40, 40);
     const marsMat = new THREE.MeshStandardMaterial({
       map: marsTexture,
-      roughness: 0.8,
+      roughness: 0.78,
       metalness: 0.04,
     });
     const marsMesh = new THREE.Mesh(marsGeo, marsMat);
@@ -482,6 +484,7 @@ export function PlanetScene({
       // =======================================================================
       // CONTINUOUS CAMERA & PLANET CHOREOGRAPHY ACROSS CHAPTERS 1 -> 5
       // =======================================================================
+      let targetEarthOpacity = 1;
       if (ch <= 2) {
         // Chapters 1 & 2 shared continuous orbital approach:
         const t = Math.max(0, Math.min(1, introP));
@@ -513,8 +516,9 @@ export function PlanetScene({
         targetCamPos.set(0.1, 0.05, 5.35 - t * 0.25);
         targetLookAt.set(0.15, 0.0, 1.5);
 
-        targetEarthPos.set(-1.35, -3.95, -1.2);
-        targetAtmoIntensity = 1.35;
+        targetEarthPos.set(-1.35, -6.8, -2.5);
+        targetAtmoIntensity = 0;
+        targetEarthOpacity = 0;
 
         targetMoonPos.set(-6.4, 2.8, -5.2);
         targetMarsPos.set(6.4, 3.0, -6.5);
@@ -536,7 +540,7 @@ export function PlanetScene({
         } else {
           targetMarsPos.set(2.25, 0.45, 2.5);
           targetMoonPos.set(-6.2, 2.8, -6.0);
-          targetMarsScale = 1.12;
+          targetMarsScale = 1.18;
           targetMoonScale = 0.62;
         }
       } else {
@@ -548,7 +552,7 @@ export function PlanetScene({
         targetMoonPos.set(-4.2, 1.8, -2.5);
         targetMarsPos.set(4.4, 2.1, -4.5);
         targetMoonScale = 0.95;
-        targetMarsScale = 0.95;
+        targetMarsScale = 0.85;
       }
 
       const camDamp = dampFactor(dt, 4.8);
@@ -560,6 +564,12 @@ export function PlanetScene({
       camera.lookAt(currentLookAt);
 
       earthGroup.position.lerp(targetEarthPos, bodyDamp);
+      earthMat.opacity = THREE.MathUtils.lerp(
+        earthMat.opacity,
+        targetEarthOpacity,
+        bodyDamp
+      );
+      earthGroup.visible = earthMat.opacity > 0.01;
       atmoUniforms.uIntensity.value = THREE.MathUtils.lerp(
         atmoUniforms.uIntensity.value,
         targetAtmoIntensity,
