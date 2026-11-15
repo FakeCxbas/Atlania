@@ -23,7 +23,7 @@ export function MethodologyDialog({ dataset }: { dataset: AnalogDataset }) {
         type="button"
         aria-haspopup="dialog"
         onClick={() => dialogRef.current?.showModal()}
-        className="h-8 rounded-lg border border-[#D4AF37]/40 bg-[#D4AF37]/10 px-2.5 py-1.5 text-xs font-medium text-[#D4AF37] transition-colors hover:bg-[#D4AF37]/20"
+        className="min-h-9 rounded-lg bg-[#181B2C] px-3 py-1.5 text-xs font-medium text-[#C5A36D] ring-1 ring-[#C5A36D]/35 transition-colors hover:bg-[#C5A36D]/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C5A36D]"
       >
         Metodología
       </button>
@@ -31,7 +31,7 @@ export function MethodologyDialog({ dataset }: { dataset: AnalogDataset }) {
         ref={dialogRef}
         aria-labelledby="methodology-title"
         onClose={() => triggerRef.current?.focus()}
-        className="m-auto max-h-[90dvh] w-[calc(100%-2rem)] max-w-2xl overflow-y-auto rounded-lg border border-slate-700 bg-[#0D1424] p-5 text-slate-200 shadow-2xl backdrop:bg-black/75"
+        className="m-auto max-h-[90dvh] w-[calc(100%-2rem)] max-w-2xl overflow-y-auto rounded-xl border border-[#55527D]/35 bg-[#121626] p-5 text-[#E4DFD5] shadow-2xl backdrop:bg-black/75"
       >
         <div className="flex items-start justify-between gap-4">
           <h2 id="methodology-title" className="text-lg font-semibold">
