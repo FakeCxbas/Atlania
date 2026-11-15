@@ -332,7 +332,7 @@ export function MethodologyDialog({ dataset }: { dataset: AnalogDataset }) {
             <p className="mt-1">
               En cumplimiento con la guía oficial de NASA Space Apps Challenge 2026:
               la formulación matemática del índice ASI, la curaduría científica de
-              los 35 sitios y la ingesta determinista de datos (NASA POWER, NASA PDS,
+              los {dataset.sites.length} sitios y la ingesta determinista de datos (NASA POWER, NASA PDS,
               NASA GIBS y ESA Copernicus DEM) fueron diseñadas por el equipo. Se
               emplearon asistentes de IA (Gemini / Codex) como apoyo de ingeniería
               de software y pruebas automatizadas, diseño conceptual del isotipo

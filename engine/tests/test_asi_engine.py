@@ -24,13 +24,55 @@ def payload():
 
 
 def test_catalog():
-    assert len(EARTH_SITES) == len({s.id for s in EARTH_SITES}) == 35
+    assert len(EARTH_SITES) == len({s.id for s in EARTH_SITES}) == 60
     assert set(REFERENCE_PROFILES) == {"shackleton-crater", "mare-tranquillitatis", "jezero-crater", "olympus-mons-flank", "mouton-mons", "valles-marineris"}
-    assert sum(s.country == "Ecuador" for s in EARTH_SITES) == 8
+    assert sum(s.country == "Ecuador" for s in EARTH_SITES) == 12
+    for site in EARTH_SITES:
+        assert site.rationale and site.caveat
+        assert site.discovery_tier in {"Benchmark", "Regional Highlight", "Under-Recognized"}
+        assert len(site.mission_testbeds) >= 2
     for target in REFERENCE_PROFILES.values():
         assert sum(target.weights) == pytest.approx(1)
         assert target.source_url.startswith("https://")
 
+
+
+def test_new_sites_cannot_displace_mare_leaders_with_any_climate():
+    new_ids = {
+        "alcedo-hydrothermal",
+        "altar-crater-lake",
+        "cayambe-glacier",
+        "channeled-scablands",
+        "fernandina-caldera",
+        "jeju-manjanggul",
+        "kilauea-caldera",
+        "lake-tyrrell",
+        "lencois-maranhenses",
+        "makgadikgadi-pans",
+        "mount-etna",
+        "nevado-tres-cruces",
+        "pariaqaqa-permafrost",
+        "payunia-volcanic",
+        "poas-acid-crater",
+        "ries-crater",
+        "salar-atacama-pajonales",
+        "sudbury-basin",
+        "tassili-najjer",
+        "tatacoa-badlands",
+        "undara-lava-tubes",
+        "vredefort-dome",
+        "wadi-rum",
+        "waw-an-namus",
+        "white-sands-gypsum",
+    }
+    sites = {site.id: site for site in EARTH_SITES}
+    assert new_ids <= sites.keys()
+    # These inputs maximize both climate-dependent dimensions for this target.
+    # The upper bound guards the ranking without hardcoding live POWER values.
+    ideal_climate = Climate(18, 16, 0, 0, 0)
+    target = REFERENCE_PROFILES["mare-tranquillitatis"]
+    for site_id in new_ids:
+        assert score_target(sites[site_id], ideal_climate, target)["overall_asi"] < 87.5
 
 def ml_site(site_id, value):
     return {"id": site_id, "best_target": "target", "scores": {
@@ -277,13 +319,15 @@ def test_dataset_roundtrip_geojson_and_reproducibility(tmp_path):
     data = build_dataset(offline=True)
     assert data["methodology"]["name"] == "ATLANIA Planetary Analog Similarity Index"
     assert data["methodology"]["version"] == "0.2.0"
-    assert data["methodology"]["source_counts"] == {"nasa_power": 0, "fallback": 35}
+    assert data["methodology"]["source_counts"] == {"nasa_power": 0, "fallback": 60}
+    assert len(data["sites"]) == 60
+    assert sum(s["country"] == "Ecuador" for s in data["sites"]) == 12
     paths = write_dataset(data, tmp_path)
     serialized_data = json.loads(json.dumps(data))
     assert json.loads(paths[0].read_text()) == serialized_data
     geo = json.loads(paths[1].read_text())
     assert geo["type"] == "FeatureCollection"
-    assert len(geo["features"]) == 35
+    assert len(geo["features"]) == 60
     for feature, site in zip(geo["features"], serialized_data["sites"]):
         assert feature["geometry"]["coordinates"] == [site["longitude"], site["latitude"]]
         assert feature["properties"] == site
@@ -320,7 +364,10 @@ def test_pipeline_mixed_sources():
         return httpx.Response(200, json=payload()) if float(request.url.params["latitude"]) < 0 else httpx.Response(503)
     with httpx.Client(transport=httpx.MockTransport(handler)) as client:
         data = build_dataset(client=client)
-    assert data["methodology"]["source_counts"] == {"nasa_power": 19, "fallback": 16}
+    assert len(data["sites"]) == 60
+    assert sum(s["country"] == "Ecuador" for s in data["sites"]) == 12
+    assert data["methodology"]["source_counts"] == {"nasa_power": 31, "fallback": 29}
+    assert data["methodology"]["dem_source_counts"] == {"open_meteo": 60, "fallback": 0}
 
 
 @pytest.mark.parametrize("parameter,value", [("PRECTOTCORR", -1), ("WS10M", -1),
